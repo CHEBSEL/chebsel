@@ -1,25 +1,12 @@
-CHEBSEL — PACK PWA FINAL PROPRE
+CHEBSEL v1.0 STABLE
 
-Fichiers à mettre dans GitHub :
-- index.html
-- manifest.webmanifest
-- sw.js
-- dossier icons/
+Comité autorisé :
+- Sinsurin Jacques — Président / Administrateur
+- Jose Sterlin — Secrétaire
+- Chery Agnace — Trésorier
 
-Le dossier icons contient :
-- chebsel-logo.png
-- icon-192.png
-- icon-512.png
-- icon-maskable-512.png
+Nouveautés : PIN locaux, rôles, lecture seule, actions critiques protégées, audit enrichi, diagnostic, doublons, tableau mensuel, clôture verrouillée, passation, test de sauvegarde et manuel.
 
-GitHub Pages :
-Settings > Pages > Deploy from a branch > main > /(root)
+Barème du règlement : mensuelle 125 G; RNM 25 G; ANM 50 G; ANM prestation 100 G.
 
-URL :
-https://chebsel.github.io/chebsel/
-
-Après mise à jour :
-- attendre 1 à 2 minutes ;
-- ouvrir l'URL ;
-- faire Ctrl+F5 si nécessaire ;
-- si une ancienne PWA est déjà installée, la désinstaller puis la réinstaller.
+Sur un nouvel appareil, le Président initialise son PIN en premier. Les PIN ne sont ni publiés sur GitHub ni exportés dans les sauvegardes JSON.

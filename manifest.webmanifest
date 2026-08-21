@@ -1,7 +1,7 @@
 {
-  "name": "CHEBSEL — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "name": "CHEBSEL v1.0 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
   "short_name": "CHEBSEL",
-  "description": "Gestion des membres, appels, cotisations, amendes, paiements, sauvegardes et restauration CHEBSEL.",
+  "description": "CHEBSEL v1.0 stable : sécurité PIN, rôles, membres, appel, finances, audit, diagnostic, sauvegarde et restauration.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
