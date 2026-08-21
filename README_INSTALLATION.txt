@@ -1,12 +1,11 @@
-CHEBSEL v1.0 STABLE
+CHEBSEL v1.1 — CONNEXION AU LANCEMENT
 
-Comité autorisé :
-- Sinsurin Jacques — Président / Administrateur
-- Jose Sterlin — Secrétaire
-- Chery Agnace — Trésorier
+Au démarrage, CHEBSEL exige un choix d'accès :
+- Sinsurin Jacques — Président / Administrateur : PIN
+- Jose Sterlin — Secrétaire : PIN
+- Chery Agnace — Trésorier : PIN
+- Membres / visiteurs : Accès visiteur en lecture seule
 
-Nouveautés : PIN locaux, rôles, lecture seule, actions critiques protégées, audit enrichi, diagnostic, doublons, tableau mensuel, clôture verrouillée, passation, test de sauvegarde et manuel.
+Le visiteur peut consulter CHEBSEL mais ne peut pas ajouter, modifier, supprimer, restaurer, clôturer ou enregistrer un paiement.
 
-Barème du règlement : mensuelle 125 G; RNM 25 G; ANM 50 G; ANM prestation 100 G.
-
-Sur un nouvel appareil, le Président initialise son PIN en premier. Les PIN ne sont ni publiés sur GitHub ni exportés dans les sauvegardes JSON.
+Sur un nouvel appareil, le Président initialise d'abord son PIN.
