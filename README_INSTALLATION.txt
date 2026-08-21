@@ -1,19 +1,17 @@
-CHEBSEL v1.1.2 — CORRECTIF STABLE
+CHEBSEL v1.2.0 — CODES D’ACCÈS GLOBAUX
 
-CORRECTIONS PRINCIPALES
-1. Le badge visible affiche maintenant v1.1.2.
-2. Correction du bug VISITOR_KEY qui empêchait le démarrage normal de la logique de connexion.
-3. L'écran d'accès s'ouvre automatiquement à chaque lancement/rechargement.
-4. Les PIN existants restent stockés sous la même clé locale : chebsel_auth_v1.
-5. Aucun PIN existant n'est volontairement réinitialisé par la mise à jour.
-6. Accès visiteur disponible en lecture seule.
-7. Nouveau cache PWA : chebsel-pwa-stable-v112.
+Les trois responsables disposent maintenant d’un code d’accès global qui fonctionne sur n’importe quel appareil utilisant CHEBSEL v1.2.0, sans cloud et sans synchronisation.
 
 RESPONSABLES
 - Sinsurin Jacques — Président / Administrateur
 - Jose Sterlin — Secrétaire
 - Chery Agnace — Trésorier
 
-IMPORTANT
-Les PIN sont locaux à l'origine https://chebsel.github.io/chebsel/.
-Si les données du site/localStorage ont été effacées auparavant, les anciens PIN ne peuvent pas être récupérés depuis GitHub ou une sauvegarde JSON, car ils n'y sont pas exportés.
+Les anciens PIN locaux déjà configurés continuent de fonctionner sur l’appareil où ils sont stockés.
+Les nouveaux codes globaux fonctionnent sur tous les appareils.
+Les autres membres utilisent « Accès visiteur » en lecture seule.
+
+SÉCURITÉ
+Les codes en clair ne sont pas enregistrés dans les fichiers publiés sur GitHub.
+Seules des empreintes PBKDF2-SHA256 avec sel sont intégrées.
+Cette protection reste une authentification statique et ne remplace pas une authentification serveur/cloud.
