@@ -1,0 +1,32 @@
+{
+  "name": "CHEBSEL — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "short_name": "CHEBSEL",
+  "description": "Gestion des membres, appels, cotisations, amendes, paiements et sauvegardes CHEBSEL.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#102644",
+  "orientation": "any",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
