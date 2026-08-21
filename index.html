@@ -234,6 +234,23 @@ const FIN_B64='PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImZyIj4KPGhlYWQ+CjxtZXRhIGNoY
 const ATT_KEY='chebsel_attendance_app_v1';
 const FIN_KEY='chebsel_finance_app_v1';
 const MASTER_KEY='chebsel_master_members_v1';
+
+const CHEBSEL_DEFAULT_MEMBERS=[
+ {id:"m1",no:"1",first:"Osnel",last:"Ulysse",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m2",no:"2",first:"Guy-Mary",last:"Bien-Aime",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m3",no:"3",first:"Guidmond",last:"Garcon",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m4",no:"4",first:"Anias",last:"Chery",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m5",no:"5",first:"Lubérus Wilfrid",last:"Wildly",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m6",no:"6",first:"Jose",last:"Sterlin",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m7",no:"7",first:"Jackson",last:"Chery",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m8",no:"8",first:"Jacques",last:"Sinsurin",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m9",no:"9",first:"Arold",last:"Pierre-Louis",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m10",no:"10",first:"Pierre",last:"Philidor",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m11",no:"11",first:"Lucson",last:"Louis",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m12",no:"12",first:"Jimmy",last:"Nortila",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
+ {id:"m13",no:"13",first:"Jean-René",last:"Saintil",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""}
+];
+
 const SHELL_THEME='chebsel_portail_theme_v2';
 let activeApp=null;
 
@@ -252,9 +269,9 @@ function initializeMasterMembers(){
  let master=safeParse(MASTER_KEY);
  if(Array.isArray(master)&&master.length)return master.map(normalizeMember);
  const a=safeParse(ATT_KEY),f=safeParse(FIN_KEY);
- let source=Array.isArray(a?.members)&&a.members.length?a.members:(Array.isArray(f?.members)?f.members:[]);
+ let source=Array.isArray(a?.members)&&a.members.length?a.members:(Array.isArray(f?.members)&&f.members.length?f.members:CHEBSEL_DEFAULT_MEMBERS);
  master=source.map(normalizeMember);
- if(master.length)saveJSON(MASTER_KEY,master);
+ saveJSON(MASTER_KEY,master);
  return master;
 }
 
