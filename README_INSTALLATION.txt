@@ -1,18 +1,29 @@
-CHEBSEL v1.2.1 — COTISATIONS MENSUELLES AUTOMATIQUES
+CHEBSEL v1.2.3 — CORRECTION FLEXIBLE DES PAIEMENTS
 
-NOUVEAUTÉS
-- Absence non motivée lors d’une prestation : 250 G.
-- Cotisation mensuelle obligatoire : 125 G.
-- Début de l’automatisation : août 2026.
-- Mois civils : janvier, février, mars, etc.
-- À partir du premier jour du mois suivant, toute cotisation du mois précédent qui n’existe pas est automatiquement créée comme dette de 125 G pour chaque membre actif.
-- Aucun doublon mensuel n’est créé pour un même membre et un même mois.
-- Lors d’une clôture mensuelle, CHEBSEL crée aussi les cotisations manquantes du mois avant de verrouiller la clôture.
-- Les dettes des mois précédents restent ouvertes jusqu’au paiement.
+NOUVEAUTÉ
+Lorsqu’un paiement est erroné, le Président ou le Trésorier dispose maintenant de deux choix :
 
-EXEMPLE
-Pour août 2026, le contrôle automatique intervient à partir du 1er septembre 2026.
-Un membre actif sans cotisation d’août reçoit :
-Cotisation mensuelle — août 2026 | Dû : 125 G | Payé : 0 G | Solde : 125 G.
+1. CORRIGER ET REMPLACER IMMÉDIATEMENT
+CHEBSEL :
+- annule comptablement le paiement d’origine ;
+- restaure les dettes qu’il avait soldées ;
+- enregistre immédiatement le nouveau paiement corrigé ;
+- conserve l’ancienne et la nouvelle opération dans le journal d’audit.
 
-Les codes d’accès globaux de v1.2.0 sont conservés.
+2. ANNULER SEULEMENT
+CHEBSEL :
+- annule comptablement le paiement d’origine ;
+- restaure les dettes concernées ;
+- ne crée aucun nouveau paiement ;
+- permet d’enregistrer le bon paiement plus tard.
+
+Le motif est obligatoire dans les deux cas.
+La confirmation par code d’accès / PIN reste obligatoire.
+
+RÈGLES CONSERVÉES
+- Cotisation mensuelle obligatoire : 125 G, automatisée à partir d’août 2026.
+- RNM : 25 G.
+- ANM : 50 G.
+- ANM lors d’une prestation : 250 G.
+- Codes d’accès globaux multi-appareils.
+- Accès visiteur en lecture seule.

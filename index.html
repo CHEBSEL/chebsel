@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.2.1 — Centre de gestion</title>
+<title>CHEBSEL v1.2.3 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -111,7 +111,7 @@ html[data-theme="dark"] .paidTag{background:#103422;color:#8ff0b5}
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.2.1</span>
+  <div class="topactions"><span class="versionChip">v1.2.3</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -220,6 +220,28 @@ html[data-theme="dark"] .paidTag{background:#103422;color:#8ff0b5}
  <div class="modalActions"><button class="save" onclick="applySmartPayment()">Enregistrer</button><button class="cancel" onclick="closePaymentModal()">Annuler</button></div>
 </div></div>
 
+
+<div class="modal" id="paymentCorrectionModal"><div class="modalBox">
+ <h3 style="margin-top:0">Corriger un paiement</h3>
+ <input type="hidden" id="correctionPaymentId">
+ <div class="profilePanel" id="correctionOriginal" style="margin-bottom:12px"></div>
+ <div class="form">
+  <div class="wide" id="correctionMemberWrap"><label>Membre correct</label><select id="correctionMember"></select></div>
+  <div id="correctionAmountWrap"><label>Montant correct (HTG)</label><input type="number" min="0.01" step="0.01" id="correctionAmount"></div>
+  <div id="correctionDateWrap"><label>Date</label><input type="date" id="correctionDate"></div>
+  <div class="wide" id="correctionRefWrap"><label>Mode / référence</label><input id="correctionRef" placeholder="Espèces, transfert, référence..."></div>
+  <div class="wide"><label>Motif de la correction</label><input id="correctionReason" placeholder="Ex. mauvais membre / montant erroné"></div>
+  <div class="wide"><label>Après annulation du paiement d’origine</label>
+   <select id="correctionMode" onchange="toggleCorrectionFields()">
+    <option value="replace">Enregistrer immédiatement le paiement corrigé</option>
+    <option value="cancelOnly">Annuler seulement — enregistrer le nouveau paiement plus tard</option>
+   </select>
+  </div>
+ </div>
+ <p class="small" id="correctionHelp">CHEBSEL annulera comptablement le paiement d’origine, restaurera les dettes qu’il avait soldées, puis enregistrera le paiement corrigé. L’ancienne opération restera visible dans le journal d’audit.</p>
+ <div class="modalActions"><button class="save" onclick="savePaymentCorrection()">Valider la correction</button><button class="cancel" onclick="closePaymentCorrectionModal()">Annuler</button></div>
+</div></div>
+
 <div class="modal" id="receiptModal"><div class="modalBox">
  <div id="receiptContent"></div>
  <div class="modalActions no-print"><button class="save" onclick="printReceipt()">Imprimer / PDF</button><button class="cancel" onclick="closeReceipt()">Fermer</button></div>
@@ -237,10 +259,10 @@ html[data-theme="dark"] .paidTag{background:#103422;color:#8ff0b5}
 </div></div>
 
 
-<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.2.1</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
+<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.2.3</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
 <div class="membersView" id="securityView"><div class="viewerbar"><button class="back" onclick="closeSecurity()">← Retour</button><div class="viewtitle"><b>Sécurité & rôles</b><span>Accès local protégé par PIN</span></div></div><div class="membersBody"><div class="profilePanel" id="securitySummary"></div><div class="profilePanel"><h3>Profils autorisés</h3><div id="securityUsers"></div></div><div class="profilePanel"><h3>Matrice des droits</h3><div id="permissionMatrix"></div></div></div></div>
 <div class="membersView" id="handoverView"><div class="viewerbar"><button class="back" onclick="closeHandover()">← Retour</button><div class="viewtitle"><b>Passation de comité</b><span>Fiche de transfert de responsabilité</span></div></div><div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Date de passation</label><input type="date" id="handoverDate"></div><div><label>Observation</label><input id="handoverNote" placeholder="Ex. fin de mandat / renouvellement"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="renderHandover()">Actualiser</button><button class="secondaryQuick" onclick="printHandover()">Imprimer / PDF</button><button class="secondaryQuick" onclick="portalBackup()">Sauvegarde finale</button></div></div><div id="handoverBody"></div></div></div>
-<div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.2.1 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
+<div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.2.3 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
 <div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0">Connexion CHEBSEL</h3><p class="small" id="loginHelp">Responsables : entrez votre code d’accès CHEBSEL. Membres : choisissez « Accès visiteur » pour consulter en lecture seule.</p><div class="form"><div class="wide"><label>Responsable</label><select id="loginUser"></select></div><div class="wide"><label>Code d’accès / PIN</label><input type="password" id="loginPin" inputmode="numeric" maxlength="12" placeholder="PIN personnel"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Connexion</button><button class="cancel" onclick="enterVisitorMode()">👁 Accès visiteur</button></div><div class="permissionNote" style="margin-top:10px">Accès visiteur : consultation uniquement. Aucune modification, suppression, restauration, clôture ou paiement n’est autorisé.</div></div></div>
 <div class="modal" id="pinModal"><div class="modalBox"><h3 id="pinModalTitle" style="margin-top:0">Configurer un PIN</h3><input type="hidden" id="pinTarget"><div class="form"><div class="wide"><label>Nouveau PIN (4 à 12 chiffres)</label><input type="password" id="pinNew" inputmode="numeric" maxlength="12"></div><div class="wide"><label>Confirmer</label><input type="password" id="pinConfirm" inputmode="numeric" maxlength="12"></div></div><div class="modalActions"><button class="save" onclick="saveUserPin()">Enregistrer</button><button class="cancel" onclick="closePinModal()">Annuler</button></div></div></div>
 <div class="modal" id="restoreTestModal"><div class="modalBox"><h3 style="margin-top:0">Tester une sauvegarde</h3><p class="small">Le test ne modifie aucune donnée.</p><div class="form"><div class="wide"><label>Fichier JSON</label><input type="file" id="restoreTestFile" accept=".json,application/json"></div></div><div id="restoreTestResult" class="profilePanel" style="margin-top:12px">Sélectionnez un fichier.</div><div class="modalActions"><button class="save" onclick="testBackupFile()">Tester</button><button class="cancel" onclick="closeRestoreTestModal()">Fermer</button></div></div></div>
@@ -410,28 +432,213 @@ function renderProfile(mid){
  <div class="memberStats"><div class="mini"><b>${calls.length}</b><span>Activités</span></div><div class="mini"><b>${P}</b><span>Présences</span></div><div class="mini"><b>${R}</b><span>Retards</span></div><div class="mini"><b>${rate}</b><span>Taux</span></div><div class="mini"><b>${A}</b><span>Absences</span></div><div class="mini"><b>${money(due)}</b><span>Dû</span></div><div class="mini"><b>${money(paid)}</b><span>Payé</span></div><div class="mini"><b>${money(balance)}</b><span>Dette</span></div></div>
  <div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="openPaymentModal('${m.id}')">Enregistrer un paiement</button></div></div>
  <div class="profilePanel"><h3>Historique financier</h3>${es.length?es.map(e=>`<div class="ledgerRow"><div><div class="ledgerMain">${escapeHtml(e.typeLabel||e.type||'Écriture')}</div><div class="ledgerMeta">${escapeHtml(e.date||'')} • Dû ${money(e.due)} • Payé ${money(e.paid||0)}</div></div><div>${Math.max(0,Number(e.due||0)-Number(e.paid||0))>0?'<span class="debtTag">Solde '+money(Math.max(0,Number(e.due||0)-Number(e.paid||0)))+'</span>':'<span class="paidTag">Soldé</span>'}</div></div>`).join(''):'<div class="empty">Aucune écriture financière.</div>'}</div>
+ <div class="profilePanel"><h3>Paiements enregistrés</h3>${renderMemberPaymentHistory(mid)}</div>
  <div class="profilePanel"><h3>Historique de présence</h3>${calls.length?calls.map(c=>{const r=c.records[mid];return `<div class="ledgerRow"><div><div class="ledgerMain">${escapeHtml(c.activity||'Activité')}</div><div class="ledgerMeta">${escapeHtml(c.date||'')} • ${escapeHtml(({P:'Présent',A:'Absent motivé',R:'Retard motivé',E:'Excusé',RNM:'Retard non motivé',ANM:'Absence non motivée'})[r.status]||'Non renseigné')}</div></div></div>`}).join(''):'<div class="empty">Aucun historique de présence.</div>'}</div>`
 }
 
-function openPaymentModal(mid){payMemberId.value=mid;payAmount.value='';payDate.value=new Date().toISOString().slice(0,10);payRef.value='';paymentModal.classList.add('open')}
+function openPaymentModal(mid){
+ if(!requirePermission('finance.payment'))return;
+ payMemberId.value=mid;payAmount.value='';payDate.value=new Date().toISOString().slice(0,10);payRef.value='';paymentModal.classList.add('open')
+}
 function closePaymentModal(){paymentModal.classList.remove('open')}
-function applySmartPayment(){
- const mid=payMemberId.value,amount=Number(payAmount.value||0),date=payDate.value||new Date().toISOString().slice(0,10);
- if(amount<=0){alert('Saisissez un montant valide.');return}
+
+function getPaymentLog(){const x=safeParse(PAYMENT_LOG_KEY);return Array.isArray(x)?x:[]}
+function savePaymentLog(log){saveJSON(PAYMENT_LOG_KEY,log.slice(0,5000))}
+function paymentById(id){return getPaymentLog().find(p=>p.id===id)}
+
+function applyPaymentToMember(mid,amount,date,ref,opts={}){
  const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];
  const debts=f.entries.filter(e=>e.memberId===mid&&Math.max(0,Number(e.due||0)-Number(e.paid||0))>0).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
- if(!debts.length){alert('Ce membre ne possède aucune dette ouverte.');return}
- let remain=amount,applied=0,alloc=[];
+ if(!debts.length)return {ok:false,error:'Ce membre ne possède aucune dette ouverte.'};
+ let remain=Number(amount),applied=0,alloc=[];
  for(const e of debts){
    if(remain<=0)break;
-   const bal=Math.max(0,Number(e.due||0)-Number(e.paid||0)),x=Math.min(bal,remain);
-   e.paid=Number(e.paid||0)+x;e.paidDate=date;e.updatedAt=new Date().toISOString();remain-=x;applied+=x;alloc.push({label:e.typeLabel||e.type,amount:x})
+   const bal=Math.max(0,Number(e.due||0)-Number(e.paid||0)),x=Math.min(bal,remain),beforePaid=Number(e.paid||0);
+   e.paid=beforePaid+x;e.paidDate=date;e.updatedAt=new Date().toISOString();remain-=x;applied+=x;
+   alloc.push({entryId:e.id,label:e.typeLabel||e.type,amount:x,beforePaid,afterPaid:e.paid})
  }
- saveJSON(FIN_KEY,f);audit('Paiement enregistré',`${fullName(centralMembers().find(x=>x.id===mid))} : ${money(applied)}${remain>0?' • excédent non affecté '+money(remain):''}`);
- closePaymentModal();syncBridge();renderProfile(mid);refreshHome();showReceipt(mid,applied,date,payRef.value,alloc,remain)
+ saveJSON(FIN_KEY,f);
+ const id=opts.id||('PAY-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase());
+ const rec={
+   id,receiptNo:opts.receiptNo||('REC-'+Date.now().toString().slice(-8)),
+   memberId:mid,date,amount:Number(amount),applied,unapplied:remain,ref:ref||'',alloc,
+   status:'active',createdAt:new Date().toISOString(),createdBy:currentUser()?.name||'',
+   correctsPaymentId:opts.correctsPaymentId||'',note:opts.note||''
+ };
+ const log=getPaymentLog();log.unshift(rec);savePaymentLog(log);
+ return {ok:true,payment:rec}
 }
-function showReceipt(mid,amount,date,ref,alloc,remain){
- const m=centralMembers().find(x=>x.id===mid),n='REC-'+Date.now().toString().slice(-8);
+
+async function applySmartPayment(){
+ if(!requirePermission('finance.payment'))return;
+ if(!(await criticalGuard('finance.payment','Enregistrement d’un paiement')))return;
+ const mid=payMemberId.value,amount=Number(payAmount.value||0),date=payDate.value||new Date().toISOString().slice(0,10),ref=(payRef.value||'').trim();
+ if(amount<=0){alert('Saisissez un montant valide.');return}
+ const dup=getPaymentLog().find(p=>p.status==='active'&&p.memberId===mid&&p.date===date&&Number(p.amount)===amount&&(p.ref||'')===ref);
+ if(dup){alert('Paiement en double détecté : même membre, même date, même montant et même référence.');return}
+ const result=applyPaymentToMember(mid,amount,date,ref);
+ if(!result.ok){alert(result.error);return}
+ const rec=result.payment,m=centralMembers().find(x=>x.id===mid);
+ audit('Paiement enregistré',`${fullName(m)} : ${money(rec.applied)}${rec.unapplied>0?' • excédent non affecté '+money(rec.unapplied):''}`,{entity:'payment',entityId:rec.id,before:null,after:rec});
+ closePaymentModal();syncBridge();renderProfile(mid);refreshHome();showReceipt(mid,rec.applied,date,ref,rec.alloc,rec.unapplied,rec.receiptNo)
+}
+
+function renderMemberPaymentHistory(mid){
+ const rows=getPaymentLog().filter(p=>p.memberId===mid);
+ if(!rows.length)return '<div class="empty">Aucun paiement traçable enregistré depuis la v1.2.2.</div>';
+ return rows.map(p=>{
+   const active=p.status!=='cancelled',status=active?'<span class="paidTag">Actif</span>':'<span class="debtTag">Annulé / rectifié</span>';
+   const actions=active&&can('finance.payment')?`<div class="memberActions" style="margin-top:8px"><button class="secondaryQuick" onclick="openPaymentCorrectionModal('${p.id}')">Corriger</button><button class="delete" onclick="cancelPayment('${p.id}')">Annuler le paiement</button></div>`:'';
+   const corr=p.correctsPaymentId?`<div class="ledgerMeta">Correction du paiement ${escapeHtml(p.correctsPaymentId)}</div>`:'';
+   const cancelled=p.status==='cancelled'?`<div class="ledgerMeta">Annulé le ${p.cancelledAt?new Date(p.cancelledAt).toLocaleString('fr-FR'):'—'} • ${escapeHtml(p.correctionReason||'')}</div>`:'';
+   return `<div class="ledgerRow" style="display:block"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="ledgerMain">${escapeHtml(p.receiptNo||p.id)} • ${money(p.amount)}</div><div class="ledgerMeta">${escapeHtml(p.date||'')} • ${escapeHtml(p.ref||'Sans référence')} • Affecté ${money(p.applied||0)}</div>${corr}${cancelled}</div><div>${status}</div></div>${actions}</div>`
+ }).join('')
+}
+
+function reversePaymentAllocations(payment){
+ const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];
+ const problems=[];
+ for(const a of payment.alloc||[]){
+   const e=f.entries.find(x=>x.id===a.entryId);
+   if(!e){problems.push('Écriture introuvable : '+(a.label||a.entryId));continue}
+   const current=Number(e.paid||0),reverse=Number(a.amount||0);
+   if(current<reverse-0.001){problems.push('Montant déjà modifié sur '+(a.label||e.id));continue}
+   e.paid=Math.max(0,current-reverse);e.updatedAt=new Date().toISOString();
+   if(e.paid===0)e.paidDate='';
+ }
+ if(problems.length)return {ok:false,problems};
+ saveJSON(FIN_KEY,f);return {ok:true}
+}
+
+function toggleCorrectionFields(){
+ const replace=correctionMode.value==='replace';
+ ['correctionMemberWrap','correctionAmountWrap','correctionDateWrap','correctionRefWrap'].forEach(id=>{
+   const el=document.getElementById(id);if(el)el.style.display=replace?'':'none'
+ });
+ correctionHelp.textContent=replace
+  ?"CHEBSEL annulera comptablement le paiement d’origine, restaurera les dettes qu’il avait soldées, puis enregistrera immédiatement le paiement corrigé. L’ancienne opération restera visible dans le journal d’audit."
+  :"CHEBSEL annulera uniquement le paiement d’origine et restaurera les dettes concernées. Aucun nouveau paiement ne sera créé. Vous pourrez l’enregistrer plus tard.";
+}
+function openPaymentCorrectionModal(pid){
+ if(!requirePermission('finance.payment'))return;
+ const p=paymentById(pid);if(!p||p.status==='cancelled'){alert('Paiement introuvable ou déjà annulé.');return}
+ correctionPaymentId.value=pid;
+ const m=centralMembers().find(x=>x.id===p.memberId);
+ correctionOriginal.innerHTML=`<b>Paiement d’origine</b><div class="memberMeta">${escapeHtml(p.receiptNo||p.id)} • ${escapeHtml(fullName(m))} • ${money(p.amount)} • ${escapeHtml(p.date||'')} • ${escapeHtml(p.ref||'Sans référence')}</div>`;
+ correctionMember.innerHTML=centralMembers().filter(x=>x.active!==false).map(x=>`<option value="${x.id}" ${x.id===p.memberId?'selected':''}>${escapeHtml(fullName(x))}</option>`).join('');
+ correctionAmount.value=p.amount;correctionDate.value=p.date||new Date().toISOString().slice(0,10);correctionRef.value=p.ref||'';correctionReason.value='';
+ correctionMode.value='replace';toggleCorrectionFields();
+ paymentCorrectionModal.classList.add('open')
+}
+function closePaymentCorrectionModal(){paymentCorrectionModal.classList.remove('open')}
+
+async function savePaymentCorrection(){
+ if(!requirePermission('finance.payment'))return;
+ if(!(await criticalGuard('finance.payment','Correction / annulation d’un paiement')))return;
+
+ const pid=correctionPaymentId.value,p=paymentById(pid);
+ if(!p||p.status==='cancelled'){alert('Ce paiement n’est plus disponible pour correction.');return}
+
+ const mode=correctionMode.value,reason=(correctionReason.value||'').trim();
+ if(!reason){alert('Indiquez le motif de la correction ou de l’annulation.');return}
+
+ let mid='',amount=0,date='',ref='';
+ if(mode==='replace'){
+   mid=correctionMember.value;
+   amount=Number(correctionAmount.value||0);
+   date=correctionDate.value;
+   ref=(correctionRef.value||'').trim();
+   if(amount<=0){alert('Saisissez un montant correct.');return}
+   if(!date){alert('Indiquez la date du paiement corrigé.');return}
+ }
+
+ const before=JSON.parse(JSON.stringify(p));
+ const rev=reversePaymentAllocations(p);
+ if(!rev.ok){
+   alert('Opération impossible automatiquement : '+rev.problems.join(' ; ')+'. Vérifiez le journal et les écritures concernées.');
+   return
+ }
+
+ let log=getPaymentLog(),idx=log.findIndex(x=>x.id===pid);
+ if(idx<0){alert('Journal de paiement introuvable.');return}
+
+ log[idx]={
+   ...log[idx],
+   status:'cancelled',
+   cancelledAt:new Date().toISOString(),
+   cancelledBy:currentUser()?.name||'',
+   correctionReason:reason,
+   correctionMode:mode
+ };
+ savePaymentLog(log);
+
+ // Option 1: cancel only, no replacement payment
+ if(mode==='cancelOnly'){
+   const oldMember=centralMembers().find(x=>x.id===p.memberId);
+   audit(
+     'Paiement annulé sans remplacement',
+     `${fullName(oldMember)} • ${money(p.amount)} • ${reason}`,
+     {entity:'payment',entityId:pid,before,after:paymentById(pid)}
+   );
+   closePaymentCorrectionModal();
+   syncBridge();renderProfile(p.memberId);refreshHome();
+   alert('Paiement annulé. Les dettes concernées ont été restaurées. Aucun nouveau paiement n’a été créé.');
+   return
+ }
+
+ // Option 2: cancel and immediately create corrected payment
+ const result=applyPaymentToMember(mid,amount,date,ref,{correctsPaymentId:pid,note:reason});
+ if(!result.ok){
+   // Roll back original cancellation if replacement fails
+   const f=safeParse(FIN_KEY)||{};
+   for(const a of p.alloc||[]){
+     const e=(f.entries||[]).find(x=>x.id===a.entryId);
+     if(e)e.paid=Number(e.paid||0)+Number(a.amount||0)
+   }
+   saveJSON(FIN_KEY,f);
+   log=getPaymentLog();idx=log.findIndex(x=>x.id===pid);
+   if(idx>=0)log[idx]=before;
+   savePaymentLog(log);
+   alert('Le paiement original a été restauré. Correction non enregistrée : '+result.error);
+   return
+ }
+
+ const replacement=result.payment;
+ log=getPaymentLog();idx=log.findIndex(x=>x.id===pid);
+ if(idx>=0){
+   log[idx].replacementPaymentId=replacement.id;
+   savePaymentLog(log)
+ }
+
+ const oldMember=centralMembers().find(x=>x.id===p.memberId),
+       newMember=centralMembers().find(x=>x.id===mid);
+
+ audit(
+   'Paiement corrigé avec remplacement',
+   `${fullName(oldMember)} ${money(p.amount)} → ${fullName(newMember)} ${money(amount)} • ${reason}`,
+   {entity:'payment',entityId:pid,before,after:{cancelledOriginal:paymentById(pid),replacement}}
+ );
+
+ closePaymentCorrectionModal();
+ syncBridge();renderProfile(mid);refreshHome();
+ showReceipt(mid,replacement.applied,date,ref,replacement.alloc,replacement.unapplied,replacement.receiptNo)
+}
+async function cancelPayment(pid){
+ if(!requirePermission('finance.payment'))return;
+ if(!(await criticalGuard('finance.payment','Annulation d’un paiement')))return;
+ const p=paymentById(pid);if(!p||p.status==='cancelled'){alert('Paiement introuvable ou déjà annulé.');return}
+ const reason=prompt('Motif de l’annulation :');if(reason===null)return;if(!reason.trim()){alert('Le motif est obligatoire.');return}
+ const before=JSON.parse(JSON.stringify(p)),rev=reversePaymentAllocations(p);
+ if(!rev.ok){alert('Annulation automatique impossible : '+rev.problems.join(' ; '));return}
+ const log=getPaymentLog(),idx=log.findIndex(x=>x.id===pid);
+ log[idx]={...log[idx],status:'cancelled',cancelledAt:new Date().toISOString(),cancelledBy:currentUser()?.name||'',correctionReason:reason.trim()};
+ savePaymentLog(log);
+ const m=centralMembers().find(x=>x.id===p.memberId);
+ audit('Paiement annulé',`${fullName(m)} • ${money(p.amount)} • ${reason.trim()}`,{entity:'payment',entityId:pid,before,after:log[idx]});
+ syncBridge();renderProfile(p.memberId);refreshHome()
+}
+function showReceipt(mid,amount,date,ref,alloc,remain,receiptNo=''){
+ const m=centralMembers().find(x=>x.id===mid),n=receiptNo||('REC-'+Date.now().toString().slice(-8));
  const f=safeParse(FIN_KEY)||{},es=(f.entries||[]).filter(e=>e.memberId===mid),bal=es.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0);
  receiptContent.innerHTML=`<div class="receipt" id="receiptPrint"><h2>CHŒUR D’HOMME DE L’ÉGLISE BAPTISTE SEL ET LUMIÈRE</h2><div style="text-align:center;font-weight:800">REÇU DE PAIEMENT</div><div class="rmeta" style="text-align:center">${n}</div><table><tr><td>Date</td><td>${escapeHtml(date)}</td></tr><tr><td>Membre</td><td>${escapeHtml(fullName(m))}</td></tr><tr><td>Montant reçu</td><td class="total">${money(amount)}</td></tr><tr><td>Référence</td><td>${escapeHtml(ref||'—')}</td></tr><tr><td>Solde restant</td><td>${money(bal)}</td></tr></table><div style="margin-top:12px;font-size:12px"><b>Affectation :</b>${alloc.map(x=>`<div>${escapeHtml(x.label)} : ${money(x.amount)}</div>`).join('')}${remain>0?`<div>Excédent non affecté : ${money(remain)}</div>`:''}</div><div class="sign"><span>Signature du payeur</span><span>Signature du trésorier</span></div></div>`;
  receiptModal.classList.add('open')
@@ -479,6 +686,7 @@ function globalBack(){
  if(receiptModal?.classList.contains('open')){closeReceipt();return}
  if(paymentModal?.classList.contains('open')){closePaymentModal();return}
  if(memberModal?.classList.contains('open')){closeMemberModal();return}
+ if(paymentCorrectionModal?.classList.contains('open')){closePaymentCorrectionModal();return}
  if(restoreTestModal?.classList.contains('open')){closeRestoreTestModal();return}
  if(pinModal?.classList.contains('open')){closePinModal();return}
  if(loginModal?.classList.contains('open')){closeLoginModal();return}
@@ -550,7 +758,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.2.1';
+const APP_VERSION='1.2.3';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -736,17 +944,17 @@ function validateBackupPayload(p){const e=[];if(!p||typeof p!=='object')e.push('
 function openRestoreTestModal(){restoreTestFile.value='';restoreTestResult.innerHTML='Sélectionnez un fichier.';restoreTestModal.classList.add('open')} function closeRestoreTestModal(){restoreTestModal.classList.remove('open')}
 function testBackupFile(){const file=restoreTestFile.files[0];if(!file){alert('Choisissez un fichier JSON.');return}const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result),v=validateBackupPayload(p);restoreTestResult.innerHTML=v.ok?`<div class="statusGood">✓ Sauvegarde valide</div><div class="memberMeta">${v.members} membres • ${v.calls} appels • ${v.entries} écritures</div>`:`<div class="statusBad">Sauvegarde invalide</div><div class="memberMeta">${escapeHtml(v.errors.join(' • '))}</div>`}catch(e){restoreTestResult.innerHTML='<div class="statusBad">JSON illisible ou corrompu.</div>'}};r.readAsText(file)}
 async function restorePortalBackup(){if(!requirePermission('restore'))return;if(!(await criticalGuard('restore','Restauration complète')))return;const file=restoreFile.files[0];if(!file){alert('Sélectionnez un JSON.');return}const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result),v=validateBackupPayload(p);if(!v.ok)throw new Error(v.errors.join(' ; '));if(!confirm(`Sauvegarde valide : ${v.members} membres, ${v.calls} appels, ${v.entries} écritures. Restaurer ?`))return;saveJSON(MASTER_KEY,p.masterMembers.map(normalizeMember));saveJSON(ATT_KEY,p.attendance);saveJSON(FIN_KEY,p.finance);if(Array.isArray(p.audit))saveJSON(AUDIT_KEY,p.audit);if(p.monthlyClosings)saveJSON(CLOSE_KEY,p.monthlyClosings);if(Array.isArray(p.paymentLog))saveJSON(PAYMENT_LOG_KEY,p.paymentLog);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Restauration complète',file.name,{entity:'backup',after:{members:v.members,calls:v.calls,entries:v.entries}});syncMembersToApps();syncBridge();closeRestoreModal();refreshHome();alert('Restauration terminée.')}catch(e){alert('Restauration impossible : '+e.message)}};r.readAsText(file)}
-function portalBackup(){syncBridge();const a=getAuth(),payload={app:'CHEBSEL Portal Stable',version:'1.0',exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',committee:Object.values(a.users).map(x=>({key:x.key,name:x.name,role:x.role,configured:!!x.pinHash})),masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],paymentLog:safeParse(PAYMENT_LOG_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{}};const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),ln=document.createElement('a');ln.href=URL.createObjectURL(b);ln.download='Sauvegarde_CHEBSEL_v1_'+new Date().toISOString().slice(0,10)+'.json';ln.click();setTimeout(()=>URL.revokeObjectURL(ln.href),500);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde complète','Export JSON v1.1.2',{entity:'backup'});refreshHome()}
+function portalBackup(){syncBridge();const a=getAuth(),payload={app:'CHEBSEL Portal Stable',version:'1.2.3',exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',committee:Object.values(a.users).map(x=>({key:x.key,name:x.name,role:x.role,configured:!!x.pinHash})),masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],paymentLog:safeParse(PAYMENT_LOG_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{}};const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),ln=document.createElement('a');ln.href=URL.createObjectURL(b);ln.download='Sauvegarde_CHEBSEL_v1_'+new Date().toISOString().slice(0,10)+'.json';ln.click();setTimeout(()=>URL.revokeObjectURL(ln.href),500);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde complète','Export JSON v1.2.3',{entity:'backup'});refreshHome()}
 function renderAudit(){const log=safeParse(AUDIT_KEY)||[];auditList.innerHTML=log.length?log.map(x=>`<div class="auditRow"><b>${escapeHtml(x.action)}</b><div class="memberMeta">${new Date(x.at).toLocaleString('fr-FR')} • ${escapeHtml(x.user||'')} • ${escapeHtml(x.role||'')} ${x.details?'• '+escapeHtml(x.details):''}</div>${x.before!==null&&x.before!==undefined?`<details><summary class="memberMeta">Ancien / nouveau</summary><pre style="white-space:pre-wrap;font-size:.72rem">${escapeHtml(JSON.stringify({avant:x.before,apres:x.after},null,2))}</pre></details>`:''}</div>`).join(''):'<div class="empty">Journal vide.</div>'}
 async function clearAudit(){if(!requirePermission('audit.clear'))return;if(!(await criticalGuard('audit.clear','Effacement du journal')))return;if(!confirm('Effacer le journal local ?'))return;localStorage.removeItem(AUDIT_KEY);renderAudit()}
 function openHandover(){handoverDate.value=new Date().toISOString().slice(0,10);handoverView.classList.add('open');renderHandover()} function closeHandover(){handoverView.classList.remove('open')}
 function renderHandover(){const f=safeParse(FIN_KEY)||{},cl=safeParse(CLOSE_KEY)||{},members=centralMembers(),debt=(f.entries||[]).reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),last=Object.keys(cl).sort().pop(),b=localStorage.getItem(BACKUP_KEY);handoverBody.innerHTML=`<div class="profilePanel" id="handoverPrint"><h2>FICHE DE PASSATION — CHEBSEL</h2><div class="memberMeta">Chœur d’Homme de l’Église Baptiste Sel et Lumière • v${APP_VERSION}</div><div class="helpSection"><h4>Comité</h4><p>Président : Sinsurin Jacques<br>Secrétaire : Jose Sterlin<br>Trésorier : Chery Agnace</p></div><div class="helpSection"><h4>État</h4><p>Date : ${escapeHtml(handoverDate.value||'—')}<br>Membres : ${members.length}<br>Créances : ${money(debt)}<br>Dernière clôture : ${last||'Aucune'}<br>Dernière sauvegarde : ${b?new Date(b).toLocaleString('fr-FR'):'Aucune'}<br>Observation : ${escapeHtml(handoverNote.value||'—')}</p></div><div class="helpSection"><h4>Avant transfert</h4><p>Faire une sauvegarde JSON, la tester, lancer le diagnostic, remettre le fichier au nouveau comité, puis restaurer et configurer de nouveaux PIN sur le nouvel appareil.</p></div><div style="margin-top:36px;display:flex;justify-content:space-between"><span>Président sortant : __________</span><span>Président entrant : __________</span></div></div>`}
 function printHandover(){const e=document.getElementById('handoverPrint');if(!e)return;const w=window.open('','_blank');w.document.write('<html><head><title>Passation CHEBSEL</title></head><body>'+e.outerHTML+'</body></html>');w.document.close();w.print()}
 function openHelp(){helpView.classList.add('open');renderHelp()} function closeHelp(){helpView.classList.remove('open')}
-function renderHelp(){helpBody.innerHTML=`<h2>CHEBSEL v1.2.1 — Manuel</h2><div class="helpSection"><h4>Connexion</h4><p>Lecture seule par défaut. Le Président initialise le premier PIN; il configure ensuite les PIN du Secrétaire et du Trésorier.</p></div><div class="helpSection"><h4>Rôles</h4><p>Président : accès complet. Secrétaire : membres et appel. Trésorier : finances, paiements et clôture.</p></div><div class="helpSection"><h4>Règles financières</h4><p>Cotisation mensuelle 125 G; RNM 25 G; ANM 50 G; ANM pendant une prestation 100 G.</p></div><div class="helpSection"><h4>Discipline</h4><p>Le règlement prévoit qu’un retard jusqu’à 15 minutes reste un retard; au-delà, il est considéré comme une absence.</p></div><div class="helpSection"><h4>Sauvegarde</h4><p>Sauvegarder après les saisies importantes et au minimum chaque mois. Tester le JSON avant passation/restauration.</p></div><div class="helpSection"><h4>Journal des mises à jour</h4><p><b>v1.2.1 :</b> ANM prestation portée à 250 G ; cotisation mensuelle obligatoire de 125 G automatiquement comptabilisée en dette pour chaque mois civil non payé à partir d’août 2026. <br><b>Correctifs v1.1.2 :</b> version visible uniformisée, bug VISITOR_KEY corrigé, connexion forcée à chaque lancement, conservation des PIN déjà enregistrés dans chebsel_auth_v1. <br><b>v1.1.2 :</b> PIN, rôles, lecture seule, verrouillage critique, audit enrichi, détection des doublons, diagnostic, tableau mensuel, clôture verrouillée, passation et test de sauvegarde.</p></div>`}
+function renderHelp(){helpBody.innerHTML=`<h2>CHEBSEL v1.2.3 — Manuel</h2><div class="helpSection"><h4>Connexion</h4><p>Lecture seule par défaut. Le Président initialise le premier PIN; il configure ensuite les PIN du Secrétaire et du Trésorier.</p></div><div class="helpSection"><h4>Rôles</h4><p>Président : accès complet. Secrétaire : membres et appel. Trésorier : finances, paiements et clôture.</p></div><div class="helpSection"><h4>Règles financières</h4><p>Cotisation mensuelle 125 G; RNM 25 G; ANM 50 G; ANM pendant une prestation 100 G.</p></div><div class="helpSection"><h4>Discipline</h4><p>Le règlement prévoit qu’un retard jusqu’à 15 minutes reste un retard; au-delà, il est considéré comme une absence.</p></div><div class="helpSection"><h4>Sauvegarde</h4><p>Sauvegarder après les saisies importantes et au minimum chaque mois. Tester le JSON avant passation/restauration.</p></div><div class="helpSection"><h4>Journal des mises à jour</h4><p><b>v1.2.3 :</b> correction des paiements rendue flexible : remplacement immédiat facultatif ou simple annulation avec réenregistrement ultérieur. <br><b>v1.2.2 :</b> correction et annulation sécurisées des paiements, traçabilité des affectations, restauration automatique des dettes et audit avant/après. <br><b>v1.2.1 :</b> ANM prestation portée à 250 G ; cotisation mensuelle obligatoire de 125 G automatiquement comptabilisée en dette pour chaque mois civil non payé à partir d’août 2026. <br><b>Correctifs v1.1.2 :</b> version visible uniformisée, bug VISITOR_KEY corrigé, connexion forcée à chaque lancement, conservation des PIN déjà enregistrés dans chebsel_auth_v1. <br><b>v1.1.2 :</b> PIN, rôles, lecture seule, verrouillage critique, audit enrichi, détection des doublons, diagnostic, tableau mensuel, clôture verrouillée, passation et test de sauvegarde.</p></div>`}
 function refreshHome(){syncBridge();const members=centralMembers(),a=safeParse(ATT_KEY)||{},f=safeParse(FIN_KEY)||{},calls=Array.isArray(a.calls)?a.calls:[],entries=Array.isArray(f.entries)?f.entries:[],active=members.filter(m=>m.active).length,last=[...calls].sort((x,y)=>(y.date||'').localeCompare(x.date||''))[0];let present='—';if(last?.records)present=Object.values(last.records).filter(r=>r.status==='P').length;const debt=entries.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),auto=entries.filter(e=>e.bridgeAuto===true).length;renderBackupHealth();renderMonthlyDashboard();updateAuthUI();homeStats.innerHTML=[["Membres actifs",active],["Présents dernier appel",present],["Dette totale",money(debt)],["Amendes liées",auto]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}
 
-memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});
+memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});paymentCorrectionModal.addEventListener('click',e=>{if(e.target===paymentCorrectionModal)closePaymentCorrectionModal()});
 window.addEventListener('storage',()=>{syncBridge();refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()});
 setInterval(()=>{syncBridge();if(!viewer.classList.contains('open')){refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()}},1400);
 
