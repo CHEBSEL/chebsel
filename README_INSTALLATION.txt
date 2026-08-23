@@ -1,29 +1,22 @@
-CHEBSEL v1.2.3 — CORRECTION FLEXIBLE DES PAIEMENTS
+CHEBSEL v1.3.2 — STATUTS D’APPEL NORMALISÉS
 
-NOUVEAUTÉ
-Lorsqu’un paiement est erroné, le Président ou le Trésorier dispose maintenant de deux choix :
+STATUTS OFFICIELS
+- Présent : 0 G
+- Retard motivé : compte comme retard, 0 G
+- RNM — Retard non motivé : 25 G
+- Absence motivée : compte comme absence, 0 G
+- ANM — Absence non motivée : 50 G
+- ANM prestation — Absence non motivée lors d’une prestation : 250 G
 
-1. CORRIGER ET REMPLACER IMMÉDIATEMENT
-CHEBSEL :
-- annule comptablement le paiement d’origine ;
-- restaure les dettes qu’il avait soldées ;
-- enregistre immédiatement le nouveau paiement corrigé ;
-- conserve l’ancienne et la nouvelle opération dans le journal d’audit.
+PRINCIPE
+Une situation motivée reste comptabilisée dans les statistiques de présence/retard/absence, mais ne génère aucune amende.
+Seules les situations non motivées génèrent une dette d’amende.
 
-2. ANNULER SEULEMENT
-CHEBSEL :
-- annule comptablement le paiement d’origine ;
-- restaure les dettes concernées ;
-- ne crée aucun nouveau paiement ;
-- permet d’enregistrer le bon paiement plus tard.
-
-Le motif est obligatoire dans les deux cas.
-La confirmation par code d’accès / PIN reste obligatoire.
-
-RÈGLES CONSERVÉES
-- Cotisation mensuelle obligatoire : 125 G, automatisée à partir d’août 2026.
-- RNM : 25 G.
-- ANM : 50 G.
-- ANM lors d’une prestation : 250 G.
-- Codes d’accès globaux multi-appareils.
-- Accès visiteur en lecture seule.
+AUTRES RÈGLES CONSERVÉES
+- Cotisation mensuelle obligatoire : 125 G à partir d’août 2026.
+- Calendrier annuel administrable.
+- Prestations automatiques du 2e dimanche à 7h00 et 17h00.
+- Annulation/réactivation motivée des prestations régulières.
+- Correction flexible des paiements.
+- Codes d’accès globaux.
+- Mode visiteur restreint.

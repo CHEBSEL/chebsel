@@ -1,7 +1,7 @@
 {
-  "name": "CHEBSEL v1.2.3 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "name": "CHEBSEL v1.3.2 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
   "short_name": "CHEBSEL",
-  "description": "CHEBSEL v1.2.3 : correction flexible des paiements, codes d’accès globaux, cotisations mensuelles obligatoires, appel, audit et sauvegarde.",
+  "description": "CHEBSEL v1.3.2 : statuts d’appel normalisés avec retard/absence motivés sans amende, calendrier administrable, finances et audit.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
