@@ -1,0 +1,129 @@
++  if(changed)localStorage.setItem(CALENDAR_OVERRIDE_KEY,JSON.stringify(ov))
++ }
++}
++function syncSourceRecords(){
++ const members=(safeParse(MASTER_KEY)||[]).map(m=>({...m,syncId:m.syncId||uuidv4()}));
++ const a=safeParse(ATT_KEY)||{}, calls=Array.isArray(a.calls)?a.calls:[];
++ const attendance_events=[],attendance_records=[];
++ for(const c0 of calls){
++  const c={...c0};const records=c.records||{};delete c.records;
++  c.syncId=c.syncId||uuidv4();attendance_events.push(c);
++  for(const [memberId,r0] of Object.entries(records)){
++   if(!r0)continue;
++   attendance_records.push({...r0,syncId:r0.syncId||uuidv4(),attendanceEventSyncId:c.syncId,legacyEventId:c0.id||'',memberId})
++  }
++ }
++ const f=safeParse(FIN_KEY)||{},financial_entries=(Array.isArray(f.entries)?f.entries:[]).map(e=>({...e,syncId:e.syncId||uuidv4()}));
++ const payments=(safeParse(PAYMENT_LOG_KEY)||[]).map(p=>({...p,syncId:p.syncId||uuidv4()}));
++ const payment_allocations=[];
++ for(const p of payments)for(const al of p.alloc||[])payment_allocations.push({...al,syncId:al.syncId||uuidv4(),paymentSyncId:p.syncId,paymentLegacyId:p.id||''});
++ const calendar_events=(safeParse(CALENDAR_KEY)||[]).map(e=>({...e,syncId:e.syncId||uuidv4()}));
++ const ovs=safeParse(CALENDAR_OVERRIDE_KEY)||{},calendar_overrides=Object.entries(ovs).map(([eventId,o])=>({...o,syncId:o.syncId||uuidv4(),eventId}));
++ const cls=safeParse(CLOSE_KEY)||{},monthly_closings=Object.entries(cls).map(([month,v])=>({...(v&&typeof v==='object'?v:{value:v}),syncId:(v&&v.syncId)||`close-${month}`,month}));
++ const audit_logs=(safeParse(AUDIT_KEY)||[]).map(x=>({...x,syncId:x.syncId||x.id||uuidv4()}));
++ return {members,attendance_events,attendance_records,financial_entries,payments,payment_allocations,calendar_events,calendar_overrides,monthly_closings,audit_logs}
++}
++async function queueOutbox(entity,entityId,operation,payload){
++ if(SYNC_READY_BOOTING)return;
++ const id=`${entity}:${entityId}`;
++ const prev=await idbGet('outbox',id);
++ await idbPut('outbox',{
++  id,operationId:prev?.operationId||uuidv4(),entity,entityId,operation,payload,
++  status:'pending',retryCount:prev?.retryCount||0,createdAt:prev?.createdAt||syncNowISO(),updatedAt:syncNowISO()
++ });
++}
++async function mirrorStore(storeName,records,enqueueChanges=false){
++ const current=await idbAll(storeName),existing=new Map(current.map(x=>[x.syncId,x])),incoming=new Map(records.map(x=>[x.syncId,x]));
++ for(const rec of records){
++  const old=existing.get(rec.syncId);
++  const changed=!old||syncComparable(old)!==syncComparable(rec);
++  const next={...rec,_syncStatus:changed&&enqueueChanges?'pending':(old?old._syncStatus||'synced':'synced'),_localUpdatedAt:changed?syncNowISO():(old?old._localUpdatedAt||syncNowISO():syncNowISO()),_serverUpdatedAt:old?old._serverUpdatedAt||null:null,_version:(old?Number(old._version||0):0)+(changed&&enqueueChanges?1:0),_deletedAt:null};
++  await idbPut(storeName,next);
++  if(changed&&enqueueChanges)await queueOutbox(storeName,rec.syncId,'UPSERT',rec)
++ }
++ for(const [id,old] of existing){
++  if(!incoming.has(id)&&!old._deletedAt){
++   const tomb={...old,_syncStatus:enqueueChanges?'pending':'synced',_deletedAt:syncNowISO(),_localUpdatedAt:syncNowISO(),_version:Number(old._version||0)+(enqueueChanges?1:0)};
++   await idbPut(storeName,tomb);
++   if(enqueueChanges)await queueOutbox(storeName,id,'DELETE',{syncId:id,_deletedAt:tomb._deletedAt})
++  }
++ }
++}
++async function syncReadyReconcile(enqueueChanges=true){
++ try{
++  await syncDBOpen();
++  if(!SYNC_READY_BOOTING)document.getElementById('syncReadyState')&&(syncReadyState.textContent='Préparation…');
++  const all=syncSourceRecords();
++  for(const [store,records] of Object.entries(all))await mirrorStore(store,records,enqueueChanges);
++  const meta={key:'state',schemaVersion:1,appVersion:APP_VERSION,lastPreparedAt:syncNowISO(),cloudConnected:false};
++  await idbPut('meta',meta);
++  await updateSyncReadyUI();
++  return true
++ }catch(err){
++  console.error('Sync-ready reconcile',err);
++  const el=document.getElementById('syncReadyState');if(el)el.textContent='Erreur locale';
++  return false
++ }
++}
++function syncReadySchedule(){
++ clearTimeout(SYNC_RECONCILE_TIMER);
++ SYNC_RECONCILE_TIMER=setTimeout(()=>syncReadyReconcile(true),350)
++}
++function syncReadyOnLocalWrite(k,v){
++ if(SYNC_TRACKED_KEYS.has(k)&&!SYNC_READY_BOOTING)syncReadySchedule()
++}
++async function updateSyncReadyUI(){
++ if(!document.getElementById('syncReadyPanel'))return;
++ try{
++  await syncDBOpen();
++  const pending=await idbCountByStatus('outbox','pending'),conflicts=await idbCountByStatus('conflicts','open'),meta=await idbGet('meta','state');
++  syncOnlineState.textContent=navigator.onLine?'🟢 En ligne':'🔴 Hors connexion';
++  syncPendingCount.textContent=String(pending);
++  syncConflictCount.textContent=String(conflicts);
++  syncLastPrepared.textContent=meta?.lastPreparedAt?new Date(meta.lastPreparedAt).toLocaleString('fr-FR'):'—';
++  syncReadyState.textContent=pending?`🟡 ${pending} en attente`:'🟢 Base locale prête';
++  if(SYNC_QUEUE_VISIBLE)await renderSyncQueue()
++ }catch(e){syncReadyState.textContent='⚠ IndexedDB indisponible'}
++}
++async function renderSyncQueue(){
++ const rows=(await idbAll('outbox')).sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
++ syncQueueList.innerHTML=rows.length?rows.slice(0,100).map(x=>`<div class="syncQueueRow"><b>${escapeHtml(x.operation)} • ${escapeHtml(x.entity)}</b><div class="memberMeta">${escapeHtml(x.entityId)} • ${escapeHtml(x.status)} • ${x.updatedAt?new Date(x.updatedAt).toLocaleString('fr-FR'):''}</div></div>`).join(''):'<div class="empty">Aucune modification locale en attente.</div>'
++}
++async function toggleSyncQueue(){
++ SYNC_QUEUE_VISIBLE=!SYNC_QUEUE_VISIBLE;syncQueueList.style.display=SYNC_QUEUE_VISIBLE?'block':'none';
++ if(SYNC_QUEUE_VISIBLE)await renderSyncQueue()
++}
++async function exportSyncReadyDiagnostic(){
++ await syncReadyReconcile(true);
++ const stores=['members','attendance_events','attendance_records','financial_entries','payments','payment_allocations','calendar_events','calendar_overrides','monthly_closings','audit_logs','outbox','conflicts','meta'];
++ const counts={};for(const s of stores)counts[s]=(await idbAll(s)).length;
++ const pending=(await idbAll('outbox')).filter(x=>x.status==='pending');
++ const payload={app:'CHEBSEL',version:APP_VERSION,mode:'sync-ready-local-only',exportedAt:syncNowISO(),online:navigator.onLine,counts,pendingOperations:pending.map(x=>({operationId:x.operationId,entity:x.entity,entityId:x.entityId,operation:x.operation,status:x.status,updatedAt:x.updatedAt}))};
++ const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Diagnostic_SyncReady_CHEBSEL_${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)
++}
++async function initSyncReady(){
++ try{
++  await syncDBOpen();
++  syncLegacyMigrateIds();
++  // First migration is a clean baseline: existing data are mirrored but not queued for upload.
++  const first=!(await idbGet('meta','state'));
++  await syncReadyReconcile(!first);
++  SYNC_READY_BOOTING=false;
++  if(first){
++   await idbPut('meta',{key:'state',schemaVersion:1,appVersion:APP_VERSION,lastPreparedAt:syncNowISO(),cloudConnected:false,migratedFrom:'localStorage'});
++  }
++  await updateSyncReadyUI()
++ }catch(e){SYNC_READY_BOOTING=false;console.error(e);updateSyncReadyUI()}
++}
++window.addEventListener('online',()=>{updateSyncReadyUI();syncReadyReconcile(true)});
++window.addEventListener('offline',updateSyncReadyUI);
++document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncReadyReconcile(true)});
++setInterval(()=>{if(!SYNC_READY_BOOTING)syncReadyReconcile(true)},15000);
++
++
++const CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
++const CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
++const CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
++let CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
++function getCloudConfig(){const x=safeParse(CLOUD_CONFIG_KEY),c=x&&typeof x==='object'?x:{};return {url:c.url||CLOUD_DEFAULT_URL,anonKey:c.anonKey||CLOUD_DEFAULT_PUBLISHABLE_KEY,email:c.email||'',configuredAt:c.configuredAt||''}}
++function cloudConfigured(){const c=getCloudConfig();return !!(c.url&&c.anonKey)}
