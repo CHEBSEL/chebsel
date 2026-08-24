@@ -1,0 +1,166 @@
+ function applyShellTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem(SHELL_THEME,t);themeBtn.textContent=t==='dark'?'☀️':'🌙';themeMeta.setAttribute('content',t==='dark'?'#05080d':'#0b1220')}
+ 
+@@ -762,6 +807,7 @@ function globalBack(){
+  if(receiptModal?.classList.contains('open')){closeReceipt();return}
+  if(paymentModal?.classList.contains('open')){closePaymentModal();return}
+  if(memberModal?.classList.contains('open')){closeMemberModal();return}
++ if(cloudConfigModal?.classList.contains('open')){closeCloudConfigModal();return}
+  if(recurringOverrideModal?.classList.contains('open')){closeRecurringOverrideModal();return}
+  if(activityModal?.classList.contains('open')){closeActivityModal();return}
+  if(paymentCorrectionModal?.classList.contains('open')){closePaymentCorrectionModal();return}
+@@ -818,7 +864,7 @@ function restorePortalBackup(){
+ 
+ function portalBackup(){
+  syncBridge();
+- const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},calendar:customActivities(),calendarOverrides:calendarOverrides()};
++ const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},calendar:customActivities(),calendarOverrides:calendarOverrides(),syncReady:{schemaVersion:1,cloudConnected:false,dbName:SYNC_DB_NAME}};
+  const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Sauvegarde_CHEBSEL_Portail_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde portail','Export JSON complet');refreshHome()
+ }
+@@ -837,7 +883,7 @@ function refreshHome(){
+ }
+ 
+ 
+-const APP_VERSION='1.3.2';
++const APP_VERSION='1.5.1';
+ const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
+ const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
+ const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
+@@ -854,6 +900,288 @@ function getAuth(){
+ }
+ function currentSession(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null')}catch(e){return null}}
+ function isVisitor(){return sessionStorage.getItem(VISITOR_KEY)==='1'}
++
++// =======================
++// CHEBSEL v1.4 Sync-Ready
++// =======================
++const SYNC_DB_NAME='chebsel_sync_ready_v1';
++const SYNC_DB_VERSION=1;
++const SYNC_META_KEY='chebsel_sync_ready_meta_v1';
++const SYNC_TRACKED_KEYS=new Set([
++ MASTER_KEY,ATT_KEY,FIN_KEY,PAYMENT_LOG_KEY,AUDIT_KEY,CLOSE_KEY,CALENDAR_KEY,CALENDAR_OVERRIDE_KEY
++]);
++let SYNC_DB=null;
++let SYNC_READY_BOOTING=true;
++let SYNC_RECONCILE_TIMER=null;
++let SYNC_QUEUE_VISIBLE=false;
++
++function uuidv4(){
++ if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
++ const a=crypto?.getRandomValues?crypto.getRandomValues(new Uint8Array(16)):Array.from({length:16},()=>Math.floor(Math.random()*256));
++ a[6]=(a[6]&15)|64;a[8]=(a[8]&63)|128;
++ const h=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
++ return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`
++}
++function syncNowISO(){return new Date().toISOString()}
++function syncComparable(obj){
++ const c=JSON.parse(JSON.stringify(obj||{}));
++ delete c._syncStatus;delete c._localUpdatedAt;delete c._serverUpdatedAt;delete c._version;delete c._deletedAt;
++ return JSON.stringify(c)
++}
++function syncDBOpen(){
++ if(SYNC_DB)return Promise.resolve(SYNC_DB);
++ return new Promise((resolve,reject)=>{
++  const req=indexedDB.open(SYNC_DB_NAME,SYNC_DB_VERSION);
++  req.onupgradeneeded=()=>{
++   const db=req.result;
++   const defs=[
++    ['members','syncId'],['attendance_events','syncId'],['attendance_records','syncId'],
++    ['financial_entries','syncId'],['payments','syncId'],['payment_allocations','syncId'],
++    ['calendar_events','syncId'],['calendar_overrides','syncId'],['monthly_closings','syncId'],
++    ['audit_logs','syncId'],['outbox','id'],['conflicts','id'],['meta','key'],['devices','id']
++   ];
++   for(const [name,keyPath] of defs){
++    if(!db.objectStoreNames.contains(name)){
++     const s=db.createObjectStore(name,{keyPath});
++     if(name==='outbox'){
++      s.createIndex('status','status',{unique:false});
++      s.createIndex('entity','entity',{unique:false});
++     }
++     if(name==='conflicts')s.createIndex('status','status',{unique:false});
++    }
++   }
++  };
++  req.onsuccess=()=>{SYNC_DB=req.result;resolve(SYNC_DB)};
++  req.onerror=()=>reject(req.error)
++ })
++}
++async function idbAll(store){
++ const db=await syncDBOpen();
++ return new Promise((resolve,reject)=>{
++  const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).getAll();
++  req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)
++ })
++}
++async function idbGet(store,key){
++ const db=await syncDBOpen();
++ return new Promise((resolve,reject)=>{
++  const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).get(key);
++  req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)
++ })
++}
++async function idbPut(store,value){
++ const db=await syncDBOpen();
++ return new Promise((resolve,reject)=>{
++  const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);
++  tx.oncomplete=()=>resolve(value);tx.onerror=()=>reject(tx.error)
++ })
++}
++async function idbDelete(store,key){
++ const db=await syncDBOpen();
++ return new Promise((resolve,reject)=>{
++  const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);
++  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)
++ })
++}
++async function idbCountByStatus(store,status){
++ const db=await syncDBOpen();
++ return new Promise((resolve,reject)=>{
++  const tx=db.transaction(store,'readonly'),s=tx.objectStore(store);
++  if(!s.indexNames.contains('status')){const r=s.count();r.onsuccess=()=>resolve(r.result||0);r.onerror=()=>reject(r.error);return}
++  const r=s.index('status').count(IDBKeyRange.only(status));
++  r.onsuccess=()=>resolve(r.result||0);r.onerror=()=>reject(r.error)
++ })
++}
++function ensureSyncId(obj,prefix='rec'){
++ if(!obj.syncId)obj.syncId=uuidv4();
++ return obj.syncId
++}
++function syncLegacyMigrateIds(){
++ // Keep legacy IDs for current app references, add stable syncId for future cloud records.
++ const members=safeParse(MASTER_KEY);
++ if(Array.isArray(members)){
++  let changed=false;for(const m of members){if(!m.syncId){m.syncId=uuidv4();changed=true}}
++  if(changed)localStorage.setItem(MASTER_KEY,JSON.stringify(members))
++ }
++ const a=safeParse(ATT_KEY);
++ if(a&&Array.isArray(a.calls)){
++  let changed=false;
++  for(const c of a.calls){
++   if(!c.syncId){c.syncId=uuidv4();changed=true}
++   if(c.records)for(const [mid,r] of Object.entries(c.records)){if(r&&!r.syncId){r.syncId=uuidv4();changed=true}}
++  }
++  if(changed)localStorage.setItem(ATT_KEY,JSON.stringify(a))
++ }
++ const f=safeParse(FIN_KEY);
++ if(f&&Array.isArray(f.entries)){
++  let changed=false;for(const e of f.entries){if(!e.syncId){e.syncId=uuidv4();changed=true}}
++  if(changed)localStorage.setItem(FIN_KEY,JSON.stringify(f))
++ }
++ const p=safeParse(PAYMENT_LOG_KEY);
++ if(Array.isArray(p)){
++  let changed=false;
++  for(const x of p){
++   if(!x.syncId){x.syncId=uuidv4();changed=true}
++   for(const al of x.alloc||[]){if(!al.syncId){al.syncId=uuidv4();changed=true}}
++  }
++  if(changed)localStorage.setItem(PAYMENT_LOG_KEY,JSON.stringify(p))
++ }
++ const cal=safeParse(CALENDAR_KEY);
++ if(Array.isArray(cal)){
++  let changed=false;for(const e of cal){if(!e.syncId){e.syncId=uuidv4();changed=true}}
++  if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(cal))
++ }
++ const ov=safeParse(CALENDAR_OVERRIDE_KEY);
++ if(ov&&typeof ov==='object'){
++  let changed=false;for(const v of Object.values(ov)){if(v&&!v.syncId){v.syncId=uuidv4();changed=true}}
