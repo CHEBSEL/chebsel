@@ -1,22 +1,14 @@
-CHEBSEL v1.3.2 — STATUTS D’APPEL NORMALISÉS
+CHEBSEL v1.5.1 — SUPABASE CONNECTED
 
-STATUTS OFFICIELS
-- Présent : 0 G
-- Retard motivé : compte comme retard, 0 G
-- RNM — Retard non motivé : 25 G
-- Absence motivée : compte comme absence, 0 G
-- ANM — Absence non motivée : 50 G
-- ANM prestation — Absence non motivée lors d’une prestation : 250 G
+Le projet Supabase CHEBSEL est préconfiguré dans l'application avec son Project URL et sa clé publishable publique.
+Aucun secret serveur/service_role n'est intégré.
 
-PRINCIPE
-Une situation motivée reste comptabilisée dans les statistiques de présence/retard/absence, mais ne génère aucune amende.
-Seules les situations non motivées génèrent une dette d’amende.
+Étape restante : créer le premier utilisateur dans Supabase Authentication puis rattacher ce compte à l'organisation CHEBSEL dans public.user_profiles.
 
-AUTRES RÈGLES CONSERVÉES
-- Cotisation mensuelle obligatoire : 125 G à partir d’août 2026.
-- Calendrier annuel administrable.
-- Prestations automatiques du 2e dimanche à 7h00 et 17h00.
-- Annulation/réactivation motivée des prestations régulières.
-- Correction flexible des paiements.
-- Codes d’accès globaux.
-- Mode visiteur restreint.
+Pilote cloud :
+- Membres : OUI
+- Calendrier : OUI
+- Appels : NON, local seulement
+- Finances : NON, local seulement
+
+CHEBSEL reste offline-first.

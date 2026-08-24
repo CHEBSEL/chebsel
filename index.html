@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.3.2 — Centre de gestion</title>
+<title>CHEBSEL v1.5.1 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -109,6 +109,23 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 .cancelTag{display:inline-flex;padding:4px 7px;border-radius:999px;background:#ffe6e6;color:#8b1d1d;font-size:.68rem;font-weight:900;margin-left:6px}
 .overrideTag{display:inline-flex;padding:4px 7px;border-radius:999px;background:var(--chip);color:var(--muted);font-size:.68rem;font-weight:850;margin-left:6px}
 
+
+.syncReadyPanel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px;box-shadow:var(--shadow)}
+.syncReadyHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.syncReadyHead h3{margin:0}
+.syncState{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:999px;border:1px solid var(--line);font-size:.72rem;font-weight:900;background:var(--soft)}
+.syncReadyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:11px}
+.syncReadyStat{border:1px solid var(--line);border-radius:12px;padding:9px;background:var(--soft)}
+.syncReadyStat span{display:block;font-size:.68rem;color:var(--muted)}.syncReadyStat b{display:block;margin-top:3px}
+.syncQueueList{margin-top:10px;max-height:240px;overflow:auto}
+.syncQueueRow{border-top:1px solid var(--line);padding:8px 2px;font-size:.74rem}
+.syncQueueRow:first-child{border-top:0}
+@media(min-width:760px){.syncReadyGrid{grid-template-columns:repeat(4,1fr)}}
+
+
+.cloudPanel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px;box-shadow:var(--shadow)}
+.cloudHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.cloudState{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-size:.72rem;font-weight:900}.cloudGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.cloudGrid>div{border:1px solid var(--line);border-radius:12px;padding:9px;background:var(--soft)}.cloudGrid span{display:block;font-size:.68rem;color:var(--muted)}.cloudGrid b{display:block;margin-top:3px}@media(min-width:760px){.cloudGrid{grid-template-columns:repeat(4,1fr)}}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -129,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.3.2</span>
+  <div class="topactions"><span class="versionChip">v1.5.1</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -142,6 +159,32 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 <main class="home">
  <section class="hero"><div style="display:flex;align-items:center;gap:14px"><img src="icons/chebsel-logo.png" alt="Logo CHEBSEL" style="width:72px;height:72px;object-fit:contain;flex:0 0 72px"><div><h1>Bienvenue dans le registre numérique CHEBSEL</h1><p>Chœur d’Homme de l’Église Baptiste Sel et Lumière</p></div></div></section>
  <div class="stats" id="homeStats"></div>
+
+<div class="syncReadyPanel visitor-hidden" id="syncReadyPanel">
+ <div class="syncReadyHead">
+  <div>
+   <h3>🔄 Fondation Sync-Ready</h3>
+   <div class="memberMeta">IndexedDB locale + file de synchronisation. Aucun cloud n’est connecté dans cette version.</div>
+  </div>
+  <span class="syncState" id="syncReadyState">Initialisation…</span>
+ </div>
+ <div class="syncReadyGrid">
+  <div class="syncReadyStat"><span>Connexion</span><b id="syncOnlineState">—</b></div>
+  <div class="syncReadyStat"><span>Opérations en attente</span><b id="syncPendingCount">0</b></div>
+  <div class="syncReadyStat"><span>Conflits locaux</span><b id="syncConflictCount">0</b></div>
+  <div class="syncReadyStat"><span>Dernière préparation</span><b id="syncLastPrepared">—</b></div>
+ </div>
+ <div class="memberActions" style="margin-top:10px">
+  <button class="secondaryQuick" onclick="syncReadyReconcile(true)">↻ Préparer maintenant</button>
+  <button class="secondaryQuick" onclick="toggleSyncQueue()">Voir la file locale</button>
+  <button class="secondaryQuick" onclick="exportSyncReadyDiagnostic()">Exporter diagnostic</button>
+ </div>
+ <div class="syncQueueList" id="syncQueueList" style="display:none"></div>
+ <div class="memberMeta" style="margin-top:8px">Les modifications restent utilisables hors ligne. La file sera destinée au futur moteur PUSH/PULL de CHEBSEL Cloud.</div>
+</div>
+
+
+<div class="cloudPanel visitor-hidden" id="cloudFoundationPanel"><div class="cloudHead"><div><h3 style="margin:0">☁️ CHEBSEL Cloud Foundation</h3><div class="memberMeta">Projet Supabase CHEBSEL préconfiguré • pilote Membres + Calendrier uniquement.</div></div><span class="cloudState" id="cloudState">Non configuré</span></div><div class="cloudGrid"><div><span>Backend</span><b>Supabase</b></div><div><span>Session cloud</span><b id="cloudSession">Aucune</b></div><div><span>Pilot sync</span><b>Membres + Calendrier</b></div><div><span>Dernière sync cloud</span><b id="cloudLastSync">—</b></div></div><div class="memberActions" style="margin-top:10px"><button class="secondaryQuick" onclick="openCloudConfigModal()">⚙ Configurer</button><button class="secondaryQuick" onclick="cloudSignIn()">🔐 Connexion cloud</button><button class="secondaryQuick" onclick="cloudPilotSync()">↕ Synchroniser pilote</button><button class="secondaryQuick" onclick="cloudSignOut()">Déconnexion cloud</button></div><div class="memberMeta" style="margin-top:8px">Appels et finances restent locaux en v1.5.0. N’utilisez jamais une clé service_role dans l’application.</div></div>
 <div class="calendarPanel" id="calendarHomePanel">
  <div class="calendarHead">
   <div><h3>📅 Calendrier d’activités</h3><div class="memberMeta" id="calendarCurrentTitle">Activités du mois en cours</div></div>
@@ -326,10 +369,12 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
  <div class="modalActions"><button class="save" onclick="saveActivity()">Enregistrer</button><button class="cancel" onclick="closeActivityModal()">Annuler</button></div>
 </div></div>
 
-<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.3.2</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
+<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.5.1</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
 <div class="membersView" id="securityView"><div class="viewerbar"><button class="back" onclick="closeSecurity()">← Retour</button><div class="viewtitle"><b>Sécurité & rôles</b><span>Accès local protégé par PIN</span></div></div><div class="membersBody"><div class="profilePanel" id="securitySummary"></div><div class="profilePanel"><h3>Profils autorisés</h3><div id="securityUsers"></div></div><div class="profilePanel"><h3>Matrice des droits</h3><div id="permissionMatrix"></div></div></div></div>
 <div class="membersView" id="handoverView"><div class="viewerbar"><button class="back" onclick="closeHandover()">← Retour</button><div class="viewtitle"><b>Passation de comité</b><span>Fiche de transfert de responsabilité</span></div></div><div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Date de passation</label><input type="date" id="handoverDate"></div><div><label>Observation</label><input id="handoverNote" placeholder="Ex. fin de mandat / renouvellement"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="renderHandover()">Actualiser</button><button class="secondaryQuick" onclick="printHandover()">Imprimer / PDF</button><button class="secondaryQuick" onclick="portalBackup()">Sauvegarde finale</button></div></div><div id="handoverBody"></div></div></div>
-<div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.3.2 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
+<div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.5.0 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
+
+<div class="modal" id="cloudConfigModal"><div class="modalBox"><h3 style="margin-top:0">Configuration CHEBSEL Cloud</h3><div class="form"><div class="wide"><label>Supabase Project URL</label><input id="cloudUrl" placeholder="https://xxxxx.supabase.co"></div><div class="wide"><label>Publishable / anon key</label><input id="cloudAnonKey" placeholder="Clé publique client"></div><div class="wide"><label>Email utilisateur cloud</label><input id="cloudEmail" type="email" placeholder="responsable@..."></div><div class="wide"><label>Mot de passe</label><input id="cloudPassword" type="password" placeholder="Mot de passe Supabase Auth"></div></div><p class="small">La clé <b>service_role</b> est interdite dans cette application. Utilisez uniquement la clé publique prévue pour le navigateur.</p><div class="modalActions"><button class="save" onclick="saveCloudConfig()">Enregistrer</button><button class="cancel" onclick="closeCloudConfigModal()">Fermer</button></div></div></div>
 <div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0">Connexion CHEBSEL</h3><p class="small" id="loginHelp">Responsables : entrez votre code d’accès CHEBSEL. Membres : choisissez « Accès visiteur » pour consulter en lecture seule.</p><div class="form"><div class="wide"><label>Responsable</label><select id="loginUser"></select></div><div class="wide"><label>Code d’accès / PIN</label><input type="password" id="loginPin" inputmode="numeric" maxlength="12" placeholder="PIN personnel"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Connexion</button><button class="cancel" onclick="enterVisitorMode()">👁 Accès visiteur</button></div><div class="permissionNote" style="margin-top:10px">Accès visiteur : consultation uniquement. Aucune modification, suppression, restauration, clôture ou paiement n’est autorisé.</div></div></div>
 <div class="modal" id="pinModal"><div class="modalBox"><h3 id="pinModalTitle" style="margin-top:0">Configurer un PIN</h3><input type="hidden" id="pinTarget"><div class="form"><div class="wide"><label>Nouveau PIN (4 à 12 chiffres)</label><input type="password" id="pinNew" inputmode="numeric" maxlength="12"></div><div class="wide"><label>Confirmer</label><input type="password" id="pinConfirm" inputmode="numeric" maxlength="12"></div></div><div class="modalActions"><button class="save" onclick="saveUserPin()">Enregistrer</button><button class="cancel" onclick="closePinModal()">Annuler</button></div></div></div>
 <div class="modal" id="restoreTestModal"><div class="modalBox"><h3 style="margin-top:0">Tester une sauvegarde</h3><p class="small">Le test ne modifie aucune donnée.</p><div class="form"><div class="wide"><label>Fichier JSON</label><input type="file" id="restoreTestFile" accept=".json,application/json"></div></div><div id="restoreTestResult" class="profilePanel" style="margin-top:12px">Sélectionnez un fichier.</div><div class="modalActions"><button class="save" onclick="testBackupFile()">Tester</button><button class="cancel" onclick="closeRestoreTestModal()">Fermer</button></div></div></div>
@@ -372,10 +417,10 @@ let activeApp=null;
 
 function decode64(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(u)}
 function safeParse(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
-function saveJSON(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function saveJSON(k,v){localStorage.setItem(k,JSON.stringify(v));try{syncReadyOnLocalWrite(k,v)}catch(e){}}
 function fullName(m){return [m?.first,m?.last].filter(Boolean).join(' ').trim()||'Sans nom'}
 function money(v){return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(Number(v||0))+' G'}
-function uid(){return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
+function uid(){return (globalThis.crypto?.randomUUID?crypto.randomUUID():'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8))}
 function toggleShellTheme(){applyShellTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')}
 function applyShellTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem(SHELL_THEME,t);themeBtn.textContent=t==='dark'?'☀️':'🌙';themeMeta.setAttribute('content',t==='dark'?'#05080d':'#0b1220')}
 
@@ -762,6 +807,7 @@ function globalBack(){
  if(receiptModal?.classList.contains('open')){closeReceipt();return}
  if(paymentModal?.classList.contains('open')){closePaymentModal();return}
  if(memberModal?.classList.contains('open')){closeMemberModal();return}
+ if(cloudConfigModal?.classList.contains('open')){closeCloudConfigModal();return}
  if(recurringOverrideModal?.classList.contains('open')){closeRecurringOverrideModal();return}
  if(activityModal?.classList.contains('open')){closeActivityModal();return}
  if(paymentCorrectionModal?.classList.contains('open')){closePaymentCorrectionModal();return}
@@ -818,7 +864,7 @@ function restorePortalBackup(){
 
 function portalBackup(){
  syncBridge();
- const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},calendar:customActivities(),calendarOverrides:calendarOverrides()};
+ const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},calendar:customActivities(),calendarOverrides:calendarOverrides(),syncReady:{schemaVersion:1,cloudConnected:false,dbName:SYNC_DB_NAME}};
  const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Sauvegarde_CHEBSEL_Portail_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
  localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde portail','Export JSON complet');refreshHome()
 }
@@ -837,7 +883,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.3.2';
+const APP_VERSION='1.5.1';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -854,6 +900,288 @@ function getAuth(){
 }
 function currentSession(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null')}catch(e){return null}}
 function isVisitor(){return sessionStorage.getItem(VISITOR_KEY)==='1'}
+
+// =======================
+// CHEBSEL v1.4 Sync-Ready
+// =======================
+const SYNC_DB_NAME='chebsel_sync_ready_v1';
+const SYNC_DB_VERSION=1;
+const SYNC_META_KEY='chebsel_sync_ready_meta_v1';
+const SYNC_TRACKED_KEYS=new Set([
+ MASTER_KEY,ATT_KEY,FIN_KEY,PAYMENT_LOG_KEY,AUDIT_KEY,CLOSE_KEY,CALENDAR_KEY,CALENDAR_OVERRIDE_KEY
+]);
+let SYNC_DB=null;
+let SYNC_READY_BOOTING=true;
+let SYNC_RECONCILE_TIMER=null;
+let SYNC_QUEUE_VISIBLE=false;
+
+function uuidv4(){
+ if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
+ const a=crypto?.getRandomValues?crypto.getRandomValues(new Uint8Array(16)):Array.from({length:16},()=>Math.floor(Math.random()*256));
+ a[6]=(a[6]&15)|64;a[8]=(a[8]&63)|128;
+ const h=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
+ return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`
+}
+function syncNowISO(){return new Date().toISOString()}
+function syncComparable(obj){
+ const c=JSON.parse(JSON.stringify(obj||{}));
+ delete c._syncStatus;delete c._localUpdatedAt;delete c._serverUpdatedAt;delete c._version;delete c._deletedAt;
+ return JSON.stringify(c)
+}
+function syncDBOpen(){
+ if(SYNC_DB)return Promise.resolve(SYNC_DB);
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(SYNC_DB_NAME,SYNC_DB_VERSION);
+  req.onupgradeneeded=()=>{
+   const db=req.result;
+   const defs=[
+    ['members','syncId'],['attendance_events','syncId'],['attendance_records','syncId'],
+    ['financial_entries','syncId'],['payments','syncId'],['payment_allocations','syncId'],
+    ['calendar_events','syncId'],['calendar_overrides','syncId'],['monthly_closings','syncId'],
+    ['audit_logs','syncId'],['outbox','id'],['conflicts','id'],['meta','key'],['devices','id']
+   ];
+   for(const [name,keyPath] of defs){
+    if(!db.objectStoreNames.contains(name)){
+     const s=db.createObjectStore(name,{keyPath});
+     if(name==='outbox'){
+      s.createIndex('status','status',{unique:false});
+      s.createIndex('entity','entity',{unique:false});
+     }
+     if(name==='conflicts')s.createIndex('status','status',{unique:false});
+    }
+   }
+  };
+  req.onsuccess=()=>{SYNC_DB=req.result;resolve(SYNC_DB)};
+  req.onerror=()=>reject(req.error)
+ })
+}
+async function idbAll(store){
+ const db=await syncDBOpen();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).getAll();
+  req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)
+ })
+}
+async function idbGet(store,key){
+ const db=await syncDBOpen();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).get(key);
+  req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)
+ })
+}
+async function idbPut(store,value){
+ const db=await syncDBOpen();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);
+  tx.oncomplete=()=>resolve(value);tx.onerror=()=>reject(tx.error)
+ })
+}
+async function idbDelete(store,key){
+ const db=await syncDBOpen();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);
+  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)
+ })
+}
+async function idbCountByStatus(store,status){
+ const db=await syncDBOpen();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,'readonly'),s=tx.objectStore(store);
+  if(!s.indexNames.contains('status')){const r=s.count();r.onsuccess=()=>resolve(r.result||0);r.onerror=()=>reject(r.error);return}
+  const r=s.index('status').count(IDBKeyRange.only(status));
+  r.onsuccess=()=>resolve(r.result||0);r.onerror=()=>reject(r.error)
+ })
+}
+function ensureSyncId(obj,prefix='rec'){
+ if(!obj.syncId)obj.syncId=uuidv4();
+ return obj.syncId
+}
+function syncLegacyMigrateIds(){
+ // Keep legacy IDs for current app references, add stable syncId for future cloud records.
+ const members=safeParse(MASTER_KEY);
+ if(Array.isArray(members)){
+  let changed=false;for(const m of members){if(!m.syncId){m.syncId=uuidv4();changed=true}}
+  if(changed)localStorage.setItem(MASTER_KEY,JSON.stringify(members))
+ }
+ const a=safeParse(ATT_KEY);
+ if(a&&Array.isArray(a.calls)){
+  let changed=false;
+  for(const c of a.calls){
+   if(!c.syncId){c.syncId=uuidv4();changed=true}
+   if(c.records)for(const [mid,r] of Object.entries(c.records)){if(r&&!r.syncId){r.syncId=uuidv4();changed=true}}
+  }
+  if(changed)localStorage.setItem(ATT_KEY,JSON.stringify(a))
+ }
+ const f=safeParse(FIN_KEY);
+ if(f&&Array.isArray(f.entries)){
+  let changed=false;for(const e of f.entries){if(!e.syncId){e.syncId=uuidv4();changed=true}}
+  if(changed)localStorage.setItem(FIN_KEY,JSON.stringify(f))
+ }
+ const p=safeParse(PAYMENT_LOG_KEY);
+ if(Array.isArray(p)){
+  let changed=false;
+  for(const x of p){
+   if(!x.syncId){x.syncId=uuidv4();changed=true}
+   for(const al of x.alloc||[]){if(!al.syncId){al.syncId=uuidv4();changed=true}}
+  }
+  if(changed)localStorage.setItem(PAYMENT_LOG_KEY,JSON.stringify(p))
+ }
+ const cal=safeParse(CALENDAR_KEY);
+ if(Array.isArray(cal)){
+  let changed=false;for(const e of cal){if(!e.syncId){e.syncId=uuidv4();changed=true}}
+  if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(cal))
+ }
+ const ov=safeParse(CALENDAR_OVERRIDE_KEY);
+ if(ov&&typeof ov==='object'){
+  let changed=false;for(const v of Object.values(ov)){if(v&&!v.syncId){v.syncId=uuidv4();changed=true}}
+  if(changed)localStorage.setItem(CALENDAR_OVERRIDE_KEY,JSON.stringify(ov))
+ }
+}
+function syncSourceRecords(){
+ const members=(safeParse(MASTER_KEY)||[]).map(m=>({...m,syncId:m.syncId||uuidv4()}));
+ const a=safeParse(ATT_KEY)||{}, calls=Array.isArray(a.calls)?a.calls:[];
+ const attendance_events=[],attendance_records=[];
+ for(const c0 of calls){
+  const c={...c0};const records=c.records||{};delete c.records;
+  c.syncId=c.syncId||uuidv4();attendance_events.push(c);
+  for(const [memberId,r0] of Object.entries(records)){
+   if(!r0)continue;
+   attendance_records.push({...r0,syncId:r0.syncId||uuidv4(),attendanceEventSyncId:c.syncId,legacyEventId:c0.id||'',memberId})
+  }
+ }
+ const f=safeParse(FIN_KEY)||{},financial_entries=(Array.isArray(f.entries)?f.entries:[]).map(e=>({...e,syncId:e.syncId||uuidv4()}));
+ const payments=(safeParse(PAYMENT_LOG_KEY)||[]).map(p=>({...p,syncId:p.syncId||uuidv4()}));
+ const payment_allocations=[];
+ for(const p of payments)for(const al of p.alloc||[])payment_allocations.push({...al,syncId:al.syncId||uuidv4(),paymentSyncId:p.syncId,paymentLegacyId:p.id||''});
+ const calendar_events=(safeParse(CALENDAR_KEY)||[]).map(e=>({...e,syncId:e.syncId||uuidv4()}));
+ const ovs=safeParse(CALENDAR_OVERRIDE_KEY)||{},calendar_overrides=Object.entries(ovs).map(([eventId,o])=>({...o,syncId:o.syncId||uuidv4(),eventId}));
+ const cls=safeParse(CLOSE_KEY)||{},monthly_closings=Object.entries(cls).map(([month,v])=>({...(v&&typeof v==='object'?v:{value:v}),syncId:(v&&v.syncId)||`close-${month}`,month}));
+ const audit_logs=(safeParse(AUDIT_KEY)||[]).map(x=>({...x,syncId:x.syncId||x.id||uuidv4()}));
+ return {members,attendance_events,attendance_records,financial_entries,payments,payment_allocations,calendar_events,calendar_overrides,monthly_closings,audit_logs}
+}
+async function queueOutbox(entity,entityId,operation,payload){
+ if(SYNC_READY_BOOTING)return;
+ const id=`${entity}:${entityId}`;
+ const prev=await idbGet('outbox',id);
+ await idbPut('outbox',{
+  id,operationId:prev?.operationId||uuidv4(),entity,entityId,operation,payload,
+  status:'pending',retryCount:prev?.retryCount||0,createdAt:prev?.createdAt||syncNowISO(),updatedAt:syncNowISO()
+ });
+}
+async function mirrorStore(storeName,records,enqueueChanges=false){
+ const current=await idbAll(storeName),existing=new Map(current.map(x=>[x.syncId,x])),incoming=new Map(records.map(x=>[x.syncId,x]));
+ for(const rec of records){
+  const old=existing.get(rec.syncId);
+  const changed=!old||syncComparable(old)!==syncComparable(rec);
+  const next={...rec,_syncStatus:changed&&enqueueChanges?'pending':(old?old._syncStatus||'synced':'synced'),_localUpdatedAt:changed?syncNowISO():(old?old._localUpdatedAt||syncNowISO():syncNowISO()),_serverUpdatedAt:old?old._serverUpdatedAt||null:null,_version:(old?Number(old._version||0):0)+(changed&&enqueueChanges?1:0),_deletedAt:null};
+  await idbPut(storeName,next);
+  if(changed&&enqueueChanges)await queueOutbox(storeName,rec.syncId,'UPSERT',rec)
+ }
+ for(const [id,old] of existing){
+  if(!incoming.has(id)&&!old._deletedAt){
+   const tomb={...old,_syncStatus:enqueueChanges?'pending':'synced',_deletedAt:syncNowISO(),_localUpdatedAt:syncNowISO(),_version:Number(old._version||0)+(enqueueChanges?1:0)};
+   await idbPut(storeName,tomb);
+   if(enqueueChanges)await queueOutbox(storeName,id,'DELETE',{syncId:id,_deletedAt:tomb._deletedAt})
+  }
+ }
+}
+async function syncReadyReconcile(enqueueChanges=true){
+ try{
+  await syncDBOpen();
+  if(!SYNC_READY_BOOTING)document.getElementById('syncReadyState')&&(syncReadyState.textContent='Préparation…');
+  const all=syncSourceRecords();
+  for(const [store,records] of Object.entries(all))await mirrorStore(store,records,enqueueChanges);
+  const meta={key:'state',schemaVersion:1,appVersion:APP_VERSION,lastPreparedAt:syncNowISO(),cloudConnected:false};
+  await idbPut('meta',meta);
+  await updateSyncReadyUI();
+  return true
+ }catch(err){
+  console.error('Sync-ready reconcile',err);
+  const el=document.getElementById('syncReadyState');if(el)el.textContent='Erreur locale';
+  return false
+ }
+}
+function syncReadySchedule(){
+ clearTimeout(SYNC_RECONCILE_TIMER);
+ SYNC_RECONCILE_TIMER=setTimeout(()=>syncReadyReconcile(true),350)
+}
+function syncReadyOnLocalWrite(k,v){
+ if(SYNC_TRACKED_KEYS.has(k)&&!SYNC_READY_BOOTING)syncReadySchedule()
+}
+async function updateSyncReadyUI(){
+ if(!document.getElementById('syncReadyPanel'))return;
+ try{
+  await syncDBOpen();
+  const pending=await idbCountByStatus('outbox','pending'),conflicts=await idbCountByStatus('conflicts','open'),meta=await idbGet('meta','state');
+  syncOnlineState.textContent=navigator.onLine?'🟢 En ligne':'🔴 Hors connexion';
+  syncPendingCount.textContent=String(pending);
+  syncConflictCount.textContent=String(conflicts);
+  syncLastPrepared.textContent=meta?.lastPreparedAt?new Date(meta.lastPreparedAt).toLocaleString('fr-FR'):'—';
+  syncReadyState.textContent=pending?`🟡 ${pending} en attente`:'🟢 Base locale prête';
+  if(SYNC_QUEUE_VISIBLE)await renderSyncQueue()
+ }catch(e){syncReadyState.textContent='⚠ IndexedDB indisponible'}
+}
+async function renderSyncQueue(){
+ const rows=(await idbAll('outbox')).sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+ syncQueueList.innerHTML=rows.length?rows.slice(0,100).map(x=>`<div class="syncQueueRow"><b>${escapeHtml(x.operation)} • ${escapeHtml(x.entity)}</b><div class="memberMeta">${escapeHtml(x.entityId)} • ${escapeHtml(x.status)} • ${x.updatedAt?new Date(x.updatedAt).toLocaleString('fr-FR'):''}</div></div>`).join(''):'<div class="empty">Aucune modification locale en attente.</div>'
+}
+async function toggleSyncQueue(){
+ SYNC_QUEUE_VISIBLE=!SYNC_QUEUE_VISIBLE;syncQueueList.style.display=SYNC_QUEUE_VISIBLE?'block':'none';
+ if(SYNC_QUEUE_VISIBLE)await renderSyncQueue()
+}
+async function exportSyncReadyDiagnostic(){
+ await syncReadyReconcile(true);
+ const stores=['members','attendance_events','attendance_records','financial_entries','payments','payment_allocations','calendar_events','calendar_overrides','monthly_closings','audit_logs','outbox','conflicts','meta'];
+ const counts={};for(const s of stores)counts[s]=(await idbAll(s)).length;
+ const pending=(await idbAll('outbox')).filter(x=>x.status==='pending');
+ const payload={app:'CHEBSEL',version:APP_VERSION,mode:'sync-ready-local-only',exportedAt:syncNowISO(),online:navigator.onLine,counts,pendingOperations:pending.map(x=>({operationId:x.operationId,entity:x.entity,entityId:x.entityId,operation:x.operation,status:x.status,updatedAt:x.updatedAt}))};
+ const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Diagnostic_SyncReady_CHEBSEL_${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)
+}
+async function initSyncReady(){
+ try{
+  await syncDBOpen();
+  syncLegacyMigrateIds();
+  // First migration is a clean baseline: existing data are mirrored but not queued for upload.
+  const first=!(await idbGet('meta','state'));
+  await syncReadyReconcile(!first);
+  SYNC_READY_BOOTING=false;
+  if(first){
+   await idbPut('meta',{key:'state',schemaVersion:1,appVersion:APP_VERSION,lastPreparedAt:syncNowISO(),cloudConnected:false,migratedFrom:'localStorage'});
+  }
+  await updateSyncReadyUI()
+ }catch(e){SYNC_READY_BOOTING=false;console.error(e);updateSyncReadyUI()}
+}
+window.addEventListener('online',()=>{updateSyncReadyUI();syncReadyReconcile(true)});
+window.addEventListener('offline',updateSyncReadyUI);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncReadyReconcile(true)});
+setInterval(()=>{if(!SYNC_READY_BOOTING)syncReadyReconcile(true)},15000);
+
+
+const CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
+const CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
+const CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
+let CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
+function getCloudConfig(){const x=safeParse(CLOUD_CONFIG_KEY),c=x&&typeof x==='object'?x:{};return {url:c.url||CLOUD_DEFAULT_URL,anonKey:c.anonKey||CLOUD_DEFAULT_PUBLISHABLE_KEY,email:c.email||'',configuredAt:c.configuredAt||''}}
+function cloudConfigured(){const c=getCloudConfig();return !!(c.url&&c.anonKey)}
+async function loadSupabaseSDK(){if(globalThis.supabase?.createClient)return globalThis.supabase;if(CLOUD_SDK_LOADING)return CLOUD_SDK_LOADING;CLOUD_SDK_LOADING=new Promise((resolve,reject)=>{if(!navigator.onLine){reject(new Error('Internet requis pour charger Supabase la première fois.'));return}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.async=true;s.onload=()=>resolve(globalThis.supabase);s.onerror=()=>reject(new Error('Impossible de charger supabase-js.'));document.head.appendChild(s)});return CLOUD_SDK_LOADING}
+async function getCloudClient(){if(CLOUD_CLIENT)return CLOUD_CLIENT;if(!cloudConfigured())throw new Error('CHEBSEL Cloud n’est pas configuré.');const sdk=await loadSupabaseSDK(),c=getCloudConfig();CLOUD_CLIENT=sdk.createClient(c.url,c.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return CLOUD_CLIENT}
+function openCloudConfigModal(){if(isVisitor()){alert('Accès réservé aux responsables.');return}const c=getCloudConfig();cloudUrl.value=c.url||'';cloudAnonKey.value=c.anonKey||'';cloudEmail.value=c.email||'';cloudPassword.value='';cloudConfigModal.classList.add('open')}
+function closeCloudConfigModal(){cloudConfigModal.classList.remove('open')}
+function saveCloudConfig(){if(!requirePermission('security.manage'))return;const url=(cloudUrl.value||'').trim(),anonKey=(cloudAnonKey.value||'').trim(),email=(cloudEmail.value||'').trim();if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})}
+async function cloudSessionInfo(){if(!cloudConfigured())return null;try{const c=await getCloudClient(),{data}=await c.auth.getSession();return data?.session||null}catch(e){return null}}
+async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey){openCloudConfigModal();return}const email=(cfg.email||'').trim();if(!email){alert('Ajoutez l’email cloud dans Configuration.');return}const password=(cloudConfigModal?.classList.contains('open')?cloudPassword.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';if(!password)return;const c=await getCloudClient(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||''});await registerCloudDevice();updateCloudUI();alert('Connexion CHEBSEL Cloud réussie.')}catch(e){alert('Connexion cloud impossible : '+e.message);updateCloudUI()}}
+async function cloudSignOut(){try{if(CLOUD_CLIENT)await CLOUD_CLIENT.auth.signOut();CLOUD_CLIENT=null;updateCloudUI()}catch(e){alert(e.message)}}
+async function registerCloudDevice(){try{const c=await getCloudClient(),session=await cloudSessionInfo();if(!session)return;let id=localStorage.getItem('chebsel_device_id_v1');if(!id){id=uuidv4();localStorage.setItem('chebsel_device_id_v1',id)}const {error}=await c.from('devices').upsert({id,auth_user_id:session.user.id,device_name:navigator.userAgent.slice(0,180),platform:navigator.platform||'',last_seen_at:syncNowISO(),active:true},{onConflict:'id'});if(error)throw error}catch(e){console.warn(e)}}
+async function getCloudProfile(){const c=await getCloudClient(),s=await cloudSessionInfo();if(!s)throw new Error('Connexion cloud requise.');const {data,error}=await c.from('user_profiles').select('auth_user_id,organization_id,role,active').eq('auth_user_id',s.user.id).single();if(error)throw error;if(!data?.active)throw new Error('Compte cloud inactif.');return data}
+function cloudMemberPayload(m,org){return {id:m.syncId,organization_id:org,legacy_id:m.id||null,member_no:m.no||null,first_name:m.first||'',last_name:m.last||'',phone:m.phone||null,active:m.active!==false,notes:m.note||null,updated_at:syncNowISO(),deleted_at:m._deletedAt||null}}
+function cloudCalendarPayload(e,org){return {id:e.syncId,organization_id:org,legacy_id:e.id||null,title:e.title||'',event_date:e.date||null,start_time:e.time||null,location:e.location||null,event_type:'custom',status:e.status||'scheduled',reason:e.note||null,updated_at:syncNowISO(),deleted_at:e._deletedAt||null}}
+async function pushPilotEntity(store,table,payloadFn,org){const rows=(await idbAll(store)).filter(x=>!x._deletedAt);if(!rows.length)return 0;const c=await getCloudClient(),{error}=await c.from(table).upsert(rows.map(x=>payloadFn(x,org)),{onConflict:'id'});if(error)throw error;return rows.length}
+async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),by=new Map(local.map(x=>[x.syncId,x]));let changed=false;for(const r of data||[]){const cur=by.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',_serverUpdatedAt:r.updated_at});changed=true}else{local.push({id:'cloud_'+r.id.slice(0,8),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at});changed=true}}if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(local));syncMembersToApps()}return (data||[]).length}
+async function pullCloudCalendar(org){const c=await getCloudClient(),{data,error}=await c.from('calendar_events').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=customActivities(),by=new Map(local.map(x=>[x.syncId,x]));let changed=false;for(const r of data||[]){const cur=by.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',_serverUpdatedAt:r.updated_at});changed=true}else{local.push({id:'cloud_'+r.id.slice(0,8),syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',auto:false,_serverUpdatedAt:r.updated_at});changed=true}}if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(local));return (data||[]).length}
+async function cloudPilotSync(){if(isVisitor()){alert('Accès réservé aux responsables.');return}if(!navigator.onLine){alert('Pas d’Internet. Les modifications restent locales.');return}try{cloudState.textContent='Synchronisation…';await syncReadyReconcile(true);const p=await getCloudProfile(),org=p.organization_id;const pm=await pushPilotEntity('members','members',cloudMemberPayload,org),pc=await pushPilotEntity('calendar_events','calendar_events',cloudCalendarPayload,org),rm=await pullCloudMembers(org),rc=await pullCloudCalendar(org);await syncReadyReconcile(false);const out=await idbAll('outbox');for(const op of out){if(['members','calendar_events'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc}});refreshHome();updateCloudUI();updateSyncReadyUI();alert('Synchronisation pilote terminée.')}catch(e){alert('Synchronisation cloud impossible : '+e.message);updateCloudUI()}}
+async function updateCloudUI(){if(!document.getElementById('cloudFoundationPanel'))return;const cfg=cloudConfigured(),meta=safeParse(CLOUD_META_KEY)||{},session=cfg?await cloudSessionInfo():null;cloudState.textContent=!cfg?'⚪ Non configuré':(!navigator.onLine?'🔴 Hors connexion':(session?'🟢 Connecté':'🟡 Configuré'));cloudSession.textContent=session?(session.user?.email||'Session active'):'Aucune';cloudLastSync.textContent=meta.lastSyncAt?new Date(meta.lastSyncAt).toLocaleString('fr-FR'):'—'}
+window.addEventListener('online',()=>updateCloudUI());window.addEventListener('offline',()=>updateCloudUI());
+
 function currentUser(){const s=currentSession();return s?getAuth().users?.[s.key]||null:null}
 function can(p){const u=currentUser();return !!u&&(PERMISSIONS[u.key]||[]).includes(p)}
 function requirePermission(p){if(!currentUser()){alert('Mode lecture seule. Connectez-vous pour modifier le système.');openLoginModal();return false}if(!can(p)){alert('Votre rôle ne permet pas cette opération.');return false}return true}
@@ -1126,22 +1454,22 @@ function validateBackupPayload(p){const e=[];if(!p||typeof p!=='object')e.push('
 function openRestoreTestModal(){restoreTestFile.value='';restoreTestResult.innerHTML='Sélectionnez un fichier.';restoreTestModal.classList.add('open')} function closeRestoreTestModal(){restoreTestModal.classList.remove('open')}
 function testBackupFile(){const file=restoreTestFile.files[0];if(!file){alert('Choisissez un fichier JSON.');return}const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result),v=validateBackupPayload(p);restoreTestResult.innerHTML=v.ok?`<div class="statusGood">✓ Sauvegarde valide</div><div class="memberMeta">${v.members} membres • ${v.calls} appels • ${v.entries} écritures</div>`:`<div class="statusBad">Sauvegarde invalide</div><div class="memberMeta">${escapeHtml(v.errors.join(' • '))}</div>`}catch(e){restoreTestResult.innerHTML='<div class="statusBad">JSON illisible ou corrompu.</div>'}};r.readAsText(file)}
 async function restorePortalBackup(){if(!requirePermission('restore'))return;if(!(await criticalGuard('restore','Restauration complète')))return;const file=restoreFile.files[0];if(!file){alert('Sélectionnez un JSON.');return}const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result),v=validateBackupPayload(p);if(!v.ok)throw new Error(v.errors.join(' ; '));if(!confirm(`Sauvegarde valide : ${v.members} membres, ${v.calls} appels, ${v.entries} écritures. Restaurer ?`))return;saveJSON(MASTER_KEY,p.masterMembers.map(normalizeMember));saveJSON(ATT_KEY,p.attendance);saveJSON(FIN_KEY,p.finance);if(Array.isArray(p.audit))saveJSON(AUDIT_KEY,p.audit);if(p.monthlyClosings)saveJSON(CLOSE_KEY,p.monthlyClosings);if(Array.isArray(p.paymentLog))saveJSON(PAYMENT_LOG_KEY,p.paymentLog);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Restauration complète',file.name,{entity:'backup',after:{members:v.members,calls:v.calls,entries:v.entries}});syncMembersToApps();syncBridge();closeRestoreModal();refreshHome();alert('Restauration terminée.')}catch(e){alert('Restauration impossible : '+e.message)}};r.readAsText(file)}
-function portalBackup(){syncBridge();const a=getAuth(),payload={app:'CHEBSEL Portal Stable',version:'1.3.2',exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',committee:Object.values(a.users).map(x=>({key:x.key,name:x.name,role:x.role,configured:!!x.pinHash})),masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],paymentLog:safeParse(PAYMENT_LOG_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{}};const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),ln=document.createElement('a');ln.href=URL.createObjectURL(b);ln.download='Sauvegarde_CHEBSEL_v1_'+new Date().toISOString().slice(0,10)+'.json';ln.click();setTimeout(()=>URL.revokeObjectURL(ln.href),500);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde complète','Export JSON v1.3.0',{entity:'backup'});refreshHome()}
+function portalBackup(){syncBridge();const a=getAuth(),payload={app:'CHEBSEL Portal Stable',version:'1.5.0',exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',committee:Object.values(a.users).map(x=>({key:x.key,name:x.name,role:x.role,configured:!!x.pinHash})),masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],paymentLog:safeParse(PAYMENT_LOG_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},syncReady:{schemaVersion:1,cloudConnected:false,dbName:SYNC_DB_NAME}};const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),ln=document.createElement('a');ln.href=URL.createObjectURL(b);ln.download='Sauvegarde_CHEBSEL_v1_'+new Date().toISOString().slice(0,10)+'.json';ln.click();setTimeout(()=>URL.revokeObjectURL(ln.href),500);localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde complète','Export JSON v1.3.0',{entity:'backup'});refreshHome()}
 function renderAudit(){const log=safeParse(AUDIT_KEY)||[];auditList.innerHTML=log.length?log.map(x=>`<div class="auditRow"><b>${escapeHtml(x.action)}</b><div class="memberMeta">${new Date(x.at).toLocaleString('fr-FR')} • ${escapeHtml(x.user||'')} • ${escapeHtml(x.role||'')} ${x.details?'• '+escapeHtml(x.details):''}</div>${x.before!==null&&x.before!==undefined?`<details><summary class="memberMeta">Ancien / nouveau</summary><pre style="white-space:pre-wrap;font-size:.72rem">${escapeHtml(JSON.stringify({avant:x.before,apres:x.after},null,2))}</pre></details>`:''}</div>`).join(''):'<div class="empty">Journal vide.</div>'}
 async function clearAudit(){if(!requirePermission('audit.clear'))return;if(!(await criticalGuard('audit.clear','Effacement du journal')))return;if(!confirm('Effacer le journal local ?'))return;localStorage.removeItem(AUDIT_KEY);renderAudit()}
 function openHandover(){if(isVisitor()){alert('Accès réservé aux responsables.');return}handoverDate.value=new Date().toISOString().slice(0,10);handoverView.classList.add('open');renderHandover()} function closeHandover(){handoverView.classList.remove('open')}
 function renderHandover(){const f=safeParse(FIN_KEY)||{},cl=safeParse(CLOSE_KEY)||{},members=centralMembers(),debt=(f.entries||[]).reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),last=Object.keys(cl).sort().pop(),b=localStorage.getItem(BACKUP_KEY);handoverBody.innerHTML=`<div class="profilePanel" id="handoverPrint"><h2>FICHE DE PASSATION — CHEBSEL</h2><div class="memberMeta">Chœur d’Homme de l’Église Baptiste Sel et Lumière • v${APP_VERSION}</div><div class="helpSection"><h4>Comité</h4><p>Président : Sinsurin Jacques<br>Secrétaire : Jose Sterlin<br>Trésorier : Chery Agnace</p></div><div class="helpSection"><h4>État</h4><p>Date : ${escapeHtml(handoverDate.value||'—')}<br>Membres : ${members.length}<br>Créances : ${money(debt)}<br>Dernière clôture : ${last||'Aucune'}<br>Dernière sauvegarde : ${b?new Date(b).toLocaleString('fr-FR'):'Aucune'}<br>Observation : ${escapeHtml(handoverNote.value||'—')}</p></div><div class="helpSection"><h4>Avant transfert</h4><p>Faire une sauvegarde JSON, la tester, lancer le diagnostic, remettre le fichier au nouveau comité, puis restaurer et configurer de nouveaux PIN sur le nouvel appareil.</p></div><div style="margin-top:36px;display:flex;justify-content:space-between"><span>Président sortant : __________</span><span>Président entrant : __________</span></div></div>`}
 function printHandover(){const e=document.getElementById('handoverPrint');if(!e)return;const w=window.open('','_blank');w.document.write('<html><head><title>Passation CHEBSEL</title></head><body>'+e.outerHTML+'</body></html>');w.document.close();w.print()}
 function openHelp(){if(isVisitor()){alert('Accès réservé aux responsables.');return}helpView.classList.add('open');renderHelp()} function closeHelp(){helpView.classList.remove('open')}
-function renderHelp(){helpBody.innerHTML=`<h2>CHEBSEL v1.3.2 — Manuel</h2><div class="helpSection"><h4>Connexion</h4><p>Lecture seule par défaut. Le Président initialise le premier PIN; il configure ensuite les PIN du Secrétaire et du Trésorier.</p></div><div class="helpSection"><h4>Rôles</h4><p>Président : accès complet. Secrétaire : membres et appel. Trésorier : finances, paiements et clôture.</p></div><div class="helpSection"><h4>Règles financières</h4><p>Cotisation mensuelle 125 G; RNM 25 G; ANM 50 G; ANM pendant une prestation 100 G.</p></div><div class="helpSection"><h4>Discipline</h4><p>Le règlement prévoit qu’un retard jusqu’à 15 minutes reste un retard; au-delà, il est considéré comme une absence.</p></div><div class="helpSection"><h4>Sauvegarde</h4><p>Sauvegarder après les saisies importantes et au minimum chaque mois. Tester le JSON avant passation/restauration.</p></div><div class="helpSection"><h4>Journal des mises à jour</h4><p><b>v1.3.2 :</b> normalisation des statuts d’appel : Présent, Retard motivé, RNM, Absence motivée, ANM et ANM prestation ; seules les situations non motivées génèrent une amende. <br><b>v1.3.1 :</b> calendrier entièrement administrable : ajout/modification/suppression d’activités, annulation motivée ou réactivation d’une prestation régulière du 2e dimanche sans supprimer la règle récurrente. <br><b>v1.3.0 :</b> calendrier annuel d’activités avec prestations automatiques tous les 2e dimanches à 7h00 et 17h00 ; mode visiteur limité aux indicateurs synthétiques, calendrier du mois, tableau de bord mensuel et débiteurs. <br><b>v1.2.3 :</b> correction des paiements rendue flexible : remplacement immédiat facultatif ou simple annulation avec réenregistrement ultérieur. <br><b>v1.2.2 :</b> correction et annulation sécurisées des paiements, traçabilité des affectations, restauration automatique des dettes et audit avant/après. <br><b>v1.2.1 :</b> ANM prestation portée à 250 G ; cotisation mensuelle obligatoire de 125 G automatiquement comptabilisée en dette pour chaque mois civil non payé à partir d’août 2026. <br><b>Correctifs v1.1.2 :</b> version visible uniformisée, bug VISITOR_KEY corrigé, connexion forcée à chaque lancement, conservation des PIN déjà enregistrés dans chebsel_auth_v1. <br><b>v1.1.2 :</b> PIN, rôles, lecture seule, verrouillage critique, audit enrichi, détection des doublons, diagnostic, tableau mensuel, clôture verrouillée, passation et test de sauvegarde.</p></div>`}
+function renderHelp(){helpBody.innerHTML=`<h2>CHEBSEL v1.5.1 — Manuel</h2><div class="helpSection"><h4>Connexion</h4><p>Lecture seule par défaut. Le Président initialise le premier PIN; il configure ensuite les PIN du Secrétaire et du Trésorier.</p></div><div class="helpSection"><h4>Rôles</h4><p>Président : accès complet. Secrétaire : membres et appel. Trésorier : finances, paiements et clôture.</p></div><div class="helpSection"><h4>Règles financières</h4><p>Cotisation mensuelle 125 G; RNM 25 G; ANM 50 G; ANM pendant une prestation 250 G.</p></div><div class="helpSection"><h4>Discipline</h4><p>Le règlement prévoit qu’un retard jusqu’à 15 minutes reste un retard; au-delà, il est considéré comme une absence.</p></div><div class="helpSection"><h4>Sauvegarde</h4><p>Sauvegarder après les saisies importantes et au minimum chaque mois. Tester le JSON avant passation/restauration.</p></div><div class="helpSection"><h4>Journal des mises à jour</h4><p><b>v1.5.1 :</b> projet Supabase CHEBSEL préconfiguré avec Project URL et clé publishable publique ; aucun secret serveur n’est intégré. <br><b>v1.5.0 :</b> Cloud Foundation : configuration Supabase, authentification cloud, registre d’appareil et synchronisation pilote Membres + Calendrier. Appels et finances restent locaux. <br><b>v1.4.0 :</b> fondation Sync-Ready hors cloud : IndexedDB locale normalisée, UUID pour les nouveaux enregistrements, migration des données existantes, file d’opérations en attente, tombstones de suppression, métadonnées de version, diagnostic de synchronisation et indicateur en ligne/hors ligne. <br><b>v1.3.2 :</b> normalisation des statuts d’appel : Présent, Retard motivé, RNM, Absence motivée, ANM et ANM prestation ; seules les situations non motivées génèrent une amende. <br><b>v1.3.1 :</b> calendrier entièrement administrable : ajout/modification/suppression d’activités, annulation motivée ou réactivation d’une prestation régulière du 2e dimanche sans supprimer la règle récurrente. <br><b>v1.3.0 :</b> calendrier annuel d’activités avec prestations automatiques tous les 2e dimanches à 7h00 et 17h00 ; mode visiteur limité aux indicateurs synthétiques, calendrier du mois, tableau de bord mensuel et débiteurs. <br><b>v1.2.3 :</b> correction des paiements rendue flexible : remplacement immédiat facultatif ou simple annulation avec réenregistrement ultérieur. <br><b>v1.2.2 :</b> correction et annulation sécurisées des paiements, traçabilité des affectations, restauration automatique des dettes et audit avant/après. <br><b>v1.2.1 :</b> ANM prestation portée à 250 G ; cotisation mensuelle obligatoire de 125 G automatiquement comptabilisée en dette pour chaque mois civil non payé à partir d’août 2026. <br><b>Correctifs v1.1.2 :</b> version visible uniformisée, bug VISITOR_KEY corrigé, connexion forcée à chaque lancement, conservation des PIN déjà enregistrés dans chebsel_auth_v1. <br><b>v1.1.2 :</b> PIN, rôles, lecture seule, verrouillage critique, audit enrichi, détection des doublons, diagnostic, tableau mensuel, clôture verrouillée, passation et test de sauvegarde.</p></div>`}
 function refreshHome(){syncBridge();const members=centralMembers(),a=safeParse(ATT_KEY)||{},f=safeParse(FIN_KEY)||{},calls=Array.isArray(a.calls)?a.calls:[],entries=Array.isArray(f.entries)?f.entries:[],active=members.filter(m=>m.active).length,last=[...calls].sort((x,y)=>(y.date||'').localeCompare(x.date||''))[0];let present='—';if(last?.records)present=Object.values(last.records).filter(r=>r.status==='P').length;const debt=entries.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),auto=entries.filter(e=>e.bridgeAuto===true).length;renderBackupHealth();renderMonthlyDashboard();renderCurrentMonthCalendar();updateAuthUI();homeStats.innerHTML=[["Membres actifs",active],["Présents dernier appel",present],["Dette totale",money(debt)],["Amendes liées",auto]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}
 
-memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});paymentCorrectionModal.addEventListener('click',e=>{if(e.target===paymentCorrectionModal)closePaymentCorrectionModal()});activityModal.addEventListener('click',e=>{if(e.target===activityModal)closeActivityModal()});recurringOverrideModal.addEventListener('click',e=>{if(e.target===recurringOverrideModal)closeRecurringOverrideModal()});
+cloudConfigModal.addEventListener('click',e=>{if(e.target===cloudConfigModal)closeCloudConfigModal()});memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});paymentCorrectionModal.addEventListener('click',e=>{if(e.target===paymentCorrectionModal)closePaymentCorrectionModal()});activityModal.addEventListener('click',e=>{if(e.target===activityModal)closeActivityModal()});recurringOverrideModal.addEventListener('click',e=>{if(e.target===recurringOverrideModal)closeRecurringOverrideModal()});
 window.addEventListener('storage',()=>{syncBridge();refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()});
 setInterval(()=>{syncBridge();if(!viewer.classList.contains('open')){refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()}},1400);
 
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
-initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();
+initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
 </script>
 </body>
 </html>
