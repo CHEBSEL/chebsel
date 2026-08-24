@@ -1,0 +1,53 @@
+name: Deploy CHEBSEL v1.5.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-v151.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    if: contains(github.event.head_commit.message, 'Trigger CHEBSEL v1.5.1 deployment')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct deployment patch
+        shell: bash
+        run: |
+          cat deploy/CHEBSEL_v1.5.1.patch.part00 \
+              deploy/CHEBSEL_v1.5.1.patch.part01 \
+              deploy/CHEBSEL_v1.5.1.patch.part02 \
+              deploy/CHEBSEL_v1.5.1.patch.part03 \
+              deploy/CHEBSEL_v1.5.1.patch.part04 \
+              deploy/CHEBSEL_v1.5.1.patch.part05 \
+              deploy/CHEBSEL_v1.5.1.patch.part06 \
+              deploy/CHEBSEL_v1.5.1.patch.part07 \
+              deploy/CHEBSEL_v1.5.1.patch.part08 > /tmp/CHEBSEL_v1.5.1.patch
+          git apply --check /tmp/CHEBSEL_v1.5.1.patch
+
+      - name: Apply CHEBSEL v1.5.1
+        shell: bash
+        run: |
+          git apply /tmp/CHEBSEL_v1.5.1.patch
+          grep -q 'CHEBSEL v1.5.1' index.html
+          grep -q 'chebsel-pwa-stable-v151' sw.js
+          grep -q 'CLOUD_DEFAULT_URL' index.html
+          test -f supabase_schema.sql
+          test -f CLOUD_SETUP.md
+
+      - name: Commit deployment
+        shell: bash
+        run: |
+          git config user.name 'CHEBSEL Deployment'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js README_INSTALLATION.txt supabase_schema.sql CLOUD_SETUP.md
+          git commit -m 'Deploy CHEBSEL v1.5.1 Supabase Connected'
+          git push origin HEAD:main
