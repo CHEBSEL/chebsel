@@ -1,0 +1,29 @@
+name: CHEBSEL v1.7.3 Authorized Cloud Accounts
+on:
+  push:
+    paths:
+      - 'scripts/patch_v173.py'
+      - '.github/workflows/hotfix-v173.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.7.3 patch
+        run: python scripts/patch_v173.py
+      - name: Verify v1.7.3
+        run: |
+          grep -q "CHEBSEL v1.7.3" index.html
+          grep -q "Activer mon compte" index.html
+          grep -q "activate_authorized_account" index.html
+          grep -q "chebsel-pwa-stable-v173" sw.js
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Release CHEBSEL v1.7.3 authorized cloud account activation"
+          git push
