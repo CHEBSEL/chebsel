@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.7.0 — Centre de gestion</title>
+<title>CHEBSEL v1.7.1 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -885,7 +885,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.7.1';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1411,21 +1411,21 @@ async function cloudPilotSync(){
   cloudState.textContent='Envoi des appels…';
   const pa=await pushCloudAttendance(org,userId);
   cloudState.textContent='Réception des finances…';
-  const rf=await pullCloudFinance(org);
+  const rfBefore=await pullCloudFinance(org);
   let pf={entries:0,payments:0,allocations:0,closings:0};
   if(['president','treasurer'].includes(p.role)){
    cloudState.textContent='Envoi des finances…';
    pf=await pushCloudFinance(org,userId);
-   cloudState.textContent='Vérification des finances…';
-   await pullCloudFinance(org);
   }
+  cloudState.textContent='Vérification des finances…';
+  const rf=await pullCloudFinance(org);
   await syncReadyReconcilePilot(false);
   const out=await idbAll('outbox');
   for(const op of out){if(['members','calendar_events','attendance_events','attendance_records','financial_entries','payments','payment_allocations','monthly_closings'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}
-  saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc,attendancePush:pa,attendancePull:ra,financePush:pf,financePull:rf}});
+  saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc,attendancePush:pa,attendancePull:ra,financePush:pf,financePullBefore:rfBefore,financePull:rf}});
   refreshHome();await updateCloudUI();await updateSyncReadyUI();
   cloudState.textContent='🟢 Synchronisé';
-  alert(`Synchronisation terminée. Membres: ${rm}. Calendrier: ${rc}. Appels cloud: ${ra.events}; présences cloud: ${ra.records}. Finances cloud: ${rf.entries} écriture(s), ${rf.payments} paiement(s), ${rf.closings} clôture(s). Envoyés: ${pa.events} appel(s), ${pa.records} présence(s), ${pf.entries} écriture(s), ${pf.payments} paiement(s).`)
+  alert(`Synchronisation terminée. Membres: ${rm}. Calendrier: ${rc}. Appels cloud: ${ra.events}; présences cloud: ${ra.records}. Finances cloud APRÈS sync: ${rf.entries} écriture(s)/dette(s), ${rf.payments} paiement(s), ${rf.allocations} allocation(s), ${rf.closings} clôture(s). Envoyés: ${pa.events} appel(s), ${pa.records} présence(s), ${pf.entries} écriture(s), ${pf.payments} paiement(s), ${pf.allocations} allocation(s), ${pf.closings} clôture(s).`)
  }catch(e){
   cloudState.textContent='🔴 Erreur de synchronisation';
   alert('Synchronisation cloud impossible : '+e.message);
