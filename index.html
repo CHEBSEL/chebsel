@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.11.0 — Centre de gestion</title>
+<title>CHEBSEL v1.11.1 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -1085,7 +1085,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.11.0';
+const APP_VERSION='1.11.1';
 const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
 let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
@@ -2074,6 +2074,39 @@ window.addEventListener('online',()=>{if(isVisitor())syncVisitorPublicSnapshot(t
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)});
 setInterval(()=>{if(isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)},60000);
 setTimeout(()=>{if(isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)},700);
+
+// v1.11.1 — proactive PWA update recovery. Never clears CHEBSEL local data.
+(function initPwaUpdateRecovery(){
+ if(!('serviceWorker' in navigator))return;
+ const reloadKey='chebsel_sw_reload_v1111';
+ let refreshing=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if(refreshing)return;
+  refreshing=true;
+  if(sessionStorage.getItem(reloadKey)!=='1'){
+   sessionStorage.setItem(reloadKey,'1');
+   location.reload();
+  }
+ });
+ window.addEventListener('load',async()=>{
+  try{
+   const reg=await navigator.serviceWorker.register('./sw.js?v=1111',{scope:'./',updateViaCache:'none'});
+   await reg.update();
+   if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
+   reg.addEventListener('updatefound',()=>{
+    const nw=reg.installing;
+    if(!nw)return;
+    nw.addEventListener('statechange',()=>{
+     if(nw.state==='installed'&&navigator.serviceWorker.controller){
+      nw.postMessage({type:'SKIP_WAITING'});
+     }
+    });
+   });
+   setTimeout(()=>reg.update().catch(()=>{}),4000);
+  }catch(e){console.warn('CHEBSEL PWA update:',e)}
+ });
+})();
+
 </script>
 </body>
 </html>
