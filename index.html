@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.10.2 — Centre de gestion</title>
+<title>CHEBSEL v1.10.3 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -155,7 +155,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.10.2</span>
+  <div class="topactions"><span class="versionChip">v1.10.3</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -604,7 +604,7 @@ function daysOld(dateStr){
 }
 function ageBucket(days){return days<=30?'0-30':days<=60?'31-60':days<=90?'61-90':'90+'}
 
-function openProfile(mid){syncBridge();profileView.classList.add('open');renderProfile(mid)}
+function openProfile(mid){if(isVisitor()){openVisitorDebtorProfile(mid);return}syncBridge();profileView.classList.add('open');renderProfile(mid)}
 function closeProfile(){profileView.classList.remove('open');refreshHome()}
 function renderProfile(mid){
  const m=centralMembers().find(x=>x.id===mid);if(!m)return;
@@ -892,9 +892,9 @@ function closeDebtors(){debtorsView.classList.remove('open');refreshHome()}
 function renderDebtors(){
  const q=(debtSearch.value||'').toLowerCase().trim(),bucket=debtAge.value;
  if(isVisitor()&&publicVisitorSnapshot()){
-  let rows=(publicVisitorSnapshot().debtors||[]).map(x=>({name:x.name||'—',balance:Number(x.debt||0),count:Number(x.debt_count||0),days:x.oldest_date?daysOld(x.oldest_date):0}));
+  let rows=(publicVisitorSnapshot().debtors||[]).map(x=>({memberId:x.member_id||'',name:x.name||'—',balance:Number(x.debt||0),days:x.oldest_date?daysOld(x.oldest_date):0,oldestDate:x.oldest_date||''}));
   rows=rows.filter(x=>(!q||x.name.toLowerCase().includes(q))&&(bucket==='all'||ageBucket(x.days)===bucket)).sort((a,b)=>b.balance-a.balance);
-  debtorsList.innerHTML=rows.length?rows.map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(x.name)}</div><div class="memberMeta">${x.count} dette(s) • plus ancienne : ${x.days} jour(s)</div></div><span class="debtTag">${money(x.balance)}</span></div></div>`).join(''):'<div class="empty">Aucun débiteur dans ce filtre.</div>';return
+  debtorsList.innerHTML=rows.length?rows.map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(x.name)}</div><div class="memberMeta">Dette depuis ${x.days} jour(s)</div></div><span class="debtTag">${money(x.balance)}</span></div><div class="memberActions"><button class="secondaryQuick" onclick="openVisitorDebtorProfile('${x.memberId}')">Voir fiche</button></div></div>`).join(''):'<div class="empty">Aucun débiteur dans ce filtre.</div>';return
  }
  const f=safeParse(FIN_KEY)||{},members=centralMembers();
  const rows=[];
@@ -908,7 +908,13 @@ function renderDebtors(){
  rows.sort((a,b)=>b.balance-a.balance);
  debtorsList.innerHTML=rows.length?rows.map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(fullName(x.m))}</div><div class="memberMeta">${x.count} dette(s) • plus ancienne : ${x.days} jour(s)</div></div><span class="debtTag">${money(x.balance)}</span></div><div class="memberActions"><button class="secondaryQuick" onclick="openProfileFromDebtors('${x.m.id}')">Voir fiche</button><button class="quickBtn" onclick="openPaymentModal('${x.m.id}')">Paiement</button></div></div>`).join(''):'<div class="empty">Aucun débiteur dans ce filtre.</div>'
 }
-function openProfileFromDebtors(mid){debtorsView.classList.remove('open');openProfile(mid)}
+function openVisitorDebtorProfile(mid){
+ const x=(publicVisitorSnapshot()?.debtors||[]).find(d=>String(d.member_id||'')===String(mid||''));if(!x)return;
+ const days=x.oldest_date?daysOld(x.oldest_date):0;
+ debtorsView.classList.remove('open');profileView.classList.add('open');
+ profileBody.innerHTML=`<div class="profilePanel"><div class="profileTitle"><div><h3>${escapeHtml(x.name||'—')}</h3><div class="memberMeta">Fiche débiteur — lecture seule</div></div><span class="readonlyTag">Visiteur</span></div><div class="memberStats"><div class="mini"><b>${money(Number(x.debt||0))}</b><span>Dette</span></div><div class="mini"><b>${days}</b><span>Jour(s) de dette</span></div></div><div class="smallnote">Aucune opération financière ne peut être enregistrée en mode Visiteur.</div></div>`;
+}
+function openProfileFromDebtors(mid){debtorsView.classList.remove('open');if(isVisitor()){openVisitorDebtorProfile(mid);return}openProfile(mid)}
 
 function openMonthlyClose(){closeMonth.value=new Date().toISOString().slice(0,7);monthlyView.classList.add('open');renderMonthlyClose()}
 function closeMonthlyClose(){monthlyView.classList.remove('open');refreshHome()}
@@ -1015,7 +1021,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.10.2';
+const APP_VERSION='1.10.3';
 const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
 let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
@@ -1810,6 +1816,15 @@ function entryMonth(e){return String(e.date||'').slice(0,7)}
 function monthlyEntryFor(entries,mid,ym){
  return entries.find(e=>e.memberId===mid && isMonthlyEntry(e) && entryMonth(e)===ym)
 }
+function removePrematureCurrentMonthDebts(){
+ const now=new Date(),current=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+ const closes=safeParse('chebsel_monthly_close_v1')||{};if(closes[current]?.locked)return 0;
+ const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))return 0;
+ const before=f.entries.length;
+ f.entries=f.entries.filter(e=>!(isMonthlyEntry(e)&&entryMonth(e)===current&&Number(e.paid||0)<=0));
+ const removed=before-f.entries.length;if(removed>0)saveJSON(FIN_KEY,f);return removed;
+}
+
 function ensureCompletedMonthlyDebts(){
  const months=completedMonthsSinceStart();
  if(!months.length)return {created:0,months:[]};
@@ -2010,7 +2025,7 @@ cloudPilotSync=async function(silent=false){
 
 updateCompactStatus();
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
-initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
+initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();removePrematureCurrentMonthDebts();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
 
 window.addEventListener('online',()=>{if(isVisitor())syncVisitorPublicSnapshot(true)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)});
