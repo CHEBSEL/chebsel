@@ -1,0 +1,40 @@
+name: CHEBSEL v1.5.6 Sync Init Fix
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v156.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch sync state declarations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("<title>CHEBSEL v1.5.5 — Centre de gestion</title>","<title>CHEBSEL v1.5.6 — Centre de gestion</title>")
+          s=s.replace('v1.5.5','v1.5.6')
+          s=s.replace("const SYNC_DB_NAME='chebsel_sync_ready_v1';","var SYNC_DB_NAME='chebsel_sync_ready_v1';")
+          s=s.replace('const SYNC_DB_VERSION=1;','var SYNC_DB_VERSION=1;')
+          s=s.replace("const SYNC_META_KEY='chebsel_sync_ready_meta_v1';","var SYNC_META_KEY='chebsel_sync_ready_meta_v1';")
+          s=s.replace('const SYNC_TRACKED_KEYS=new Set([','var SYNC_TRACKED_KEYS=new Set([')
+          s=s.replace('let SYNC_DB=null;','var SYNC_DB=null;')
+          s=s.replace('let SYNC_READY_BOOTING=true;','var SYNC_READY_BOOTING=true;')
+          s=s.replace('let SYNC_RECONCILE_TIMER=null;','var SYNC_RECONCILE_TIMER=null;')
+          s=s.replace('let SYNC_QUEUE_VISIBLE=false;','var SYNC_QUEUE_VISIBLE=false;')
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8').replace("chebsel-pwa-stable-v155","chebsel-pwa-stable-v156")
+          sw.write_text(t,encoding='utf-8')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "CHEBSEL Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Fix Sync-Ready initialization and bump v1.5.6" || exit 0
+          git push
