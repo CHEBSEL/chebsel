@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.9.4 — Centre de gestion</title>
+<title>CHEBSEL v1.10.0 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -133,6 +133,8 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 
 #globalBackBtn{position:fixed!important;left:14px!important;bottom:18px!important;right:auto!important;top:auto!important;z-index:1000!important;width:48px!important;height:48px!important;border-radius:999px!important;background:var(--top)!important;color:#fff!important;box-shadow:0 10px 28px rgba(0,0,0,.34)!important;display:grid!important;place-items:center!important;font-size:1.2rem!important}
 @media(min-width:760px){#globalBackBtn{left:22px!important;bottom:22px!important}}
+
+.treasuryFilters{display:grid;grid-template-columns:1fr;gap:10px}.treasurySummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.treasurySummary .mini{min-width:0}.treasuryAmountIn{color:var(--green)}.treasuryAmountOut{color:var(--red)}.treasuryTable{width:100%;border-collapse:collapse}.treasuryTable th,.treasuryTable td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left;font-size:.78rem;vertical-align:top}.treasuryTable th{color:var(--muted);font-size:.7rem;text-transform:uppercase}.treasuryTable td.amount{text-align:right;font-weight:900;white-space:nowrap}@media(min-width:760px){.treasuryFilters{grid-template-columns:repeat(2,1fr)}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -153,7 +155,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.9.4</span>
+  <div class="topactions"><span class="versionChip">v1.10.0</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -206,6 +208,9 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
   <button class="launch visitor-hidden" onclick="openAttendance('call')"><div class="icon">✅</div><h2>Fiche d'appel</h2><p>Votre fiche d'appel reste identique, sauf que la gestion des membres est désormais centralisée ici.</p><span class="go">Faire l'appel →</span></button>
   <button class="launch visitor-hidden" onclick="openFinance('entry')"><div class="icon">💰</div><h2>Cotisations & Amendes</h2><p>Votre fiche financière reste identique et utilise la même liste centrale de membres.</p><span class="go">Ouvrir la fiche →</span></button>
  </section>
+ <section class="grid treasury-launch-grid" style="margin-top:14px">
+  <button class="launch" onclick="openTreasuryExpenses()"><div class="icon">💸</div><h2>Dépenses</h2><p>Enregistrer les sorties d’argent avec date, montant, motif, catégorie et référence.</p><span class="go">Gérer les dépenses →</span></button>
+  <button class="launch" onclick="openTreasuryReport()"><div class="icon">📊</div><h2>Rapports financiers</h2><p>Générer automatiquement les entrées, dépenses et le solde pour une date ou une période.</p><span class="go">Générer un rapport →</span></button>
  <section class="grid" style="margin-top:14px">
   <button class="launch" onclick="openDebtors()"><div class="icon">📋</div><h2>Débiteurs</h2><p>Voir les membres qui ont encore des dettes et leur ancienneté.</p><span class="go">Voir les débiteurs →</span></button>
   <button class="launch" onclick="openMonthlyClose()"><div class="icon">📅</div><h2>Clôture mensuelle</h2><p>Résumé mensuel : dû, payé, solde, membres à jour et débiteurs.</p><span class="go">Clôturer / consulter →</span></button>
@@ -370,6 +375,36 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 <div class="membersView" id="securityView"><div class="viewerbar"><button class="back" onclick="closeSecurity()">← Retour</button><div class="viewtitle"><b>Sécurité & rôles</b><span>Accès CHEBSEL par rôle</span></div></div><div class="membersBody"><div class="profilePanel" id="securitySummary"></div><div class="profilePanel"><h3>Profils autorisés</h3><div id="securityUsers"></div></div><div class="profilePanel"><h3>Matrice des droits</h3><div id="permissionMatrix"></div></div></div></div>
 <div class="membersView" id="handoverView"><div class="viewerbar"><button class="back" onclick="closeHandover()">← Retour</button><div class="viewtitle"><b>Passation de comité</b><span>Fiche de transfert de responsabilité</span></div></div><div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Date de passation</label><input type="date" id="handoverDate"></div><div><label>Observation</label><input id="handoverNote" placeholder="Ex. fin de mandat / renouvellement"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="renderHandover()">Actualiser</button><button class="secondaryQuick" onclick="printHandover()">Imprimer / PDF</button><button class="secondaryQuick" onclick="portalBackup()">Sauvegarde finale</button></div></div><div id="handoverBody"></div></div></div>
 <div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.5.0 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
+
+<div class="membersView" id="treasuryExpensesView">
+ <div class="viewerbar"><button class="back" onclick="closeTreasuryExpenses()">← Retour</button><div class="viewtitle"><b>Dépenses</b><span>Livre des sorties de caisse</span></div></div>
+ <div class="membersBody">
+  <div class="profilePanel"><div class="profileTitle"><div><h3>Nouvelle dépense</h3><div class="memberMeta">Réservé au Trésorier et au Président.</div></div></div>
+   <div class="form">
+    <div><label>Date</label><input type="date" id="expenseDate"></div>
+    <div><label>Montant (HTG)</label><input type="number" min="0.01" step="0.01" id="expenseAmount" placeholder="0.00"></div>
+    <div><label>Catégorie</label><input id="expenseCategory" placeholder="Ex. transport, matériel, prestation"></div>
+    <div><label>Référence</label><input id="expenseReference" placeholder="Facture, reçu, transaction..."></div>
+    <div class="wide"><label>Motif / raison *</label><input id="expenseReason" placeholder="Pourquoi cette dépense a-t-elle été faite ?"></div>
+    <div class="wide"><label>Observation</label><textarea id="expenseNotes" placeholder="Détails facultatifs"></textarea></div>
+   </div>
+   <div class="memberActions"><button class="quickBtn" onclick="saveTreasuryExpense()">Enregistrer la dépense</button></div>
+  </div>
+  <div class="profilePanel"><div class="profileTitle"><div><h3>Historique des dépenses</h3><div class="memberMeta" id="expenseListSummary"></div></div></div><div id="expenseList"></div></div>
+ </div>
+</div>
+
+<div class="membersView" id="treasuryReportView">
+ <div class="viewerbar"><button class="back" onclick="closeTreasuryReport()">← Retour</button><div class="viewtitle"><b>Rapports financiers</b><span>Entrées, dépenses et solde</span></div></div>
+ <div class="membersBody">
+  <div class="profilePanel">
+   <div class="profileTitle"><div><h3>Période du rapport</h3><div class="memberMeta">Pour une seule journée, utilisez la même date au début et à la fin.</div></div></div>
+   <div class="treasuryFilters"><div><label>Date début</label><input type="date" id="treasuryReportFrom"></div><div><label>Date fin</label><input type="date" id="treasuryReportTo"></div></div>
+   <div class="memberActions"><button class="quickBtn" onclick="renderTreasuryReport()">Générer</button><button class="secondaryQuick" onclick="printTreasuryReport()">Imprimer / PDF</button><button class="secondaryQuick" onclick="exportTreasuryReportCSV()">Exporter CSV</button></div>
+  </div>
+  <div id="treasuryReportBody"></div>
+ </div>
+</div>
 
 <div class="membersView" id="settingsHub"><div class="viewerbar"><button class="back" onclick="closeSettingsHub()">← Retour</button><div class="viewtitle"><b>Paramètres</b><span>Administration CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closeSettingsHub();openDiagnostics()">🩺 Diagnostic<span>Vérifier l’intégrité et les incohérences.</span></button><button class="utilityBtn" onclick="closeSettingsHub();openSecurity()">🔐 Sécurité & rôles<span>Profils autorisés et droits d’accès.</span></button></div></div></div></div>
 <div class="membersView" id="privacyHub"><div class="viewerbar"><button class="back" onclick="closePrivacyHub()">← Retour</button><div class="viewtitle"><b>Confidentialité</b><span>Données sensibles et transfert</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closePrivacyHub();openAudit()">🧾 Journal<span>Historique des opérations et modifications.</span></button><button class="utilityBtn" onclick="closePrivacyHub();openHandover()">🤝 Passation de comité<span>Préparer un transfert de responsabilité.</span></button><button class="utilityBtn" onclick="portalBackup()">💾 Sauvegarder<span>Exporter une copie des données CHEBSEL.</span></button><button class="utilityBtn" onclick="openRestoreModal()">↥ Restaurer<span>Restaurer une sauvegarde autorisée.</span></button><button class="utilityBtn" onclick="openRestoreTestModal()">✓ Tester une sauvegarde<span>Contrôler un fichier sans modifier les données.</span></button></div></div></div></div>
@@ -784,6 +819,64 @@ function showReceipt(mid,amount,date,ref,alloc,remain,receiptNo=''){
 function closeReceipt(){receiptModal.classList.remove('open')}
 function printReceipt(){const w=window.open('','_blank');w.document.write('<html><head><title>Reçu CHEBSEL</title></head><body>'+document.getElementById('receiptPrint').outerHTML+'</body></html>');w.document.close();w.focus();w.print()}
 
+
+function treasuryRoleAllowed(){return ['president','treasurer'].includes(currentRoleView())}
+function treasuryExpenses(){const x=safeParse(EXPENSE_KEY);return Array.isArray(x)?x:[]}
+function saveTreasuryExpenses(rows){localStorage.setItem(EXPENSE_KEY,JSON.stringify(rows));try{scheduleAutoCloudSync('expense-write',350)}catch(e){}}
+function openTreasuryExpenses(){
+ if(!treasuryRoleAllowed()){alert('Accès réservé au Trésorier et au Président.');return}
+ expenseDate.value=new Date().toISOString().slice(0,10);expenseAmount.value='';expenseCategory.value='';expenseReference.value='';expenseReason.value='';expenseNotes.value='';
+ treasuryExpensesView.classList.add('open');renderTreasuryExpenses()
+}
+function closeTreasuryExpenses(){treasuryExpensesView.classList.remove('open');refreshHome()}
+function saveTreasuryExpense(){
+ if(!treasuryRoleAllowed()){alert('Accès non autorisé.');return}
+ const amount=Number(expenseAmount.value),reason=(expenseReason.value||'').trim(),date=expenseDate.value;
+ if(!date){alert('Indiquez la date de la dépense.');return}
+ if(!(amount>0)){alert('Indiquez un montant supérieur à zéro.');return}
+ if(!reason){alert('Indiquez le motif de la dépense.');return}
+ const rows=treasuryExpenses(),row={id:'EXP-'+Date.now().toString(36),syncId:uuidv4(),date,amount,category:(expenseCategory.value||'').trim(),reason,reference:(expenseReference.value||'').trim(),notes:(expenseNotes.value||'').trim(),createdAt:syncNowISO(),createdBy:currentUser()?.name||'',deletedAt:null};
+ rows.push(row);saveTreasuryExpenses(rows);audit('Dépense enregistrée',`${date} • ${reason} • ${money(amount)}`,{entity:'expense',entityId:row.syncId,after:row});
+ expenseAmount.value='';expenseCategory.value='';expenseReference.value='';expenseReason.value='';expenseNotes.value='';renderTreasuryExpenses()
+}
+function cancelTreasuryExpense(syncId){
+ if(!treasuryRoleAllowed())return;const rows=treasuryExpenses(),x=rows.find(r=>r.syncId===syncId&&!r.deletedAt);if(!x)return;
+ if(!confirm('Annuler cette dépense ? Elle restera traçable dans le journal.'))return;
+ x.deletedAt=syncNowISO();x.updatedAt=syncNowISO();saveTreasuryExpenses(rows);audit('Dépense annulée',`${x.date} • ${x.reason} • ${money(x.amount)}`,{entity:'expense',entityId:x.syncId,before:{...x,deletedAt:null},after:x});renderTreasuryExpenses()
+}
+function renderTreasuryExpenses(){
+ const rows=treasuryExpenses().filter(x=>!x.deletedAt).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||'').localeCompare(a.createdAt||''));
+ const total=rows.reduce((n,x)=>n+Number(x.amount||0),0);expenseListSummary.textContent=`${rows.length} dépense(s) • Total : ${money(total)}`;
+ expenseList.innerHTML=rows.length?rows.map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(x.reason||'Dépense')}</div><div class="memberMeta">${escapeHtml(x.date||'—')} ${x.category?'• '+escapeHtml(x.category):''} ${x.reference?'• Réf. '+escapeHtml(x.reference):''}</div>${x.notes?`<div class="memberMeta">${escapeHtml(x.notes)}</div>`:''}</div><span class="debtTag">${money(x.amount)}</span></div><div class="memberActions"><button class="delete" onclick="cancelTreasuryExpense('${x.syncId}')">Annuler</button></div></div>`).join(''):'<div class="empty">Aucune dépense enregistrée.</div>'
+}
+function treasuryIncomeRows(from,to){
+ const ps=safeParse(PAYMENT_LOG_KEY)||[];return (Array.isArray(ps)?ps:[]).filter(p=>p.status!=='cancelled'&&p.date&&p.date>=from&&p.date<=to&&Number(p.amount||0)>0).map(p=>{const m=centralMembers().find(x=>x.id===p.memberId);return {date:p.date,label:fullName(m)||'Paiement',reference:p.ref||p.id||'',amount:Number(p.amount||0)}}).sort((a,b)=>a.date.localeCompare(b.date))
+}
+function treasuryExpenseRows(from,to){return treasuryExpenses().filter(x=>!x.deletedAt&&x.date>=from&&x.date<=to).sort((a,b)=>a.date.localeCompare(b.date))}
+function openTreasuryReport(){
+ if(!treasuryRoleAllowed()){alert('Accès réservé au Trésorier et au Président.');return}
+ const d=new Date(),today=d.toISOString().slice(0,10),first=today.slice(0,8)+'01';treasuryReportFrom.value=first;treasuryReportTo.value=today;treasuryReportView.classList.add('open');renderTreasuryReport()
+}
+function closeTreasuryReport(){treasuryReportView.classList.remove('open')}
+function treasuryReportData(){let from=treasuryReportFrom.value,to=treasuryReportTo.value;if(!from||!to)return null;if(from>to)[from,to]=[to,from];const income=treasuryIncomeRows(from,to),expenses=treasuryExpenseRows(from,to),totalIn=income.reduce((n,x)=>n+x.amount,0),totalOut=expenses.reduce((n,x)=>n+Number(x.amount||0),0);return {from,to,income,expenses,totalIn,totalOut,net:totalIn-totalOut}}
+function renderTreasuryReport(){
+ const r=treasuryReportData();if(!r){treasuryReportBody.innerHTML='<div class="empty">Choisissez une période valide.</div>';return}
+ const incomeRows=r.income.length?r.income.map(x=>`<tr><td>${escapeHtml(x.date)}</td><td>${escapeHtml(x.label)}</td><td>${escapeHtml(x.reference||'—')}</td><td class="amount treasuryAmountIn">${money(x.amount)}</td></tr>`).join(''):'<tr><td colspan="4">Aucune entrée.</td></tr>';
+ const expenseRows=r.expenses.length?r.expenses.map(x=>`<tr><td>${escapeHtml(x.date)}</td><td>${escapeHtml(x.reason||'Dépense')}</td><td>${escapeHtml(x.category||x.reference||'—')}</td><td class="amount treasuryAmountOut">${money(x.amount)}</td></tr>`).join(''):'<tr><td colspan="4">Aucune dépense.</td></tr>';
+ treasuryReportBody.innerHTML=`<div class="profilePanel" id="treasuryReportPrintable"><h2 style="margin-top:0">Rapport financier CHEBSEL</h2><div class="memberMeta">Période : ${escapeHtml(r.from)} au ${escapeHtml(r.to)}</div><div class="treasurySummary"><div class="mini"><b class="treasuryAmountIn">${money(r.totalIn)}</b><span>Entrées</span></div><div class="mini"><b class="treasuryAmountOut">${money(r.totalOut)}</b><span>Dépenses</span></div><div class="mini"><b>${money(r.net)}</b><span>Solde net</span></div></div><h3>Entrées</h3><div class="table-wrap"><table class="treasuryTable"><thead><tr><th>Date</th><th>Source</th><th>Référence</th><th>Montant</th></tr></thead><tbody>${incomeRows}</tbody></table></div><h3 style="margin-top:18px">Dépenses</h3><div class="table-wrap"><table class="treasuryTable"><thead><tr><th>Date</th><th>Motif</th><th>Catégorie / Réf.</th><th>Montant</th></tr></thead><tbody>${expenseRows}</tbody></table></div></div>`
+}
+function printTreasuryReport(){renderTreasuryReport();const el=document.getElementById('treasuryReportPrintable');if(!el)return;const w=window.open('','_blank');w.document.write(`<html><head><title>Rapport financier CHEBSEL</title><style>body{font-family:Arial,sans-serif;padding:24px}table{width:100%;border-collapse:collapse}th,td{padding:7px;border-bottom:1px solid #ddd;text-align:left}.mini{display:inline-block;margin-right:24px}.memberMeta{color:#555}</style></head><body>${el.outerHTML}</body></html>`);w.document.close();w.focus();w.print()}
+function exportTreasuryReportCSV(){
+ const r=treasuryReportData();if(!r)return;const lines=[['RAPPORT FINANCIER CHEBSEL'],['Période',r.from,r.to],[],['SYNTHÈSE'],['Entrées',r.totalIn],['Dépenses',r.totalOut],['Solde net',r.net],[],['ENTRÉES'],['Date','Source','Référence','Montant'],...r.income.map(x=>[x.date,x.label,x.reference,x.amount]),[],['DÉPENSES'],['Date','Motif','Catégorie','Référence','Montant'],...r.expenses.map(x=>[x.date,x.reason,x.category||'',x.reference||'',x.amount])];
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n'),b=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Rapport_financier_CHEBSEL_${r.from}_${r.to}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)
+}
+async function pushCloudExpenses(org,userId){
+ const rows=treasuryExpenses();if(!rows.length)return 0;const c=await getCloudClient(),payload=rows.map(x=>({id:x.syncId,organization_id:org,expense_date:x.date,amount:Number(x.amount||0),category:x.category||null,reason:x.reason||'Dépense',reference:x.reference||null,notes:x.notes||null,created_by:userId||null,updated_at:x.updatedAt||x.createdAt||syncNowISO(),deleted_at:x.deletedAt||null}));const {error}=await c.from('expenses').upsert(payload,{onConflict:'id'});if(error)throw error;return payload.length
+}
+async function pullCloudExpenses(org){
+ const c=await getCloudClient(),{data,error}=await c.from('expenses').select('*').eq('organization_id',org);if(error)throw error;const local=treasuryExpenses(),by=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x]));for(const r of data||[]){let x=by.get(r.id);if(!x){x={id:'EXP-'+r.id.slice(0,8),syncId:r.id};local.push(x);by.set(r.id,x)}Object.assign(x,{date:r.expense_date,amount:Number(r.amount||0),category:r.category||'',reason:r.reason||'',reference:r.reference||'',notes:r.notes||'',createdAt:r.created_at||x.createdAt||syncNowISO(),updatedAt:r.updated_at||'',deletedAt:r.deleted_at||null})}localStorage.setItem(EXPENSE_KEY,JSON.stringify(local));return (data||[]).length
+}
+
 function openDebtors(){syncBridge();debtorsView.classList.add('open');renderDebtors()}
 function closeDebtors(){debtorsView.classList.remove('open');refreshHome()}
 function renderDebtors(){
@@ -821,6 +914,8 @@ function exportAuditCSV(){const log=safeParse(AUDIT_KEY)||[],lines=[['Date','Act
 
 
 function globalBack(){
+ if(treasuryExpensesView?.classList.contains('open')){closeTreasuryExpenses();return}
+ if(treasuryReportView?.classList.contains('open')){closeTreasuryReport();return}
  if(settingsHub?.classList.contains('open')){closeSettingsHub();return}
  if(privacyHub?.classList.contains('open')){closePrivacyHub();return}
  if(aboutHub?.classList.contains('open')){closeAboutHub();return}
@@ -871,6 +966,7 @@ function restorePortalBackup(){
    saveJSON(FIN_KEY,p.finance);
    if(Array.isArray(p.audit))saveJSON(AUDIT_KEY,p.audit);else localStorage.removeItem(AUDIT_KEY);
    if(p.monthlyClosings && typeof p.monthlyClosings==='object')saveJSON(CLOSE_KEY,p.monthlyClosings);else localStorage.removeItem(CLOSE_KEY);
+   if(Array.isArray(p.expenses))localStorage.setItem(EXPENSE_KEY,JSON.stringify(p.expenses));
    localStorage.setItem(BACKUP_KEY,new Date().toISOString());
    audit('Restauration complète','Sauvegarde importée depuis '+file.name);
    syncMembersToApps();syncBridge();closeRestoreModal();refreshHome();
@@ -884,7 +980,7 @@ function restorePortalBackup(){
 
 function portalBackup(){
  syncBridge();
- const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},calendar:customActivities(),calendarOverrides:calendarOverrides(),syncReady:{schemaVersion:1,cloudConnected:false,dbName:SYNC_DB_NAME}};
+ const payload={app:'CHEBSEL Portal Pro',version:2,exportedAt:new Date().toISOString(),group:'Chœur d’Homme de l’Église Baptiste Sel et Lumière',sigle:'CHEBSEL',masterMembers:centralMembers(),attendance:safeParse(ATT_KEY),finance:safeParse(FIN_KEY),audit:safeParse(AUDIT_KEY)||[],monthlyClosings:safeParse(CLOSE_KEY)||{},expenses:treasuryExpenses(),calendar:customActivities(),calendarOverrides:calendarOverrides(),syncReady:{schemaVersion:1,cloudConnected:false,dbName:SYNC_DB_NAME}};
  const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Sauvegarde_CHEBSEL_Portail_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
  localStorage.setItem(BACKUP_KEY,new Date().toISOString());audit('Sauvegarde portail','Export JSON complet');refreshHome()
 }
@@ -903,7 +999,8 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.9.4';
+const APP_VERSION='1.10.0';
+const EXPENSE_KEY='chebsel_expenses_v1';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1498,13 +1595,13 @@ function currentRoleView(){if(isVisitor())return 'visitor';const u=currentUser()
 const ROLE_VIEW_MATRIX={
  visitor:new Set(['debtors']),
  secretary:new Set(['members','attendance']),
- treasurer:new Set(['debtors','finance']),
- president:new Set(['members','attendance','finance','debtors','close','audit','diagnostics','security','handover','help'])
+ treasurer:new Set(['debtors','finance','treasury']),
+ president:new Set(['members','attendance','finance','debtors','close','audit','diagnostics','security','handover','help','treasury'])
 };
 function roleCanView(module){const r=currentRoleView();return !!(r&&ROLE_VIEW_MATRIX[r]?.has(module))}
 function applyRoleVisibility(){
  const r=currentRoleView();
- const map={openMembers:'members',openAttendance:'attendance',openFinance:'finance',openDebtors:'debtors',openMonthlyClose:'close',openAudit:'audit',openDiagnostics:'diagnostics',openSecurity:'security',openHandover:'handover',openHelp:'help'};
+ const map={openMembers:'members',openAttendance:'attendance',openFinance:'finance',openDebtors:'debtors',openMonthlyClose:'close',openAudit:'audit',openDiagnostics:'diagnostics',openSecurity:'security',openHandover:'handover',openHelp:'help',openTreasuryExpenses:'treasury',openTreasuryReport:'treasury'};
  document.querySelectorAll('button.launch[onclick]').forEach(b=>{const oc=b.getAttribute('onclick')||'';let mod='';for(const [fn,m] of Object.entries(map))if(oc.includes(fn)){mod=m;break}if(mod)b.classList.toggle('role-hidden',!roleCanView(mod))});
  const president=r==='president';
  const backupSelector='[onclick*="portalBackup"],[onclick*="openRestoreModal"],[onclick*="openRestoreTestModal"]';
@@ -1857,6 +1954,17 @@ const _chebselOpenRestoreModal=openRestoreModal;
 openRestoreModal=function(){if(currentRoleView()!=='president'){alert('Restauration réservée au Président.');return false}return _chebselOpenRestoreModal.apply(this,arguments)};
 const _chebselOpenRestoreTestModal=openRestoreTestModal;
 openRestoreTestModal=function(){if(currentRoleView()!=='president'){alert('Test de sauvegarde réservé au Président.');return false}return _chebselOpenRestoreTestModal.apply(this,arguments)};
+
+const _chebselCloudPilotSyncWithFinance=cloudPilotSync;
+cloudPilotSync=async function(silent=false){
+ const ok=await _chebselCloudPilotSyncWithFinance(silent);
+ try{
+  if(navigator.onLine&&treasuryRoleAllowed()){
+   const ss=await cloudSessionInfo();if(ss){const prof=await getCloudProfile(),org=prof?.organization_id||prof?.org_id,userId=prof?.auth_user_id||ss?.user?.id||'';if(org){await pullCloudExpenses(org);await pushCloudExpenses(org,userId);await pullCloudExpenses(org)}}
+  }
+ }catch(e){if(!silent)console.warn('Synchronisation dépenses:',e);else console.warn('Auto-sync dépenses:',e)}
+ return ok
+};
 
 updateCompactStatus();
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
