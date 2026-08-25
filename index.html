@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.7.1 — Centre de gestion</title>
+<title>CHEBSEL v1.7.2 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.6.0</span>
+  <div class="topactions"><span class="versionChip">v1.7.2</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -885,7 +885,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.7.1';
+const APP_VERSION='1.7.2';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1358,8 +1358,10 @@ async function pushCloudFinance(org,userId){
  const paymentRows=[];
  for(const p of payments){const memberId=financeCloudMemberId(maps,p.memberId);if(!memberId||Number(p.amount||0)<=0)continue;paymentRows.push({id:p.syncId,organization_id:org,member_id:memberId,receipt_number:p.id||null,payment_date:p.date||new Date().toISOString().slice(0,10),amount:Number(p.amount||0),payment_method:p.method||'cash',reference:p.ref||null,status:p.status||'posted',corrects_payment_id:null,created_by:userId||null,updated_at:syncNowISO()})}
  if(paymentRows.length){const {error}=await client.from('payments').upsert(paymentRows,{onConflict:'id'});if(error)throw error}
+ const cancelledPaymentIds=payments.filter(p=>p.syncId&&p.status==='cancelled').map(p=>p.syncId);
+ if(cancelledPaymentIds.length){const {error}=await client.from('payment_allocations').delete().in('payment_id',cancelledPaymentIds);if(error)throw error}
  const allocRows=[];
- for(const p of payments){if(!p.syncId)continue;for(const al of p.alloc||[]){const e=entryByLegacy.get(String(al.entryId||''));if(!e||!e.syncId||Number(al.amount||0)<=0)continue;allocRows.push({id:al.syncId,organization_id:org,payment_id:p.syncId,financial_entry_id:e.syncId,amount:Number(al.amount||0)})}}
+ for(const p of payments){if(!p.syncId||p.status==='cancelled')continue;for(const al of p.alloc||[]){const e=entryByLegacy.get(String(al.entryId||''));if(!e||!e.syncId||Number(al.amount||0)<=0)continue;allocRows.push({id:al.syncId,organization_id:org,payment_id:p.syncId,financial_entry_id:e.syncId,amount:Number(al.amount||0)})}}
  if(allocRows.length){const {error}=await client.from('payment_allocations').upsert(allocRows,{onConflict:'id'});if(error)throw error}
  const {data:cloudCls,error:ce}=await client.from('monthly_closings').select('id,month_reference').eq('organization_id',org);if(ce)throw ce;
  const byMonth=new Map((cloudCls||[]).map(x=>[x.month_reference,x.id])),closeRows=[];let closeChanged=false;
@@ -1376,7 +1378,7 @@ async function pullCloudFinance(org){
   client.from('payment_allocations').select('*').eq('organization_id',org),
   client.from('monthly_closings').select('*').eq('organization_id',org)
  ]);if(ee)throw ee;if(pe)throw pe;if(ae)throw ae;if(ce)throw ce;
- const paidByEntry=new Map();for(const a of allocs||[])paidByEntry.set(a.financial_entry_id,(paidByEntry.get(a.financial_entry_id)||0)+Number(a.amount||0));
+ const activePaymentIds=new Set((payments||[]).filter(p=>p.status!=='cancelled').map(p=>p.id));const paidByEntry=new Map();for(const a of allocs||[]){if(!activePaymentIds.has(a.payment_id))continue;paidByEntry.set(a.financial_entry_id,(paidByEntry.get(a.financial_entry_id)||0)+Number(a.amount||0))}
  const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const bySync=new Map(f.entries.filter(x=>x.syncId).map(x=>[x.syncId,x]));
  for(const r of entries||[]){const legacyMember=maps.byCloud.get(r.member_id);if(!legacyMember)continue;let e=bySync.get(r.id);if(!e){e={id:'cloudfin_'+r.id.slice(0,8),syncId:r.id,memberId:legacyMember};f.entries.push(e);bySync.set(r.id,e)}Object.assign(e,{memberId:legacyMember,type:r.entry_type||'other',typeLabel:r.description||r.entry_type||'Écriture',due:Number(r.due_amount||0),paid:Number(paidByEntry.get(r.id)||0),date:r.entry_date||'',note:r.description||'',updatedAt:r.updated_at||syncNowISO()})}
  localStorage.setItem(FIN_KEY,JSON.stringify(f));
