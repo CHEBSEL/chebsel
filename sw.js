@@ -1,4 +1,4 @@
-const CACHE_NAME='chebsel-pwa-stable-v158';
+const CACHE_NAME='chebsel-pwa-stable-v159';
 const APP_SHELL=[
  './',
  './index.html',

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.8 — Centre de gestion</title>
+<title>CHEBSEL v1.5.9 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.8</span>
+  <div class="topactions"><span class="versionChip">v1.5.9</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -1105,7 +1105,7 @@ async function syncReadyReconcile(enqueueChanges=true){
 }
 function syncReadySchedule(){
  clearTimeout(SYNC_RECONCILE_TIMER);
- SYNC_RECONCILE_TIMER=setTimeout(()=>syncReadyReconcile(true),350)
+ SYNC_RECONCILE_TIMER=setTimeout(()=>syncReadyReconcilePilot(true),350)
 }
 function syncReadyOnLocalWrite(k,v){
  if(SYNC_TRACKED_KEYS.has(k)&&!SYNC_READY_BOOTING)syncReadySchedule()
@@ -1114,7 +1114,7 @@ async function updateSyncReadyUI(){
  if(!document.getElementById('syncReadyPanel'))return;
  try{
   await syncDBOpen();
-  const pending=await idbCountByStatus('outbox','pending'),conflicts=await idbCountByStatus('conflicts','open'),meta=await idbGet('meta','state');
+  const pending=(await idbAll('outbox')).filter(x=>x.status==='pending'&&['members','calendar_events'].includes(x.entity)).length,conflicts=await idbCountByStatus('conflicts','open'),meta=await idbGet('meta','state');
   syncOnlineState.textContent=navigator.onLine?'🟢 En ligne':'🔴 Hors connexion';
   syncPendingCount.textContent=String(pending);
   syncConflictCount.textContent=String(conflicts);
@@ -1182,28 +1182,68 @@ async function pushPilotEntity(store,table,payloadFn,org){const rows=(await idbA
 async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(clean));syncMembersToApps()}return (data||[]).length}
 async function pullCloudCalendar(org){const c=await getCloudClient(),{data,error}=await c.from('calendar_events').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=customActivities(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',auto:false,_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(clean));return (data||[]).length}
 
-async function repairV158Outbox(){
- const key='chebsel_v158_outbox_repaired';
- if(localStorage.getItem(key)==='1')return;
+function canonicalV159Members(){
+ const src=Array.isArray(safeParse(MASTER_KEY))?safeParse(MASTER_KEY):[];
+ const ordered=[...src].sort((a,b)=>(String(a.id||'').startsWith('cloud_')?1:0)-(String(b.id||'').startsWith('cloud_')?1:0));
+ const seenSync=new Set(),seenId=new Set(),seenName=new Set(),clean=[];
+ for(const x of ordered){
+  const sid=String(x.syncId||''),lid=String(x.id||''),name=`${String(x.first||'').trim().toLowerCase()}|${String(x.last||'').trim().toLowerCase()}|${String(x.no||'').trim()}`;
+  if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid))||(name!=='||'&&seenName.has(name)))continue;
+  if(sid)seenSync.add(sid);if(lid)seenId.add(lid);if(name!=='||')seenName.add(name);
+  clean.push(x);
+ }
+ if(clean.length!==src.length){localStorage.setItem(MASTER_KEY,JSON.stringify(clean));syncMembersToApps()}
+ return clean
+}
+function canonicalV159Calendar(){
+ const src=Array.isArray(safeParse(CALENDAR_KEY))?safeParse(CALENDAR_KEY):[];
+ const ordered=[...src].sort((a,b)=>(String(a.id||'').startsWith('cloud_')?1:0)-(String(b.id||'').startsWith('cloud_')?1:0));
+ const seenSync=new Set(),seenId=new Set(),seenNatural=new Set(),clean=[];
+ for(const x of ordered){
+  const sid=String(x.syncId||''),lid=String(x.id||''),nat=`${String(x.title||'').trim().toLowerCase()}|${x.date||''}|${x.time||''}`;
+  if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid))||(nat!=='||'&&seenNatural.has(nat)))continue;
+  if(sid)seenSync.add(sid);if(lid)seenId.add(lid);if(nat!=='||')seenNatural.add(nat);
+  clean.push(x)
+ }
+ if(clean.length!==src.length)localStorage.setItem(CALENDAR_KEY,JSON.stringify(clean));
+ return clean
+}
+async function syncReadyReconcilePilot(enqueueChanges=true){
  await syncDBOpen();
- const out=await idbAll('outbox');
- for(const op of out)await idbDelete('outbox',op.id);
- await syncReadyReconcile(false);
- localStorage.setItem(key,'1');
+ const all=syncSourceRecords();
+ await mirrorStore('members',all.members,enqueueChanges);
+ await mirrorStore('calendar_events',all.calendar_events,enqueueChanges);
+ const meta=await idbGet('meta','state')||{id:'state'};
+ meta.lastPreparedAt=syncNowISO();meta.lastPilotPreparedAt=meta.lastPreparedAt;await idbPut('meta',meta);
  await updateSyncReadyUI();
+}
+async function repairV159LocalState(){
+ await syncDBOpen();
+ const members=canonicalV159Members();
+ canonicalV159Calendar();
+ for(const row of await idbAll('members'))await idbDelete('members',row.syncId);
+ for(const m of members){
+  if(!m.syncId)m.syncId=uuidv4();
+  await idbPut('members',{...m,_syncStatus:'synced',_localUpdatedAt:syncNowISO(),_serverUpdatedAt:m._serverUpdatedAt||null,_version:Number(m._version||0),_deletedAt:null})
+ }
+ const out=await idbAll('outbox');
+ for(const op of out){if(['members','calendar_events'].includes(op.entity))await idbDelete('outbox',op.id)}
+ await syncReadyReconcilePilot(false);
+ localStorage.setItem('chebsel_v159_repaired','1');
+ await updateSyncReadyUI();refreshHome();
 }
 async function manualSyncReadyPrepare(){
  try{
-  await repairV158Outbox();
-  const before=(await idbAll('outbox')).filter(x=>x.status==='pending').length;
-  await syncReadyReconcile(true);
-  const after=(await idbAll('outbox')).filter(x=>x.status==='pending').length;
+  await repairV159LocalState();
+  const before=(await idbAll('outbox')).filter(x=>x.status==='pending'&&['members','calendar_events'].includes(x.entity)).length;
+  await syncReadyReconcilePilot(true);
+  const after=(await idbAll('outbox')).filter(x=>x.status==='pending'&&['members','calendar_events'].includes(x.entity)).length;
   await updateSyncReadyUI();
-  alert('Préparation terminée : '+Math.max(0,after-before)+' nouvelle(s) opération(s). '+after+' opération(s) en attente.');
+  alert(`Préparation terminée : ${Math.max(0,after-before)} nouvelle(s) opération(s) pilote. ${after} opération(s) pilote en attente.`)
  }catch(e){alert('Préparation locale impossible : '+e.message)}
 }
-setTimeout(()=>repairV158Outbox().catch(console.warn),1200);
-async function cloudPilotSync(){await repairV158Outbox();if(isVisitor()){alert('Accès réservé aux responsables.');return}if(!navigator.onLine){alert('Pas d’Internet. Les modifications restent locales.');return}try{cloudState.textContent='Synchronisation…';await syncReadyReconcile(true);const p=await getCloudProfile(),org=p.organization_id;const pm=await pushPilotEntity('members','members',cloudMemberPayload,org),pc=await pushPilotEntity('calendar_events','calendar_events',cloudCalendarPayload,org),rm=await pullCloudMembers(org),rc=await pullCloudCalendar(org);await syncReadyReconcile(false);const out=await idbAll('outbox');for(const op of out){if(['members','calendar_events'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc}});refreshHome();updateCloudUI();updateSyncReadyUI();alert('Synchronisation pilote terminée.')}catch(e){alert('Synchronisation cloud impossible : '+e.message);updateCloudUI()}}
+setTimeout(()=>repairV159LocalState().catch(console.warn),1200);
+async function cloudPilotSync(){await repairV158Outbox();if(isVisitor()){alert('Accès réservé aux responsables.');return}if(!navigator.onLine){alert('Pas d’Internet. Les modifications restent locales.');return}try{cloudState.textContent='Synchronisation…';await syncReadyReconcilePilot(true);const p=await getCloudProfile(),org=p.organization_id;const pm=await pushPilotEntity('members','members',cloudMemberPayload,org),pc=await pushPilotEntity('calendar_events','calendar_events',cloudCalendarPayload,org),rm=await pullCloudMembers(org),rc=await pullCloudCalendar(org);await syncReadyReconcilePilot(false);const out=await idbAll('outbox');for(const op of out){if(['members','calendar_events'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc}});refreshHome();updateCloudUI();updateSyncReadyUI();alert('Synchronisation pilote terminée.')}catch(e){alert('Synchronisation cloud impossible : '+e.message);updateCloudUI()}}
 async function updateCloudUI(){if(!document.getElementById('cloudFoundationPanel'))return;const cfg=cloudConfigured(),meta=safeParse(CLOUD_META_KEY)||{},session=cfg?await cloudSessionInfo():null;cloudState.textContent=!cfg?'⚪ Non configuré':(!navigator.onLine?'🔴 Hors connexion':(session?'🟢 Connecté':'🟡 Configuré'));cloudSession.textContent=session?(session.user?.email||'Session active'):'Aucune';cloudLastSync.textContent=meta.lastSyncAt?new Date(meta.lastSyncAt).toLocaleString('fr-FR'):'—'}
 window.addEventListener('online',()=>updateCloudUI());window.addEventListener('offline',()=>updateCloudUI());
 
