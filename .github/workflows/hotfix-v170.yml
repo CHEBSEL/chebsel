@@ -1,0 +1,30 @@
+name: CHEBSEL v1.7.0 Finance Cloud Sync
+on:
+  push:
+    paths:
+      - 'scripts/patch_v170.py'
+      - '.github/workflows/hotfix-v170.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.7.0 patch
+        run: python scripts/patch_v170.py
+      - name: Verify v1.7.0
+        run: |
+          grep -q 'CHEBSEL v1.7.0' index.html
+          grep -q 'pushCloudFinance' index.html
+          grep -q 'pullCloudFinance' index.html
+          grep -q 'Envoi des finances' index.html
+          grep -q 'Finances cloud' index.html
+      - name: Commit
+        run: |
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Add Finance Cloud Sync v1.7.0'
+          git push
