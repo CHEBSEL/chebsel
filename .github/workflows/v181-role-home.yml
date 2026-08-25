@@ -1,0 +1,125 @@
+name: CHEBSEL v1.8.1 Role-Based Home
+on:
+  push:
+    paths:
+      - '.github/workflows/v181-role-home.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply role-based UX
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert "CHEBSEL v1.8.0" in s and "const APP_VERSION='1.8.0'" in s
+          s=s.replace('CHEBSEL v1.8.0 — Centre de gestion','CHEBSEL v1.8.1 — Centre de gestion')
+          s=s.replace('<span class="versionChip">v1.8.0</span>','<span class="versionChip">v1.8.1</span>')
+          s=s.replace("const APP_VERSION='1.8.0';","const APP_VERSION='1.8.1';")
+
+          # Role chooser styling.
+          css='''\n.roleChoiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.roleChoice{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:16px;padding:16px 10px;font-weight:900;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.roleChoice span{font-size:1.45rem}.roleChoice.active{outline:3px solid var(--primary);background:var(--card)}.roleChoice.visitor{grid-column:1/-1}.loginRoleName{text-align:center;font-weight:900;margin:4px 0 10px}.role-hidden{display:none!important}@media(min-width:620px){.roleChoiceGrid{grid-template-columns:repeat(4,1fr)}.roleChoice.visitor{grid-column:auto}}\n'''
+          s=s.replace('</style>',css+'</style>',1)
+
+          # Replace technical two-layer login with a single role/password screen.
+          pattern=r'<div class="modal" id="loginModal">.*?</div></div>\n<div class="modal" id="pinModal">'
+          repl='''<div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0;text-align:center">Connexion CHEBSEL</h3><p class="small" id="loginHelp" style="text-align:center">Chwazi pwofil ou.</p><div class="roleChoiceGrid"><button class="roleChoice" data-login-role="president" onclick="chooseLoginRole('president',this)"><span>👑</span>Président</button><button class="roleChoice" data-login-role="secretary" onclick="chooseLoginRole('secretary',this)"><span>📝</span>Secrétaire</button><button class="roleChoice" data-login-role="treasurer" onclick="chooseLoginRole('treasurer',this)"><span>💰</span>Trésorier</button><button class="roleChoice visitor" onclick="enterVisitorMode()"><span>👁</span>Visiteur</button></div><select id="loginUser" style="display:none"></select><div id="loginPasswordWrap" style="display:none"><div class="loginRoleName" id="loginRoleName"></div><div class="form"><div class="wide"><label>Mot de passe CHEBSEL</label><input type="password" id="loginPin" autocomplete="current-password" placeholder="Mot de passe CHEBSEL"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Se connecter</button><button class="cancel" onclick="resetLoginChoice()">Changer de profil</button></div><div class="permissionNote" style="margin-top:10px;text-align:center">Sou yon nouvo aparèy, premye koneksyon an bezwen entènèt. Apre sa menm modpas la mache offline.</div></div></div></div>
+<div class="modal" id="pinModal">'''
+          s,n=re.subn(pattern,repl,s,count=1,flags=re.S)
+          assert n==1, 'login modal replacement failed'
+
+          # Replace login modal controller.
+          pattern=r'function openLoginModal\(\)\{.*?\n\}\nfunction closeLoginModal\(\)'
+          repl='''const LOGIN_ROLE_LABELS={president:'Président',secretary:'Secrétaire',treasurer:'Trésorier'};
+function chooseLoginRole(role,btn){
+ if(!['president','secretary','treasurer'].includes(role))return;
+ loginUser.value=role;document.querySelectorAll('[data-login-role]').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');
+ loginRoleName.textContent=LOGIN_ROLE_LABELS[role];loginPasswordWrap.style.display='block';loginPin.value='';loginPin.focus();
+ loginHelp.textContent='Antre Mot de passe CHEBSEL ou.';
+}
+function resetLoginChoice(){loginUser.value='';loginPin.value='';loginPasswordWrap.style.display='none';loginRoleName.textContent='';document.querySelectorAll('[data-login-role]').forEach(x=>x.classList.remove('active'));loginHelp.textContent='Chwazi pwofil ou.'}
+function openLoginModal(){
+ loginUser.innerHTML='<option value=""></option><option value="president">Président</option><option value="secretary">Secrétaire</option><option value="treasurer">Trésorier</option>';
+ resetLoginChoice();loginModal.classList.add('open')
+}
+function closeLoginModal()'''
+          s,n=re.subn(pattern,repl,s,count=1,flags=re.S)
+          assert n==1, 'openLoginModal replacement failed'
+
+          # Role visibility controller. Home summaries/calendar/monthly dashboard remain visible to all.
+          marker='function updateAuthUI(){'
+          rolejs='''function currentRoleView(){if(isVisitor())return 'visitor';const u=currentUser();return u?.key||null}
+const ROLE_VIEW_MATRIX={
+ visitor:new Set(['debtors']),
+ secretary:new Set(['members','attendance']),
+ treasurer:new Set(['debtors','finance']),
+ president:new Set(['members','attendance','finance','debtors','close','audit','diagnostics','security','handover','help'])
+};
+function roleCanView(module){const r=currentRoleView();return !!(r&&ROLE_VIEW_MATRIX[r]?.has(module))}
+function applyRoleVisibility(){
+ const r=currentRoleView();
+ const map={openMembers:'members',openAttendance:'attendance',openFinance:'finance',openDebtors:'debtors',openMonthlyClose:'close',openAudit:'audit',openDiagnostics:'diagnostics',openSecurity:'security',openHandover:'handover',openHelp:'help'};
+ document.querySelectorAll('button.launch[onclick]').forEach(b=>{const oc=b.getAttribute('onclick')||'';let mod='';for(const [fn,m] of Object.entries(map))if(oc.includes(fn)){mod=m;break}if(mod)b.classList.toggle('role-hidden',!roleCanView(mod))});
+ const president=r==='president';
+ ['cloudFoundationPanel','syncReadyPanel','backupHealth'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('role-hidden',!president)});
+ if(syncMessage)syncMessage.classList.toggle('role-hidden',!president);
+ document.querySelectorAll('p.smallnote').forEach(e=>e.classList.toggle('role-hidden',!president));
+ const calBtn=document.querySelector('#calendarHomePanel button');if(calBtn)calBtn.style.display=(r&&r!=='visitor')?'':'none';
+}
+'''
+          assert marker in s
+          s=s.replace(marker,rolejs+marker,1)
+          s=s.replace("function updateAuthUI(){const u=currentUser(),visitor=isVisitor();", "function updateAuthUI(){const u=currentUser(),visitor=isVisitor();",1)
+          # ensure controller runs after old visitor restrictions
+          s=s.replace('applyVisitorRestrictions()}','applyVisitorRestrictions();applyRoleVisibility()}',1)
+
+          # Do not force-close calendar for Visitor; current-month calendar remains baseline. Keep full calendar non-visitor.
+          s=s.replace('[viewer,membersView,diagnosticsView,securityView,handoverView,helpView,calendarView]','[viewer,membersView,diagnosticsView,securityView,handoverView,helpView]')
+
+          # Update cloud panel terminology and make technical panel president-only via controller.
+          s=s.replace('☁️ CHEBSEL Cloud Foundation','☁️ État de synchronisation')
+          s=s.replace('CHEBSEL Cloud • Membres + Calendrier + Appels + Finances.','Synchronisation automatique des données CHEBSEL.')
+
+          # Add defense-in-depth view guards to key modules.
+          s=s.replace('function openAttendance(page){syncMembersToApps();','function openAttendance(page){if(!roleCanView(\'attendance\')){alert(\'Accès non autorisé pour ce profil.\');return}syncMembersToApps();')
+          s=s.replace('function openFinance(page){syncMembersToApps();','function openFinance(page){if(!roleCanView(\'finance\')){alert(\'Accès non autorisé pour ce profil.\');return}syncMembersToApps();')
+          s=s.replace('function openDiagnostics(){if(isVisitor()){alert(\'Accès réservé aux responsables.\');return}','function openDiagnostics(){if(!roleCanView(\'diagnostics\')){alert(\'Accès non autorisé pour ce profil.\');return}')
+          s=s.replace('function openSecurity(){if(isVisitor()){alert(\'Accès réservé aux responsables.\');return}','function openSecurity(){if(!roleCanView(\'security\')){alert(\'Accès non autorisé pour ce profil.\');return}')
+          s=s.replace('function openHandover(){if(isVisitor()){alert(\'Accès réservé aux responsables.\');return}','function openHandover(){if(!roleCanView(\'handover\')){alert(\'Accès non autorisé pou pwofil sa a.\');return}')
+          s=s.replace('function openHelp(){if(isVisitor()){alert(\'Accès réservé aux responsables.\');return}','function openHelp(){if(!roleCanView(\'help\')){alert(\'Accès non autorisé pou pwofil sa a.\');return}')
+
+          # Update stale help language where visible to President.
+          s=s.replace('PIN locaux, profils autorisés et mode lecture seule.','Profils autorisés, rôles et droits d’accès.')
+          s=s.replace('Accès local protégé par PIN','Accès CHEBSEL par rôle')
+
+          p.write_text(s,encoding='utf-8')
+          print('v1.8.1 role UX applied')
+          PY
+      - name: Bump service worker cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('sw.js')
+          s=p.read_text(encoding='utf-8')
+          import re
+          s=re.sub(r'chebsel-pwa-stable-v\d+', 'chebsel-pwa-stable-v181', s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.8.1" index.html
+          grep -q "ROLE_VIEW_MATRIX" index.html
+          grep -q "chooseLoginRole" index.html
+          grep -q "Mot de passe CHEBSEL" index.html
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.8.1 role-based home" || exit 0
+          git push
