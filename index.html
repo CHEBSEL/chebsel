@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.6 — Centre de gestion</title>
+<title>CHEBSEL v1.5.7 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.6</span>
+  <div class="topactions"><span class="versionChip">v1.5.7</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -395,6 +395,8 @@ const FIN_B64='PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImZyIj4KPGhlYWQ+CjxtZXRhIGNoY
 const ATT_KEY='chebsel_attendance_app_v1';
 const FIN_KEY='chebsel_finance_app_v1';
 const MASTER_KEY='chebsel_master_members_v1';
+const CALENDAR_KEY='chebsel_calendar_v1';
+const CALENDAR_OVERRIDE_KEY='chebsel_calendar_overrides_v1';
 
 const CHEBSEL_DEFAULT_MEMBERS=[
  {id:"m1",no:"1",first:"Osnel",last:"Ulysse",sex:"",function:"",category:"Membre",group:"Chœur d’Homme",phone:"",active:true,note:""},
@@ -1341,9 +1343,6 @@ function ensureMonthBeforeClosing(ym){
 }
 
 
-const CALENDAR_KEY='chebsel_calendar_v1';
-
-const CALENDAR_OVERRIDE_KEY='chebsel_calendar_overrides_v1';
 function calendarOverrides(){const x=safeParse(CALENDAR_OVERRIDE_KEY);return x&&typeof x==='object'?x:{}}
 function saveCalendarOverrides(x){saveJSON(CALENDAR_OVERRIDE_KEY,x)}
 function recurringOverrideFor(id){return calendarOverrides()[id]||null}
