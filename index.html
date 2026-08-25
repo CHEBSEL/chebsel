@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.5 — Centre de gestion</title>
+<title>CHEBSEL v1.5.6 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.5</span>
+  <div class="topactions"><span class="versionChip">v1.5.6</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -904,16 +904,16 @@ function isVisitor(){return sessionStorage.getItem(VISITOR_KEY)==='1'}
 // =======================
 // CHEBSEL v1.4 Sync-Ready
 // =======================
-const SYNC_DB_NAME='chebsel_sync_ready_v1';
-const SYNC_DB_VERSION=1;
-const SYNC_META_KEY='chebsel_sync_ready_meta_v1';
-const SYNC_TRACKED_KEYS=new Set([
+var SYNC_DB_NAME='chebsel_sync_ready_v1';
+var SYNC_DB_VERSION=1;
+var SYNC_META_KEY='chebsel_sync_ready_meta_v1';
+var SYNC_TRACKED_KEYS=new Set([
  MASTER_KEY,ATT_KEY,FIN_KEY,PAYMENT_LOG_KEY,AUDIT_KEY,CLOSE_KEY,CALENDAR_KEY,CALENDAR_OVERRIDE_KEY
 ]);
-let SYNC_DB=null;
-let SYNC_READY_BOOTING=true;
-let SYNC_RECONCILE_TIMER=null;
-let SYNC_QUEUE_VISIBLE=false;
+var SYNC_DB=null;
+var SYNC_READY_BOOTING=true;
+var SYNC_RECONCILE_TIMER=null;
+var SYNC_QUEUE_VISIBLE=false;
 
 function uuidv4(){
  if(globalThis.crypto?.randomUUID)return crypto.randomUUID();
