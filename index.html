@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.9.0 — Centre de gestion</title>
+<title>CHEBSEL v1.9.1 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -150,7 +150,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.9.0</span>
+  <div class="topactions"><span class="versionChip">v1.9.1</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -891,7 +891,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.9.0';
+const APP_VERSION='1.9.1';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1538,15 +1538,16 @@ async function verifyOfflinePassword(role,password){
 }
 const AUTO_SYNC_PREF_KEY='chebsel_auto_sync_enabled_v1';
 function autoSyncEnabled(){return localStorage.getItem(AUTO_SYNC_PREF_KEY)!=='0'}
+function isResponsibleRole(role=currentRoleView()){return ['president','secretary','treasurer'].includes(role)}
 function updateCompactStatus(){
  const dot=document.getElementById('netDot'),btn=document.getElementById('syncToggleBtn'),label=document.getElementById('syncToggleLabel'),wrap=document.getElementById('presidentCompactStatus');
- if(dot)dot.classList.toggle('online',navigator.onLine);
+ if(dot){dot.classList.toggle('online',navigator.onLine);dot.title=navigator.onLine?'En ligne':'Hors connexion'}
  if(btn)btn.classList.toggle('on',autoSyncEnabled());
  if(label)label.textContent=autoSyncEnabled()?'✓ Sync':'Sync off';
- if(wrap)wrap.style.display=currentRoleView()==='president'?'flex':'none';
+ if(wrap)wrap.style.display=isResponsibleRole()?'flex':'none';
 }
 function toggleAutoSync(){
- if(currentRoleView()!=='president')return;
+ if(!isResponsibleRole())return;
  const next=!autoSyncEnabled();localStorage.setItem(AUTO_SYNC_PREF_KEY,next?'1':'0');updateCompactStatus();
  if(next&&navigator.onLine)scheduleAutoCloudSync('toggle-on',150);
 }
