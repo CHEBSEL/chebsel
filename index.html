@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.8.3 — Centre de gestion</title>
+<title>CHEBSEL v1.9.0 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -128,6 +128,8 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 
 
 .roleChoiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.roleChoice{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:16px;padding:16px 10px;font-weight:900;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.roleChoice span{font-size:1.45rem}.roleChoice.active{outline:3px solid var(--primary);background:var(--card)}.roleChoice.visitor{grid-column:1/-1}.loginRoleName{text-align:center;font-weight:900;margin:4px 0 10px}.role-hidden{display:none!important}@media(min-width:620px){.roleChoiceGrid{grid-template-columns:repeat(4,1fr)}.roleChoice.visitor{grid-column:auto}}
+
+.connectionDot{width:11px;height:11px;border-radius:999px;background:var(--red);box-shadow:0 0 0 3px rgba(255,255,255,.10);flex:0 0 11px}.connectionDot.online{background:var(--green)}.syncToggle{width:42px;height:24px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.14);position:relative;padding:0}.syncToggle:after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s}.syncToggle.on{background:#16794b}.syncToggle.on:after{left:21px}.syncCheck{font-size:.74rem;font-weight:900;opacity:.82}.utilityMenu{display:grid;grid-template-columns:1fr;gap:10px}.utilityBtn{border:1px solid var(--line);border-radius:14px;background:var(--soft);color:var(--text);padding:13px;text-align:left;font-weight:850}.utilityBtn span{display:block;color:var(--muted);font-size:.73rem;font-weight:600;margin-top:3px}.presidentCompact{display:flex;align-items:center;gap:7px}.old-tech-panel{display:none!important}@media(min-width:700px){.utilityMenu{grid-template-columns:repeat(2,1fr)}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -148,7 +150,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.8.3</span>
+  <div class="topactions"><span class="versionChip">v1.9.0</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -156,13 +158,13 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
    <button class="topbtn" id="globalBackBtn" onclick="globalBack()" title="Retour" aria-label="Retour">←</button>
   </div>
  </div>
-<div class="authStrip"><span class="authUser" id="authUserLabel">Mode lecture seule</span></div></header>
+<div class="authStrip"><div class="presidentCompact" id="presidentCompactStatus"><span id="netDot" class="connectionDot" title="État de connexion"></span><button id="syncToggleBtn" class="syncToggle" onclick="toggleAutoSync()" title="Synchronisation automatique" aria-label="Synchronisation automatique"></button><span class="syncCheck" id="syncToggleLabel">Sync</span></div><span class="authUser" id="authUserLabel">Mode lecture seule</span></div></header>
 
 <main class="home">
  <section class="hero"><div style="display:flex;align-items:center;gap:14px"><img src="icons/chebsel-logo.png" alt="Logo CHEBSEL" style="width:72px;height:72px;object-fit:contain;flex:0 0 72px"><div><h1>Bienvenue dans le registre numérique CHEBSEL</h1><p>Chœur d’Homme de l’Église Baptiste Sel et Lumière</p></div></div></section>
  <div class="stats" id="homeStats"></div>
 
-<div class="syncReadyPanel visitor-hidden" id="syncReadyPanel">
+<div class="syncReadyPanel visitor-hidden old-tech-panel" id="syncReadyPanel">
  <div class="syncReadyHead">
   <div>
    <h3>🔄 Fondation Sync-Ready</h3>
@@ -186,7 +188,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 </div>
 
 
-<div class="cloudPanel visitor-hidden" id="cloudFoundationPanel"><div class="cloudHead"><div><h3 style="margin:0">☁️ État de synchronisation</h3><div class="memberMeta">Synchronisation automatique des données CHEBSEL.</div></div><span class="cloudState" id="cloudState">Non configuré</span></div><div class="cloudGrid"><div><span>Backend</span><b>Supabase</b></div><div><span>Session cloud</span><b id="cloudSession">Aucune</b></div><div><span>Cloud sync</span><b>Membres + Calendrier</b></div><div><span>Dernière sync cloud</span><b id="cloudLastSync">—</b></div></div><div class="memberActions" style="margin-top:10px"><button class="secondaryQuick" onclick="openCloudConfigModal()">⚙ Configurer</button><button class="secondaryQuick" onclick="cloudSignUp()">🆕 Activer mon compte</button><button class="secondaryQuick" onclick="cloudSignIn()">🔐 Connexion cloud</button><button class="secondaryQuick" onclick="cloudPilotSync()">↕ Synchroniser maintenant</button><button class="secondaryQuick" onclick="cloudSignOut()">Déconnexion cloud</button></div><div class="memberMeta" style="margin-top:8px">Synchronisation automatique active : les changements restent disponibles hors ligne et partent vers le cloud dès que la connexion revient. Les droits dépendent du rôle. N’utilisez jamais une clé service_role dans l’application.</div></div>
+<div class="cloudPanel visitor-hidden old-tech-panel" id="cloudFoundationPanel"><div class="cloudHead"><div><h3 style="margin:0">☁️ État de synchronisation</h3><div class="memberMeta">Synchronisation automatique des données CHEBSEL.</div></div><span class="cloudState" id="cloudState">Non configuré</span></div><div class="cloudGrid"><div><span>Backend</span><b>Supabase</b></div><div><span>Session cloud</span><b id="cloudSession">Aucune</b></div><div><span>Cloud sync</span><b>Membres + Calendrier</b></div><div><span>Dernière sync cloud</span><b id="cloudLastSync">—</b></div></div><div class="memberActions" style="margin-top:10px"><button class="secondaryQuick" onclick="openCloudConfigModal()">⚙ Configurer</button><button class="secondaryQuick" onclick="cloudSignUp()">🆕 Activer mon compte</button><button class="secondaryQuick" onclick="cloudSignIn()">🔐 Connexion cloud</button><button class="secondaryQuick" onclick="cloudPilotSync()">↕ Synchroniser maintenant</button><button class="secondaryQuick" onclick="cloudSignOut()">Déconnexion cloud</button></div><div class="memberMeta" style="margin-top:8px">Synchronisation automatique active : les changements restent disponibles hors ligne et partent vers le cloud dès que la connexion revient. Les droits dépendent du rôle. N’utilisez jamais une clé service_role dans l’application.</div></div>
 <div class="calendarPanel" id="calendarHomePanel">
  <div class="calendarHead">
   <div><h3>📅 Calendrier d’activités</h3><div class="memberMeta" id="calendarCurrentTitle">Activités du mois en cours</div></div>
@@ -206,11 +208,10 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
   <button class="launch" onclick="openMonthlyClose()"><div class="icon">📅</div><h2>Clôture mensuelle</h2><p>Résumé mensuel : dû, payé, solde, membres à jour et débiteurs.</p><span class="go">Clôturer / consulter →</span></button>
   <button class="launch" onclick="openAudit()"><div class="icon">🧾</div><h2>Journal</h2><p>Historique local des ajouts, modifications, paiements et corrections.</p><span class="go">Voir le journal →</span></button>
  </section>
- <section class="grid" style="margin-top:14px">
-  <button class="launch visitor-hidden" onclick="openDiagnostics()"><div class="icon">🩺</div><h2>Diagnostic</h2><p>Doublons, incohérences, amendes, paiements et intégrité des données.</p><span class="go">Vérifier le système →</span></button>
-  <button class="launch visitor-hidden" onclick="openSecurity()"><div class="icon">🔐</div><h2>Sécurité & rôles</h2><p>Profils autorisés, rôles et droits d’accès.</p><span class="go">Gérer les accès →</span></button>
-  <button class="launch visitor-hidden" onclick="openHandover()"><div class="icon">🤝</div><h2>Passation de comité</h2><p>Sauvegarde finale, état des dettes et transfert de responsabilité.</p><span class="go">Préparer la passation →</span></button>
-  <button class="launch visitor-hidden" onclick="openHelp()"><div class="icon">📘</div><h2>Manuel & version</h2><p>Aide rapide, règles et journal des mises à jour.</p><span class="go">Ouvrir le manuel →</span></button>
+ <section class="grid" style="margin-top:14px" id="presidentUtilityCards">
+  <button class="launch visitor-hidden" onclick="openSettingsHub()"><div class="icon">⚙️</div><h2>Paramètres</h2><p>Journal, diagnostic, sécurité et gestion des rôles.</p><span class="go">Ouvrir les paramètres →</span></button>
+  <button class="launch visitor-hidden" onclick="openPrivacyHub()"><div class="icon">🔒</div><h2>Confidentialité</h2><p>Passation de comité, sauvegarde et restauration.</p><span class="go">Ouvrir confidentialité →</span></button>
+  <button class="launch visitor-hidden" onclick="openAboutHub()"><div class="icon">ℹ️</div><h2>À propos</h2><p>Manuel, version et informations sur l’application CHEBSEL.</p><span class="go">À propos de l’app →</span></button>
  </section>
  <div class="backupHealth visitor-hidden" id="backupHealth"></div>
  <div class="profilePanel" id="installCard" style="margin-top:12px;display:none">
@@ -376,6 +377,9 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 <div class="membersView" id="handoverView"><div class="viewerbar"><button class="back" onclick="closeHandover()">← Retour</button><div class="viewtitle"><b>Passation de comité</b><span>Fiche de transfert de responsabilité</span></div></div><div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Date de passation</label><input type="date" id="handoverDate"></div><div><label>Observation</label><input id="handoverNote" placeholder="Ex. fin de mandat / renouvellement"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="renderHandover()">Actualiser</button><button class="secondaryQuick" onclick="printHandover()">Imprimer / PDF</button><button class="secondaryQuick" onclick="portalBackup()">Sauvegarde finale</button></div></div><div id="handoverBody"></div></div></div>
 <div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.5.0 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
 
+<div class="membersView" id="settingsHub"><div class="viewerbar"><button class="back" onclick="closeSettingsHub()">← Retour</button><div class="viewtitle"><b>Paramètres</b><span>Administration CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closeSettingsHub();openAudit()">🧾 Journal<span>Historique des opérations et modifications.</span></button><button class="utilityBtn" onclick="closeSettingsHub();openDiagnostics()">🩺 Diagnostic<span>Vérifier l’intégrité et les incohérences.</span></button><button class="utilityBtn" onclick="closeSettingsHub();openSecurity()">🔐 Sécurité & rôles<span>Profils autorisés et droits d’accès.</span></button></div></div></div></div>
+<div class="membersView" id="privacyHub"><div class="viewerbar"><button class="back" onclick="closePrivacyHub()">← Retour</button><div class="viewtitle"><b>Confidentialité</b><span>Données sensibles et transfert</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closePrivacyHub();openHandover()">🤝 Passation de comité<span>Préparer un transfert de responsabilité.</span></button><button class="utilityBtn" onclick="portalBackup()">💾 Sauvegarder<span>Exporter une copie des données CHEBSEL.</span></button><button class="utilityBtn" onclick="openRestoreModal()">↥ Restaurer<span>Restaurer une sauvegarde autorisée.</span></button><button class="utilityBtn" onclick="openRestoreTestModal()">✓ Tester une sauvegarde<span>Contrôler un fichier sans modifier les données.</span></button></div></div></div></div>
+<div class="membersView" id="aboutHub"><div class="viewerbar"><button class="back" onclick="closeAboutHub()">← Retour</button><div class="viewtitle"><b>À propos</b><span>CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><h2 style="margin-top:0">CHEBSEL <span id="aboutVersion"></span></h2><p class="memberMeta">Centre de gestion du Chœur d’Homme de l’Église Baptiste Sel et Lumière.</p><div class="utilityMenu" style="margin-top:12px"><button class="utilityBtn" onclick="closeAboutHub();openHelp()">📘 Manuel de l’application<span>Aide, règles et utilisation générale.</span></button></div></div></div></div>
 <div class="modal" id="cloudConfigModal"><div class="modalBox"><h3 style="margin-top:0">Configuration CHEBSEL Cloud</h3><div class="form"><div class="wide"><label>Supabase Project URL</label><input id="cloudUrl" placeholder="https://xxxxx.supabase.co"></div><div class="wide"><label>Publishable / anon key</label><input id="cloudAnonKey" placeholder="Clé publique client"></div><div class="wide"><label>Email utilisateur cloud</label><input id="cloudEmail" type="email" placeholder="responsable@..."></div><div class="wide"><label>Mot de passe</label><input id="cloudPassword" type="password" placeholder="Mot de passe Supabase Auth"></div></div><p class="small">La clé <b>service_role</b> est interdite dans cette application. Utilisez uniquement la clé publique prévue pour le navigateur.</p><div class="modalActions"><button class="save" onclick="saveCloudConfig()">Enregistrer</button><button class="cancel" onclick="closeCloudConfigModal()">Fermer</button></div></div></div>
 <div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0;text-align:center">Connexion CHEBSEL</h3><p class="small" id="loginHelp" style="text-align:center">Chwazi pwofil ou.</p><div class="roleChoiceGrid"><button class="roleChoice" data-login-role="president" onclick="chooseLoginRole('president',this)"><span>👑</span>Président</button><button class="roleChoice" data-login-role="secretary" onclick="chooseLoginRole('secretary',this)"><span>📝</span>Secrétaire</button><button class="roleChoice" data-login-role="treasurer" onclick="chooseLoginRole('treasurer',this)"><span>💰</span>Trésorier</button><button class="roleChoice visitor" onclick="enterVisitorMode()"><span>👁</span>Visiteur</button></div><select id="loginUser" style="display:none"></select><div id="loginPasswordWrap" style="display:none"><div class="loginRoleName" id="loginRoleName"></div><div class="form"><div class="wide"><label>Mot de passe CHEBSEL</label><input type="password" id="loginPin" autocomplete="current-password" placeholder="Mot de passe CHEBSEL"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Se connecter</button><button class="cancel" onclick="resetLoginChoice()">Changer de profil</button></div><div class="permissionNote" style="margin-top:10px;text-align:center">Sou yon nouvo aparèy, premye koneksyon an bezwen entènèt. Apre sa menm modpas la mache offline.</div></div></div></div>
 <div class="modal" id="pinModal"><div class="modalBox"><h3 id="pinModalTitle" style="margin-top:0">Configurer un PIN</h3><input type="hidden" id="pinTarget"><div class="form"><div class="wide"><label>Nouveau PIN (4 à 12 chiffres)</label><input type="password" id="pinNew" inputmode="numeric" maxlength="12"></div><div class="wide"><label>Confirmer</label><input type="password" id="pinConfirm" inputmode="numeric" maxlength="12"></div></div><div class="modalActions"><button class="save" onclick="saveUserPin()">Enregistrer</button><button class="cancel" onclick="closePinModal()">Annuler</button></div></div></div>
@@ -887,7 +891,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.8.3';
+const APP_VERSION='1.9.0';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1443,7 +1447,7 @@ async function cloudPilotSync(silent=false){
 }
 
 async function updateCloudUI(){if(!document.getElementById('cloudFoundationPanel'))return;const cfg=cloudConfigured(),meta=safeParse(CLOUD_META_KEY)||{},session=cfg?await cloudSessionInfo():null;cloudState.textContent=!cfg?'⚪ Non configuré':(!navigator.onLine?'🔴 Hors connexion':(session?'🟢 Connecté':'🟡 Configuré'));cloudSession.textContent=session?(session.user?.email||'Session active'):'Aucune';cloudLastSync.textContent=meta.lastSyncAt?new Date(meta.lastSyncAt).toLocaleString('fr-FR'):'—'}
-window.addEventListener('online',()=>updateCloudUI());window.addEventListener('offline',()=>updateCloudUI());
+window.addEventListener('online',()=>{updateCloudUI();updateCompactStatus();scheduleAutoCloudSync('online',200)});window.addEventListener('offline',()=>{updateCloudUI();updateCompactStatus()});
 
 function currentUser(){const s=currentSession();return s?getAuth().users?.[s.key]||null:null}
 function can(p){const u=currentUser();return !!u&&(PERMISSIONS[u.key]||[]).includes(p)}
@@ -1494,7 +1498,8 @@ function applyRoleVisibility(){
  const backupSelector='[onclick*="portalBackup"],[onclick*="openRestoreModal"],[onclick*="openRestoreTestModal"]';
  document.querySelectorAll(backupSelector).forEach(e=>e.classList.toggle('role-hidden',!president));
  document.querySelectorAll('.profilePanel').forEach(panel=>{if(panel.querySelector(backupSelector))panel.classList.toggle('role-hidden',!president)});
- ['cloudFoundationPanel','syncReadyPanel','backupHealth'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('role-hidden',!president)});
+ ['cloudFoundationPanel','syncReadyPanel','backupHealth'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('role-hidden')});
+ const util=document.getElementById('presidentUtilityCards');if(util)util.classList.toggle('role-hidden',!president);updateCompactStatus();
  if(syncMessage)syncMessage.classList.toggle('role-hidden',!president);
  document.querySelectorAll('p.smallnote').forEach(e=>e.classList.toggle('role-hidden',!president));
  const calBtn=document.querySelector('#calendarHomePanel button');if(calBtn)calBtn.style.display=(r&&r!=='visitor')?'':'none';
@@ -1531,17 +1536,38 @@ async function cacheOfflinePassword(role,password,userId=''){
 async function verifyOfflinePassword(role,password){
  try{const x=(safeParse(OFFLINE_AUTH_KEY)||{})[role];if(!x?.salt||!x?.hash)return false;return (await offlinePasswordHash(password,x.salt,x.iterations||180000))===x.hash}catch(e){return false}
 }
+const AUTO_SYNC_PREF_KEY='chebsel_auto_sync_enabled_v1';
+function autoSyncEnabled(){return localStorage.getItem(AUTO_SYNC_PREF_KEY)!=='0'}
+function updateCompactStatus(){
+ const dot=document.getElementById('netDot'),btn=document.getElementById('syncToggleBtn'),label=document.getElementById('syncToggleLabel'),wrap=document.getElementById('presidentCompactStatus');
+ if(dot)dot.classList.toggle('online',navigator.onLine);
+ if(btn)btn.classList.toggle('on',autoSyncEnabled());
+ if(label)label.textContent=autoSyncEnabled()?'✓ Sync':'Sync off';
+ if(wrap)wrap.style.display=currentRoleView()==='president'?'flex':'none';
+}
+function toggleAutoSync(){
+ if(currentRoleView()!=='president')return;
+ const next=!autoSyncEnabled();localStorage.setItem(AUTO_SYNC_PREF_KEY,next?'1':'0');updateCompactStatus();
+ if(next&&navigator.onLine)scheduleAutoCloudSync('toggle-on',150);
+}
+function openSettingsHub(){if(currentRoleView()!=='president')return;settingsHub.classList.add('open')}
+function closeSettingsHub(){settingsHub.classList.remove('open')}
+function openPrivacyHub(){if(currentRoleView()!=='president')return;privacyHub.classList.add('open')}
+function closePrivacyHub(){privacyHub.classList.remove('open')}
+function openAboutHub(){if(currentRoleView()!=='president')return;aboutVersion.textContent='v'+APP_VERSION;aboutHub.classList.add('open')}
+function closeAboutHub(){aboutHub.classList.remove('open')}
+
 async function bindOfflineSession(role){
  const u=getAuth().users[role];if(!u)throw new Error('Rôle local introuvable.');
  sessionStorage.removeItem(VISITOR_KEY);sessionStorage.setItem(SESSION_KEY,JSON.stringify({key:role,at:new Date().toISOString(),method:'offline-password'}));
  loginModal.classList.remove('open');updateAuthUI();refreshHome();
 }
 function scheduleAutoCloudSync(reason='auto',delay=1200){
- if(!navigator.onLine||AUTO_CLOUD_SYNC_RUNNING||isVisitor())return;
+ if(!autoSyncEnabled()||!navigator.onLine||AUTO_CLOUD_SYNC_RUNNING||isVisitor())return;
  clearTimeout(AUTO_CLOUD_SYNC_TIMER);AUTO_CLOUD_SYNC_TIMER=setTimeout(()=>autoCloudSync(reason),delay)
 }
 async function autoCloudSync(reason='auto'){
- if(AUTO_CLOUD_SYNC_RUNNING||!navigator.onLine||isVisitor())return false;
+ if(!autoSyncEnabled()||AUTO_CLOUD_SYNC_RUNNING||!navigator.onLine||isVisitor())return false;
  try{const ss=await cloudSessionInfo();if(!ss)return false;AUTO_CLOUD_SYNC_RUNNING=true;return await cloudPilotSync(true)}catch(e){console.warn('Auto-sync CHEBSEL:',e)}finally{AUTO_CLOUD_SYNC_RUNNING=false}
  return false
 }
@@ -1764,7 +1790,7 @@ function openActivityModal(id=''){if(!requirePermission('attendance.write'))retu
 function closeActivityModal(){activityModal.classList.remove('open')}
 function saveActivity(){if(!requirePermission('attendance.write'))return;if(!activityTitle.value.trim()||!activityDate.value){alert('Titre et date obligatoires.');return}const list=customActivities(),obj={id:activityId.value||uid(),auto:false,title:activityTitle.value.trim(),date:activityDate.value,time:activityTime.value,location:activityLocation.value.trim(),note:activityNote.value.trim(),status:activityStatus.value||'active',updatedAt:new Date().toISOString()},i=list.findIndex(x=>x.id===obj.id),before=i>=0?JSON.parse(JSON.stringify(list[i])):null;if(i>=0)list[i]=obj;else list.push(obj);saveJSON(CALENDAR_KEY,list);audit(i>=0?'Activité modifiée':'Activité ajoutée',obj.title,{entity:'calendar',entityId:obj.id,before,after:obj});closeActivityModal();renderCurrentMonthCalendar();if(calendarView.classList.contains('open'))renderAnnualCalendar(obj.date.slice(0,7));refreshHome()}
 async function deleteActivity(id){if(!requirePermission('attendance.write'))return;const list=customActivities(),a=list.find(x=>x.id===id);if(!a)return;if(!confirm('Supprimer cette activité ?'))return;saveJSON(CALENDAR_KEY,list.filter(x=>x.id!==id));audit('Activité supprimée',a.title,{entity:'calendar',entityId:id,before:a,after:null});renderCurrentMonthCalendar();if(calendarView.classList.contains('open'))renderAnnualCalendar(a.date.slice(0,7));refreshHome()}
-function applyVisitorRestrictions(){const visitor=isVisitor();document.body.classList.toggle('visitor-mode',visitor);if(visitor){[viewer,membersView,diagnosticsView,securityView,handoverView,helpView].forEach(v=>{try{v?.classList.remove('open')}catch(e){}})}}
+function applyVisitorRestrictions(){const visitor=isVisitor();document.body.classList.toggle('visitor-mode',visitor);if(visitor){[viewer,membersView,diagnosticsView,securityView,handoverView,helpView,settingsHub,privacyHub,aboutHub].forEach(v=>{try{v?.classList.remove('open')}catch(e){}})}}
 
 
 const ATTENDANCE_STATUS_RULES={
@@ -1819,6 +1845,7 @@ openRestoreModal=function(){if(currentRoleView()!=='president'){alert('Restaurat
 const _chebselOpenRestoreTestModal=openRestoreTestModal;
 openRestoreTestModal=function(){if(currentRoleView()!=='president'){alert('Test de sauvegarde réservé au Président.');return false}return _chebselOpenRestoreTestModal.apply(this,arguments)};
 
+updateCompactStatus();
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
 initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
 </script>
