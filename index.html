@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.7.3 — Centre de gestion</title>
+<title>CHEBSEL v1.7.4 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.7.3</span>
+  <div class="topactions"><span class="versionChip">v1.7.4</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -375,7 +375,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 <div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.5.0 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
 
 <div class="modal" id="cloudConfigModal"><div class="modalBox"><h3 style="margin-top:0">Configuration CHEBSEL Cloud</h3><div class="form"><div class="wide"><label>Supabase Project URL</label><input id="cloudUrl" placeholder="https://xxxxx.supabase.co"></div><div class="wide"><label>Publishable / anon key</label><input id="cloudAnonKey" placeholder="Clé publique client"></div><div class="wide"><label>Email utilisateur cloud</label><input id="cloudEmail" type="email" placeholder="responsable@..."></div><div class="wide"><label>Mot de passe</label><input id="cloudPassword" type="password" placeholder="Mot de passe Supabase Auth"></div></div><p class="small">La clé <b>service_role</b> est interdite dans cette application. Utilisez uniquement la clé publique prévue pour le navigateur.</p><div class="modalActions"><button class="save" onclick="saveCloudConfig()">Enregistrer</button><button class="cancel" onclick="closeCloudConfigModal()">Fermer</button></div></div></div>
-<div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0">Connexion CHEBSEL</h3><p class="small" id="loginHelp">Responsables : entrez votre code d’accès CHEBSEL. Membres : choisissez « Accès visiteur » pour consulter en lecture seule.</p><div class="form"><div class="wide"><label>Responsable</label><select id="loginUser"></select></div><div class="wide"><label>Code d’accès / PIN</label><input type="password" id="loginPin" inputmode="numeric" maxlength="12" placeholder="PIN personnel"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Connexion</button><button class="cancel" onclick="enterVisitorMode()">👁 Accès visiteur</button></div><div class="permissionNote" style="margin-top:10px">Accès visiteur : consultation uniquement. Aucune modification, suppression, restauration, clôture ou paiement n’est autorisé.</div></div></div>
+<div class="modal" id="loginModal"><div class="modalBox"><h3 style="margin-top:0">Connexion CHEBSEL</h3><p class="small" id="loginHelp">Responsables : entrez votre code d’accès CHEBSEL. Membres : choisissez « Accès visiteur » pour consulter en lecture seule.</p><div class="form"><div class="wide"><label>Responsable</label><select id="loginUser"></select></div><div class="wide"><label>Code d’accès / PIN</label><input type="password" id="loginPin" inputmode="numeric" maxlength="12" placeholder="PIN personnel"></div></div><div class="modalActions"><button class="save" onclick="cloudSignInFromLogin()">☁️ Connexion cloud</button><button class="secondaryQuick" onclick="cloudSignUpFromLogin()">🆕 Activer mon compte</button></div><div class="modalActions"><button class="secondaryQuick" onclick="loginUserAction()">🔒 Déverrouillage local</button><button class="cancel" onclick="enterVisitorMode()">👁 Accès visiteur</button></div><div class="permissionNote" style="margin-top:10px">Sur un nouvel appareil, une connexion cloud est obligatoire avant tout accès de modification. Le déverrouillage local n’est accepté que sur un appareil déjà lié à un compte cloud actif du même rôle.</div></div></div>
 <div class="modal" id="pinModal"><div class="modalBox"><h3 id="pinModalTitle" style="margin-top:0">Configurer un PIN</h3><input type="hidden" id="pinTarget"><div class="form"><div class="wide"><label>Nouveau PIN (4 à 12 chiffres)</label><input type="password" id="pinNew" inputmode="numeric" maxlength="12"></div><div class="wide"><label>Confirmer</label><input type="password" id="pinConfirm" inputmode="numeric" maxlength="12"></div></div><div class="modalActions"><button class="save" onclick="saveUserPin()">Enregistrer</button><button class="cancel" onclick="closePinModal()">Annuler</button></div></div></div>
 <div class="modal" id="restoreTestModal"><div class="modalBox"><h3 style="margin-top:0">Tester une sauvegarde</h3><p class="small">Le test ne modifie aucune donnée.</p><div class="form"><div class="wide"><label>Fichier JSON</label><input type="file" id="restoreTestFile" accept=".json,application/json"></div></div><div id="restoreTestResult" class="profilePanel" style="margin-top:12px">Sélectionnez un fichier.</div><div class="modalActions"><button class="save" onclick="testBackupFile()">Tester</button><button class="cancel" onclick="closeRestoreTestModal()">Fermer</button></div></div></div>
 
@@ -885,7 +885,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.7.3';
+const APP_VERSION='1.7.4';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1176,7 +1176,7 @@ const CLOUD_AUTHORIZED_EMAILS=new Set(['presidanchebsel@outlook.fr','secretairec
 function saveCloudEmail(email){const c=getCloudConfig();saveJSON(CLOUD_CONFIG_KEY,{url:c.url,anonKey:c.anonKey,email:(email||'').trim().toLowerCase(),configuredAt:syncNowISO()})}
 async function ensureAuthorizedCloudProfile(){const c=await getCloudClient(),s=await cloudSessionInfo();if(!s)throw new Error('Connexion cloud requise.');const {data:existing}=await c.from('user_profiles').select('auth_user_id,organization_id,role,active').eq('auth_user_id',s.user.id).maybeSingle();if(existing?.active)return existing;const {data,error}=await c.rpc('activate_authorized_account');if(error)throw error;return data}
 async function cloudSignUp(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();const email=(prompt('Email officiel CHEBSEL à activer :',(cfg.email||'').trim())||'').trim().toLowerCase();if(!email)return;if(!CLOUD_AUTHORIZED_EMAILS.has(email))throw new Error('Cet email ne fait pas partie des trois comptes CHEBSEL autorisés.');const password=prompt('Choisissez votre mot de passe CHEBSEL Cloud (8 caractères minimum) :')||'';if(password.length<8)throw new Error('Le mot de passe doit contenir au moins 8 caractères.');const confirm=prompt('Confirmez le même mot de passe :')||'';if(password!==confirm)throw new Error('Les deux mots de passe ne correspondent pas.');saveCloudEmail(email);const c=await getCloudClient(),{data,error}=await c.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;if(data?.session){await ensureAuthorizedCloudProfile();await registerCloudDevice();saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||''});await updateCloudUI();alert('Compte CHEBSEL Cloud activé et connecté.')}else{await updateCloudUI();alert('Compte créé. Vérifiez la boîte email de '+email+' pour confirmer l’adresse, puis revenez dans CHEBSEL et appuyez sur « Connexion cloud ».')}}catch(e){alert('Activation du compte impossible : '+e.message);updateCloudUI()}}
-async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey){openCloudConfigModal();return}const email=(prompt('Email CHEBSEL Cloud :',(cfg.email||'').trim())||'').trim().toLowerCase();if(!email)return;const password=prompt('Mot de passe Supabase pour '+email+':')||'';if(!password)return;saveCloudEmail(email);const c=await getCloudClient(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;const profile=await ensureAuthorizedCloudProfile();saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||'',role:profile?.role||''});await registerCloudDevice();updateCloudUI();alert('Connexion CHEBSEL Cloud réussie — rôle : '+(profile?.role||'responsable')+'.')}catch(e){alert('Connexion cloud impossible : '+e.message);updateCloudUI()}}
+async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey){openCloudConfigModal();return}const email=(prompt('Email CHEBSEL Cloud :',(cfg.email||'').trim())||'').trim().toLowerCase();if(!email)return;const password=prompt('Mot de passe Supabase pour '+email+':')||'';if(!password)return;saveCloudEmail(email);const c=await getCloudClient(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;const profile=await ensureAuthorizedCloudProfile();saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||'',role:profile?.role||'',deviceBoundRole:profile?.role||'',deviceBoundAt:syncNowISO()});await registerCloudDevice();updateCloudUI();alert('Connexion CHEBSEL Cloud réussie — rôle : '+(profile?.role||'responsable')+'.')}catch(e){alert('Connexion cloud impossible : '+e.message);updateCloudUI()}}
 async function cloudSignOut(){try{if(CLOUD_CLIENT)await CLOUD_CLIENT.auth.signOut();CLOUD_CLIENT=null;updateCloudUI()}catch(e){alert(e.message)}}
 async function registerCloudDevice(){try{const c=await getCloudClient(),session=await cloudSessionInfo();if(!session)return;let id=localStorage.getItem('chebsel_device_id_v1');if(!id){id=uuidv4();localStorage.setItem('chebsel_device_id_v1',id)}const {error}=await c.from('devices').upsert({id,auth_user_id:session.user.id,device_name:navigator.userAgent.slice(0,180),platform:navigator.platform||'',last_seen_at:syncNowISO(),active:true},{onConflict:'id'});if(error)throw error}catch(e){console.warn(e)}}
 async function getCloudProfile(){const c=await getCloudClient(),s=await cloudSessionInfo();if(!s)throw new Error('Connexion cloud requise.');const {data,error}=await c.from('user_profiles').select('auth_user_id,organization_id,role,active').eq('auth_user_id',s.user.id).single();if(error)throw error;if(!data?.active)throw new Error('Compte cloud inactif.');return data}
@@ -1486,19 +1486,36 @@ function openLoginModal(){
 function closeLoginModal(){if(currentUser()||isVisitor())loginModal.classList.remove('open')}
 function enterVisitorMode(){sessionStorage.removeItem(SESSION_KEY);sessionStorage.setItem(VISITOR_KEY,'1');audit('Accès visiteur','Ouverture de CHEBSEL en lecture seule',{entity:'security'});loginModal.classList.remove('open');updateAuthUI();refreshHome()}
 function requireStartupLogin(){sessionStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(VISITOR_KEY);updateAuthUI();setTimeout(openLoginModal,120)}
-async function loginUserAction(){
- const k=loginUser.value,p=loginPin.value.trim(),a=getAuth(),u=a.users[k];
- if(!/^\d{4,12}$/.test(p)){alert('Entrez un code d’accès ou PIN de 4 à 12 chiffres.');return}
- const globalOk=/^\d{8}$/.test(p)?await verifyGlobalAccess(k,p):false;
- const localOk=u?.pinHash?((await hashPin(p,u.salt))===u.pinHash):false;
- if(!globalOk&&!localOk){
-  alert('Code d’accès / PIN incorrect pour ce profil.');
-  audit('Échec de connexion',u.name,{entity:'security',entityId:k});return
- }
+async function bindLocalSessionToCloud(profile,method='cloud'){
+ const role=String(profile?.role||'').toLowerCase();
+ if(!['president','secretary','treasurer'].includes(role))throw new Error('Rôle cloud non autorisé.');
+ const a=getAuth(),u=a.users[role];
  sessionStorage.removeItem(VISITOR_KEY);
- sessionStorage.setItem(SESSION_KEY,JSON.stringify({key:k,at:new Date().toISOString(),method:globalOk?'global':'local'}));
- audit('Connexion',u.name+' • '+(globalOk?'code global':'PIN local'),{entity:'security',entityId:k});
- loginModal.classList.remove('open');updateAuthUI();refreshHome()
+ sessionStorage.setItem(SESSION_KEY,JSON.stringify({key:role,at:new Date().toISOString(),method,cloudUserId:profile.auth_user_id||''}));
+ saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),role,deviceBoundRole:role,deviceBoundAt:syncNowISO()});
+ audit('Connexion cloud',u?.name||role,{entity:'security',entityId:role});
+ loginModal.classList.remove('open');updateAuthUI();refreshHome();
+}
+async function cloudSignInFromLogin(){
+ await cloudSignIn();
+ try{const s=await cloudSessionInfo();if(!s)return;const p=await getCloudProfile();await bindLocalSessionToCloud(p,'cloud')}catch(e){alert('Session cloud non validée : '+e.message)}
+}
+async function cloudSignUpFromLogin(){
+ await cloudSignUp();
+ try{const s=await cloudSessionInfo();if(!s)return;const p=await getCloudProfile();await bindLocalSessionToCloud(p,'cloud-activation')}catch(e){/* email confirmation may still be pending */}
+}
+async function loginUserAction(){
+ const k=loginUser.value,pin=loginPin.value.trim(),a=getAuth(),u=a.users[k];
+ if(!/^\d{4,12}$/.test(pin)){alert('Entrez votre PIN local de 4 à 12 chiffres.');return}
+ const session=await cloudSessionInfo();
+ if(!session){alert('Sur ce nouvel appareil, connectez d’abord votre compte CHEBSEL Cloud.');return}
+ let profile;try{profile=await getCloudProfile()}catch(e){alert('Profil cloud requis : '+e.message);return}
+ if(profile.role!==k){alert('Le compte cloud connecté appartient au rôle « '+profile.role+' », pas au profil sélectionné.');return}
+ const meta=safeParse(CLOUD_META_KEY)||{};
+ if(meta.deviceBoundRole!==k){alert('Cet appareil n’est pas encore lié à ce rôle. Faites d’abord une connexion cloud réussie.');return}
+ const localOk=u?.pinHash?((await hashPin(pin,u.salt))===u.pinHash):false;
+ if(!localOk){alert('PIN local incorrect.');audit('Échec de déverrouillage local',u?.name||k,{entity:'security',entityId:k});return}
+ await bindLocalSessionToCloud(profile,'local-pin');
 }
 function logoutUser(){const u=currentUser();if(u)audit('Déconnexion',u.name,{entity:'security',entityId:u.key});sessionStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(VISITOR_KEY);loginModal.classList.remove('open');updateAuthUI();refreshHome();setTimeout(openLoginModal,80)}
 function openPinModal(k){if(!requirePermission('security.manage'))return;pinTarget.value=k;pinNew.value='';pinConfirm.value='';pinModalTitle.textContent='Configurer le PIN — '+getAuth().users[k].name;pinModal.classList.add('open')}
@@ -1726,7 +1743,7 @@ window.addEventListener('storage',()=>{syncBridge();refreshHome();if(membersView
 setInterval(()=>{syncBridge();if(!viewer.classList.contains('open')){refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()}},1400);
 
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
-initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
+initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();(async()=>{try{const ss=await cloudSessionInfo();if(ss){const cp=await getCloudProfile();await bindLocalSessionToCloud(cp,'persisted-cloud');return}}catch(e){}requireStartupLogin()})();initSyncReady();updateCloudUI();
 </script>
 </body>
 </html>
