@@ -4,22 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.11.4 — Centre de gestion</title>
+<title>CHEBSEL v1.11.5 — Centre de gestion</title>
 <style>
 :root{
- --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
- --primary:#194185;--soft:#eef4ff;--shadow:0 14px 40px rgba(16,24,40,.10);
- --green:#16794b;--red:#b42318;--amber:#b54708;--input:#fff;--chip:#eef2f6;
+ /* CHEBSEL official brand tokens */
+ --brand-navy:#0B1220;
+ --brand-navy-2:#102644;
+ --brand-navy-3:#18375F;
+ --brand-royal:#194185;
+ --brand-gold:#C59D3F;
+ --brand-gold-light:#D8B65A;
+ --brand-gold-soft:#F7F0DE;
+ --surface-page:#F4F7FB;
+ --surface-card:#FFFFFF;
+ --text-main:#142033;
+ --text-muted:#667085;
+ --border-soft:#DFE5EE;
+ --state-success:#16794B;
+ --state-warning:#B54708;
+ --state-danger:#B42318;
+ --shadow-sm:0 4px 14px rgba(16,24,40,.06);
+ --shadow-md:0 10px 28px rgba(16,24,40,.09);
+ --shadow-lg:0 18px 48px rgba(16,24,40,.13);
+
+ /* Compatibility mapping */
+ --bg:var(--surface-page);--card:var(--surface-card);--text:var(--text-main);--muted:var(--text-muted);--line:var(--border-soft);--top:var(--brand-navy);
+ --primary:var(--brand-royal);--soft:#EEF4FF;--shadow:var(--shadow-md);
+ --green:var(--state-success);--red:var(--state-danger);--amber:var(--state-warning);--input:var(--surface-card);--chip:#EEF2F6;
 }
 html[data-theme="dark"]{
- --bg:#0d1117;--card:#161b22;--text:#f0f3f7;--muted:#9da7b5;--line:#30363d;--top:#05080d;
- --primary:#76a9ff;--soft:#111a28;--shadow:0 15px 42px rgba(0,0,0,.38);
- --green:#5dd39e;--red:#ff8a80;--amber:#ffc463;--input:#0f141b;--chip:#232a34;
+ --brand-gold:#E2C36C;
+ --brand-gold-light:#ECD581;
+ --brand-gold-soft:#2A2415;
+ --surface-page:#0D1117;
+ --surface-card:#161B22;
+ --text-main:#F0F3F7;
+ --text-muted:#9DA7B5;
+ --border-soft:#30363D;
+ --state-success:#5DD39E;
+ --state-warning:#FFC463;
+ --state-danger:#FF8A80;
+ --shadow-sm:0 4px 14px rgba(0,0,0,.22);
+ --shadow-md:0 12px 30px rgba(0,0,0,.34);
+ --shadow-lg:0 20px 52px rgba(0,0,0,.46);
+ --bg:var(--surface-page);--card:var(--surface-card);--text:var(--text-main);--muted:var(--text-muted);--line:var(--border-soft);--top:#05080D;
+ --primary:#76A9FF;--soft:#111A28;--shadow:var(--shadow-md);
+ --green:var(--state-success);--red:var(--state-danger);--amber:var(--state-warning);--input:#0F141B;--chip:#232A34;
 }
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
 button,input,select,textarea{font:inherit}button{cursor:pointer}
 .shell{min-height:100vh}
-.top{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#08111f 0%,#102644 58%,#18375f 100%);color:#fff;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.10);box-shadow:0 8px 24px rgba(5,12,22,.22)}
+.top{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--brand-navy) 0%,var(--brand-navy-2) 58%,var(--brand-navy-3) 100%);color:#fff;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.10);box-shadow:0 8px 24px rgba(5,12,22,.22)}
 .toprow{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
 .brandmark{width:48px;height:48px;flex:0 0 48px;border-radius:14px;display:grid;place-items:center;background:transparent;overflow:visible}.brandmark img{width:100%;height:100%;object-fit:contain}
@@ -30,7 +65,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .topbtn:active{transform:translateY(0)}
 @media(max-width:520px){.top{padding:9px 10px}.brandmark{width:40px;height:40px;flex-basis:40px;border-radius:12px;font-size:.7rem}.brandtitle{font-size:.91rem}.brandsub{font-size:.66rem}.topactions{gap:5px}.topbtn{width:36px;height:36px;border-radius:11px}}
 .home{max-width:1180px;margin:auto;padding:18px 14px 70px}
-.hero{border-radius:24px;padding:22px;background:linear-gradient(135deg,#0b1220,#1c3358);color:#fff;box-shadow:var(--shadow);margin-bottom:16px}
+.hero{border-radius:24px;padding:22px;background:linear-gradient(135deg,var(--brand-navy),var(--brand-navy-3));color:#fff;box-shadow:var(--shadow);margin-bottom:16px}
 .hero h1{margin:0 0 7px;font-size:1.55rem}.hero p{margin:0;opacity:.82;line-height:1.45;font-size:.98rem;font-weight:650}
 .badge{display:inline-flex;margin-top:12px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.12);font-size:.78rem;font-weight:800}
 .grid{display:grid;grid-template-columns:1fr;gap:14px}
@@ -81,7 +116,7 @@ html[data-theme="dark"] .paidTag{background:#103422;color:#8ff0b5}
  .memberTools{grid-template-columns:2fr 1fr auto}.memberStats{grid-template-columns:repeat(4,1fr)}.modal{align-items:center;justify-content:center}.modalBox{max-width:680px;border-radius:22px}.form{grid-template-columns:1fr 1fr}.form .wide{grid-column:1/-1}
 }
 
-.versionChip{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;font-size:.68rem;font-weight:850;background:rgba(255,255,255,.08);color:#fff;white-space:nowrap}
+.versionChip{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid rgba(197,157,63,.55);border-radius:999px;font-size:.68rem;font-weight:850;background:rgba(197,157,63,.12);color:var(--brand-gold-light);white-space:nowrap}
 .authStrip{max-width:1180px;margin:8px auto 0;display:flex;justify-content:flex-end;gap:7px;align-items:center;padding:0 14px}.authUser{font-size:.72rem;color:var(--muted);max-width:330px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .diagGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.diagItem{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}.diagItem b{display:block;font-size:1.12rem}.diagItem span{font-size:.7rem;color:var(--muted)}
 .issueItem{padding:10px;border-left:4px solid var(--amber);background:var(--soft);border-radius:10px;margin:8px 0;font-size:.8rem}.issueItem.critical{border-left-color:var(--red)}
@@ -227,7 +262,7 @@ body{letter-spacing:-.006em}
 @media(max-width:619px){#loginModal.loginGate{padding:14px}#loginModal .loginGateBox{padding:22px 16px;border-radius:24px}#loginModal .roleChoice{min-height:112px}.loginBrand img{width:44px;height:44px}}
 
 
-.loginPraiseVerse{margin:18px auto 2px;max-width:520px;text-align:center;padding:14px 16px;border-top:1px solid rgba(197,157,63,.28);color:#c59d3f}.loginPraiseVerse blockquote{margin:0;font-size:.88rem;line-height:1.55;font-style:italic;font-weight:650;color:#cfa94d}.loginPraiseVerse cite{display:block;margin-top:6px;font-size:.72rem;font-style:normal;font-weight:800;letter-spacing:.045em;color:#b98b2f}html[data-theme="dark"] .loginPraiseVerse blockquote{color:#e2c36c}html[data-theme="dark"] .loginPraiseVerse cite{color:#cda64d}
+.loginPraiseVerse{margin:18px auto 2px;max-width:520px;text-align:center;padding:14px 16px;border-top:1px solid rgba(197,157,63,.28);color:var(--brand-gold)}.loginPraiseVerse blockquote{margin:0;font-size:.88rem;line-height:1.55;font-style:italic;font-weight:650;color:var(--brand-gold-light)}.loginPraiseVerse cite{display:block;margin-top:6px;font-size:.72rem;font-style:normal;font-weight:800;letter-spacing:.045em;color:var(--brand-gold)}html[data-theme="dark"] .loginPraiseVerse blockquote{color:#e2c36c}html[data-theme="dark"] .loginPraiseVerse cite{color:#cda64d}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -248,7 +283,7 @@ body{letter-spacing:-.006em}
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.11.4</span>
+  <div class="topactions"><span class="versionChip">v1.11.5</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -2141,3 +2176,4 @@ setTimeout(()=>{if(isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)
 </script>
 </body>
 </html>
+<!-- CHEBSEL Brand Palette v1.11.5: Navy + Royal Blue + Gold + White -->
