@@ -1,0 +1,33 @@
+name: CHEBSEL v1.10.1 Fix ANM Prestation 250G
+on:
+  push:
+    paths:
+      - '.github/workflows/v1101-fix-anm-prestation.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply ANM prestation migration fix
+        run: python3 scripts/v1101_fix_anm_prestation_rate.py
+      - name: Bump service worker cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('sw.js');s=p.read_text(encoding='utf-8');s=re.sub(r'chebsel-pwa-stable-v\d+','chebsel-pwa-stable-v1101',s);p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.10.1" index.html
+          grep -q "f.settings.performance=250" index.html
+          grep -q "repairLegacyPerformanceFines" index.html
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.10.1 ANM prestation 250G fix" || exit 0
+          git push
