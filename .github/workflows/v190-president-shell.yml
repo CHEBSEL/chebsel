@@ -1,0 +1,32 @@
+name: CHEBSEL v1.9.0 President Shell
+on:
+  push:
+    paths:
+      - '.github/workflows/v190-president-shell.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply president shell UX
+        run: python3 scripts/v190_president_shell.py
+      - name: Bump service worker cache
+        run: |
+          python3 -c "from pathlib import Path; import re; p=Path('sw.js'); s=p.read_text(); p.write_text(re.sub(r'chebsel-pwa-stable-v[0-9]+','chebsel-pwa-stable-v190',s))"
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.9.0" index.html
+          grep -q "presidentCompactStatus" index.html
+          grep -q "toggleAutoSync" index.html
+          grep -q "Paramètres" index.html
+          grep -q "Confidentialité" index.html
+          grep -q "À propos" index.html
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.9.0 president shell" || exit 0
+          git push
