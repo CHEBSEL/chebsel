@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.7 — Centre de gestion</title>
+<title>CHEBSEL v1.5.8 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.7</span>
+  <div class="topactions"><span class="versionChip">v1.5.8</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -175,7 +175,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
   <div class="syncReadyStat"><span>Dernière préparation</span><b id="syncLastPrepared">—</b></div>
  </div>
  <div class="memberActions" style="margin-top:10px">
-  <button class="secondaryQuick" onclick="syncReadyReconcile(true)">↻ Préparer maintenant</button>
+  <button class="secondaryQuick" onclick="manualSyncReadyPrepare()">↻ Préparer maintenant</button>
   <button class="secondaryQuick" onclick="toggleSyncQueue()">Voir la file locale</button>
   <button class="secondaryQuick" onclick="exportSyncReadyDiagnostic()">Exporter diagnostic</button>
  </div>
@@ -1179,9 +1179,31 @@ async function getCloudProfile(){const c=await getCloudClient(),s=await cloudSes
 function cloudMemberPayload(m,org){return {id:m.syncId,organization_id:org,legacy_id:m.id||null,member_no:m.no||null,first_name:m.first||'',last_name:m.last||'',phone:m.phone||null,active:m.active!==false,notes:m.note||null,updated_at:syncNowISO(),deleted_at:m._deletedAt||null}}
 function cloudCalendarPayload(e,org){return {id:e.syncId,organization_id:org,legacy_id:e.id||null,title:e.title||'',event_date:e.date||null,start_time:e.time||null,location:e.location||null,event_type:'custom',status:e.status||'scheduled',reason:e.note||null,updated_at:syncNowISO(),deleted_at:e._deletedAt||null}}
 async function pushPilotEntity(store,table,payloadFn,org){const rows=(await idbAll(store)).filter(x=>!x._deletedAt);if(!rows.length)return 0;const c=await getCloudClient(),{error}=await c.from(table).upsert(rows.map(x=>payloadFn(x,org)),{onConflict:'id'});if(error)throw error;return rows.length}
-async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),by=new Map(local.map(x=>[x.syncId,x]));let changed=false;for(const r of data||[]){const cur=by.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',_serverUpdatedAt:r.updated_at});changed=true}else{local.push({id:'cloud_'+r.id.slice(0,8),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at});changed=true}}if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(local));syncMembersToApps()}return (data||[]).length}
-async function pullCloudCalendar(org){const c=await getCloudClient(),{data,error}=await c.from('calendar_events').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=customActivities(),by=new Map(local.map(x=>[x.syncId,x]));let changed=false;for(const r of data||[]){const cur=by.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',_serverUpdatedAt:r.updated_at});changed=true}else{local.push({id:'cloud_'+r.id.slice(0,8),syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',auto:false,_serverUpdatedAt:r.updated_at});changed=true}}if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(local));return (data||[]).length}
-async function cloudPilotSync(){if(isVisitor()){alert('Accès réservé aux responsables.');return}if(!navigator.onLine){alert('Pas d’Internet. Les modifications restent locales.');return}try{cloudState.textContent='Synchronisation…';await syncReadyReconcile(true);const p=await getCloudProfile(),org=p.organization_id;const pm=await pushPilotEntity('members','members',cloudMemberPayload,org),pc=await pushPilotEntity('calendar_events','calendar_events',cloudCalendarPayload,org),rm=await pullCloudMembers(org),rc=await pullCloudCalendar(org);await syncReadyReconcile(false);const out=await idbAll('outbox');for(const op of out){if(['members','calendar_events'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc}});refreshHome();updateCloudUI();updateSyncReadyUI();alert('Synchronisation pilote terminée.')}catch(e){alert('Synchronisation cloud impossible : '+e.message);updateCloudUI()}}
+async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(clean));syncMembersToApps()}return (data||[]).length}
+async function pullCloudCalendar(org){const c=await getCloudClient(),{data,error}=await c.from('calendar_events').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=customActivities(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',auto:false,_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(clean));return (data||[]).length}
+
+async function repairV158Outbox(){
+ const key='chebsel_v158_outbox_repaired';
+ if(localStorage.getItem(key)==='1')return;
+ await syncDBOpen();
+ const out=await idbAll('outbox');
+ for(const op of out)await idbDelete('outbox',op.id);
+ await syncReadyReconcile(false);
+ localStorage.setItem(key,'1');
+ await updateSyncReadyUI();
+}
+async function manualSyncReadyPrepare(){
+ try{
+  await repairV158Outbox();
+  const before=(await idbAll('outbox')).filter(x=>x.status==='pending').length;
+  await syncReadyReconcile(true);
+  const after=(await idbAll('outbox')).filter(x=>x.status==='pending').length;
+  await updateSyncReadyUI();
+  alert('Préparation terminée : '+Math.max(0,after-before)+' nouvelle(s) opération(s). '+after+' opération(s) en attente.');
+ }catch(e){alert('Préparation locale impossible : '+e.message)}
+}
+setTimeout(()=>repairV158Outbox().catch(console.warn),1200);
+async function cloudPilotSync(){await repairV158Outbox();if(isVisitor()){alert('Accès réservé aux responsables.');return}if(!navigator.onLine){alert('Pas d’Internet. Les modifications restent locales.');return}try{cloudState.textContent='Synchronisation…';await syncReadyReconcile(true);const p=await getCloudProfile(),org=p.organization_id;const pm=await pushPilotEntity('members','members',cloudMemberPayload,org),pc=await pushPilotEntity('calendar_events','calendar_events',cloudCalendarPayload,org),rm=await pullCloudMembers(org),rc=await pullCloudCalendar(org);await syncReadyReconcile(false);const out=await idbAll('outbox');for(const op of out){if(['members','calendar_events'].includes(op.entity)&&op.status==='pending'){op.status='synced';op.syncedAt=syncNowISO();await idbPut('outbox',op)}}saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),lastSyncAt:syncNowISO(),lastSummary:{pm,pc,rm,rc}});refreshHome();updateCloudUI();updateSyncReadyUI();alert('Synchronisation pilote terminée.')}catch(e){alert('Synchronisation cloud impossible : '+e.message);updateCloudUI()}}
 async function updateCloudUI(){if(!document.getElementById('cloudFoundationPanel'))return;const cfg=cloudConfigured(),meta=safeParse(CLOUD_META_KEY)||{},session=cfg?await cloudSessionInfo():null;cloudState.textContent=!cfg?'⚪ Non configuré':(!navigator.onLine?'🔴 Hors connexion':(session?'🟢 Connecté':'🟡 Configuré'));cloudSession.textContent=session?(session.user?.email||'Session active'):'Aucune';cloudLastSync.textContent=meta.lastSyncAt?new Date(meta.lastSyncAt).toLocaleString('fr-FR'):'—'}
 window.addEventListener('online',()=>updateCloudUI());window.addEventListener('offline',()=>updateCloudUI());
 
