@@ -1,0 +1,29 @@
+name: CHEBSEL v1.7.4 Cloud Role Gate
+on:
+  push:
+    paths:
+      - 'scripts/patch_v174.py'
+      - '.github/workflows/hotfix-v174.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.7.4 patch
+        run: python scripts/patch_v174.py
+      - name: Verify v1.7.4
+        run: |
+          grep -q "CHEBSEL v1.7.4" index.html
+          grep -q "deviceBoundRole" index.html
+          grep -q "cloudSignInFromLogin" index.html
+          grep -q "chebsel-pwa-stable-v174" sw.js
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.7.4 cloud role gate" || exit 0
+          git push
