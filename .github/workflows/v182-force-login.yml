@@ -1,0 +1,49 @@
+name: CHEBSEL v1.8.2 Forced Startup Login
+on:
+  push:
+    paths:
+      - '.github/workflows/v182-force-login.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Force role login on every fresh app launch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();(async()=>{try{const ss=await cloudSessionInfo();if(ss){const cp=await getCloudProfile();await bindLocalSessionToCloud(cp,'persisted-cloud');return}}catch(e){}requireStartupLogin()})();initSyncReady();updateCloudUI();"
+          new="initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();"
+          assert old in s, 'startup auto-login block not found'
+          s=s.replace(old,new,1)
+          s=s.replace('CHEBSEL v1.8.1 — Centre de gestion','CHEBSEL v1.8.2 — Centre de gestion',1)
+          s=s.replace('<span class=\"versionChip\">v1.8.1</span>','<span class=\"versionChip\">v1.8.2</span>',1)
+          s=s.replace("const APP_VERSION='1.8.1';","const APP_VERSION='1.8.2';",1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Bump service worker cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('sw.js')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'chebsel-pwa-stable-v\d+', 'chebsel-pwa-stable-v182', s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.8.2" index.html
+          grep -q "refreshHome();requireStartupLogin();initSyncReady()" index.html
+          if grep -q "bindLocalSessionToCloud(cp,'persisted-cloud')" index.html; then exit 1; fi
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.8.2 forced startup login" || exit 0
+          git push
