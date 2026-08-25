@@ -1,0 +1,36 @@
+name: CHEBSEL v1.9.3 Preserve Refresh Session
+on:
+  push:
+    paths:
+      - '.github/workflows/v193-preserve-refresh-session.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply refresh session fix
+        run: python3 scripts/v193_preserve_refresh_session.py
+      - name: Bump service worker cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('sw.js')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'chebsel-pwa-stable-v\d+', 'chebsel-pwa-stable-v193', s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.9.3" index.html
+          grep -q "if(!currentUser()&&!isVisitor())setTimeout(openLoginModal,120)" index.html
+          ! grep -q "function requireStartupLogin(){sessionStorage.removeItem(SESSION_KEY)" index.html
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.9.3 preserve session on refresh" || exit 0
+          git push
