@@ -11,44 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch cloud modal for mobile PWA
+        run: python3 -c "import base64;exec(base64.b64decode('ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnA9UGF0aCgiaW5kZXguaHRtbCIpCnM9cC5yZWFkX3RleHQoZW5jb2Rpbmc9InV0Zi04IikKb2xkPSJmdW5jdGlvbiBvcGVuQ2xvdWRDb25maWdNb2RhbCgpe2lmKGlzVmlzaXRvcigpKXthbGVydCgnQWNjw6hzIHLDqXNlcnbDqSBhdXggcmVzcG9uc2FibGVzLicpO3JldHVybn1jb25zdCBjPWdldENsb3VkQ29uZmlnKCk7Y2xvdWRVcmwudmFsdWU9Yy51cmx8fCcnO2Nsb3VkQW5vbktleS52YWx1ZT1jLmFub25LZXl8fCcnO2Nsb3VkRW1haWwudmFsdWU9Yy5lbWFpbHx8Jyc7Y2xvdWRQYXNzd29yZC52YWx1ZT0nJztjbG91ZENvbmZpZ01vZGFsLmNsYXNzTGlzdC5hZGQoJ29wZW4nKX1cbmZ1bmN0aW9uIGNsb3NlQ2xvdWRDb25maWdNb2RhbCgpe2Nsb3VkQ29uZmlnTW9kYWwuY2xhc3NMaXN0LnJlbW92ZSgnb3BlbicpfVxuZnVuY3Rpb24gc2F2ZUNsb3VkQ29uZmlnKCl7aWYoIXJlcXVpcmVQZXJtaXNzaW9uKCdzZWN1cml0eS5tYW5hZ2UnKSlyZXR1cm47Y29uc3QgdXJsPShjbG91ZFVybC52YWx1ZXx8JycpLnRyaW0oKSxhbm9uS2V5PShjbG91ZEFub25LZXkudmFsdWV8fCcnKS50cmltKCksZW1haWw9KGNsb3VkRW1haWwudmFsdWV8fCcnKS50cmltKCk7aWYoIXVybHx8IWFub25LZXkpe2FsZXJ0KCdVUkwgU3VwYWJhc2UgZXQgY2zDqSBwdWJsaXF1ZSBvYmxpZ2F0b2lyZXMuJyk7cmV0dXJufXNhdmVKU09OKENMT1VEX0NPTkZJR19LRVkse3VybCxhbm9uS2V5LGVtYWlsLGNvbmZpZ3VyZWRBdDpzeW5jTm93SVNPKCl9KTtDTE9VRF9DTElFTlQ9bnVsbDtjbG9zZUNsb3VkQ29uZmlnTW9kYWwoKTt1cGRhdGVDbG91ZFVJKCk7YXVkaXQoJ0NvbmZpZ3VyYXRpb24gY2xvdWQgbWlzZSDDoCBqb3VyJywnU3VwYWJhc2UgY29uZmlndXLDqSBsb2NhbGVtZW50Jyx7ZW50aXR5OidjbG91ZF9jb25maWcnfSl9IgpuZXc9ImZ1bmN0aW9uIGNsb3VkRWwoaWQpe3JldHVybiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZChpZCl9XG5mdW5jdGlvbiBvcGVuQ2xvdWRDb25maWdNb2RhbCgpe2lmKGlzVmlzaXRvcigpKXthbGVydCgnQWNjw6hzIHLDqXNlcnbDqSBhdXggcmVzcG9uc2FibGVzLicpO3JldHVybn10cnl7Y29uc3QgbW9kYWw9Y2xvdWRFbCgnY2xvdWRDb25maWdNb2RhbCcpLHVybEVsPWNsb3VkRWwoJ2Nsb3VkVXJsJyksa2V5RWw9Y2xvdWRFbCgnY2xvdWRBbm9uS2V5JyksZW1haWxFbD1jbG91ZEVsKCdjbG91ZEVtYWlsJykscGFzc0VsPWNsb3VkRWwoJ2Nsb3VkUGFzc3dvcmQnKTtpZighbW9kYWx8fCF1cmxFbHx8IWtleUVsfHwhZW1haWxFbHx8IXBhc3NFbCl0aHJvdyBuZXcgRXJyb3IoJ0Zvcm11bGFpcmUgQ2xvdWQgaW50cm91dmFibGUgZGFucyBjZXR0ZSB2ZXJzaW9uLicpO2NvbnN0IGM9Z2V0Q2xvdWRDb25maWcoKTt1cmxFbC52YWx1ZT1jLnVybHx8Jyc7a2V5RWwudmFsdWU9Yy5hbm9uS2V5fHwnJztlbWFpbEVsLnZhbHVlPWMuZW1haWx8fCcnO3Bhc3NFbC52YWx1ZT0nJzttb2RhbC5jbGFzc0xpc3QuYWRkKCdvcGVuJyl9Y2F0Y2goZSl7YWxlcnQoJ0ltcG9zc2libGUgZOKAmW91dnJpciBsYSBjb25maWd1cmF0aW9uIENsb3VkIDogJytlLm1lc3NhZ2UpfX1cbmZ1bmN0aW9uIGNsb3NlQ2xvdWRDb25maWdNb2RhbCgpe2NvbnN0IG1vZGFsPWNsb3VkRWwoJ2Nsb3VkQ29uZmlnTW9kYWwnKTtpZihtb2RhbCltb2RhbC5jbGFzc0xpc3QucmVtb3ZlKCdvcGVuJyl9XG5mdW5jdGlvbiBzYXZlQ2xvdWRDb25maWcoKXtpZighcmVxdWlyZVBlcm1pc3Npb24oJ3NlY3VyaXR5Lm1hbmFnZScpKXJldHVybjtjb25zdCB1cmxFbD1jbG91ZEVsKCdjbG91ZFVybCcpLGtleUVsPWNsb3VkRWwoJ2Nsb3VkQW5vbktleScpLGVtYWlsRWw9Y2xvdWRFbCgnY2xvdWRFbWFpbCcpO2lmKCF1cmxFbHx8IWtleUVsfHwhZW1haWxFbCl7YWxlcnQoJ0Zvcm11bGFpcmUgQ2xvdWQgaW50cm91dmFibGUuJyk7cmV0dXJufWNvbnN0IHVybD0odXJsRWwudmFsdWV8fCcnKS50cmltKCksYW5vbktleT0oa2V5RWwudmFsdWV8fCcnKS50cmltKCksZW1haWw9KGVtYWlsRWwudmFsdWV8fCcnKS50cmltKCk7aWYoIXVybHx8IWFub25LZXkpe2FsZXJ0KCdVUkwgU3VwYWJhc2UgZXQgY2zDqSBwdWJsaXF1ZSBvYmxpZ2F0b2lyZXMuJyk7cmV0dXJufXNhdmVKU09OKENMT1VEX0NPTkZJR19LRVkse3VybCxhbm9uS2V5LGVtYWlsLGNvbmZpZ3VyZWRBdDpzeW5jTm93SVNPKCl9KTtDTE9VRF9DTElFTlQ9bnVsbDtjbG9zZUNsb3VkQ29uZmlnTW9kYWwoKTt1cGRhdGVDbG91ZFVJKCk7YXVkaXQoJ0NvbmZpZ3VyYXRpb24gY2xvdWQgbWlzZSDDoCBqb3VyJywnU3VwYWJhc2UgY29uZmlndXLDqSBsb2NhbGVtZW50Jyx7ZW50aXR5OidjbG91ZF9jb25maWcnfSl9IgppZiBvbGQgbm90IGluIHM6IHJhaXNlIFN5c3RlbUV4aXQoImNsb3VkIG1vZGFsIGJsb2NrIG5vdCBmb3VuZCIpCnM9cy5yZXBsYWNlKG9sZCxuZXcpCm9sZHB3PSJjb25zdCBwYXNzd29yZD0oY2xvdWRDb25maWdNb2RhbD8uY2xhc3NMaXN0LmNvbnRhaW5zKCdvcGVuJyk/Y2xvdWRQYXNzd29yZC52YWx1ZTonJyl8fHByb21wdCgnTW90IGRlIHBhc3NlIFN1cGFiYXNlIHBvdXIgJytlbWFpbCsnOicpfHwnJzsiCm5ld3B3PSJjb25zdCBtb2RhbD1jbG91ZEVsKCdjbG91ZENvbmZpZ01vZGFsJykscGFzc0VsPWNsb3VkRWwoJ2Nsb3VkUGFzc3dvcmQnKTtjb25zdCBwYXNzd29yZD0oKG1vZGFsJiZtb2RhbC5jbGFzc0xpc3QuY29udGFpbnMoJ29wZW4nKSYmcGFzc0VsKT9wYXNzRWwudmFsdWU6JycpfHxwcm9tcHQoJ01vdCBkZSBwYXNzZSBTdXBhYmFzZSBwb3VyICcrZW1haWwrJzonKXx8Jyc7IgppZiBvbGRwdyBub3QgaW4gczogcmFpc2UgU3lzdGVtRXhpdCgicGFzc3dvcmQgYmxvY2sgbm90IGZvdW5kIikKcz1zLnJlcGxhY2Uob2xkcHcsbmV3cHcpCnM9cy5yZXBsYWNlKCdDSEVCU0VMIHYxLjUuMiDigJQgQ2VudHJlIGRlIGdlc3Rpb24nLCdDSEVCU0VMIHYxLjUuMyDigJQgQ2VudHJlIGRlIGdlc3Rpb24nKS5yZXBsYWNlKCc+djEuNS4yPCcsJz52MS41LjM8JykucmVwbGFjZSgiY29uc3QgQVBQX1ZFUlNJT049JzEuNS4yJyIsImNvbnN0IEFQUF9WRVJTSU9OPScxLjUuMyciKS5yZXBsYWNlKCdDb250csO0bGUgZOKAmWludMOpZ3JpdMOpIENIRUJTRUwgdjEuNS4yJywnQ29udHLDtGxlIGTigJlpbnTDqWdyaXTDqSBDSEVCU0VMIHYxLjUuMycpLnJlcGxhY2UoJzxoMj5DSEVCU0VMIHYxLjUuMiDigJQgTWFudWVsPC9oMj4nLCc8aDI+Q0hFQlNFTCB2MS41LjMg4oCUIE1hbnVlbDwvaDI+JykKcC53cml0ZV90ZXh0KHMsZW5jb2Rpbmc9J3V0Zi04JykKc3c9UGF0aCgnc3cuanMnKTsgc3cud3JpdGVfdGV4dChzdy5yZWFkX3RleHQoZW5jb2Rpbmc9J3V0Zi04JykucmVwbGFjZSgnY2hlYnNlbC1wd2Etc3RhYmxlLXYxNTInLCdjaGVic2VsLXB3YS1zdGFibGUtdjE1MycpLGVuY29kaW5nPSd1dGYtOCcpCg=='))"
+      - name: Commit hotfix
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          old="""function openCloudConfigModal(){if(isVisitor()){alert('Accès réservé aux responsables.');return}const c=getCloudConfig();cloudUrl.value=c.url||'';cloudAnonKey.value=c.anonKey||'';cloudEmail.value=c.email||'';cloudPassword.value='';cloudConfigModal.classList.add('open')}
-function closeCloudConfigModal(){cloudConfigModal.classList.remove('open')}
-function saveCloudConfig(){if(!requirePermission('security.manage'))return;const url=(cloudUrl.value||'').trim(),anonKey=(cloudAnonKey.value||'').trim(),email=(cloudEmail.value||'').trim();if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})}"""
-          new="""function cloudEl(id){return document.getElementById(id)}
-function openCloudConfigModal(){
- if(isVisitor()){alert('Accès réservé aux responsables.');return}
- try{
-  const modal=cloudEl('cloudConfigModal'),urlEl=cloudEl('cloudUrl'),keyEl=cloudEl('cloudAnonKey'),emailEl=cloudEl('cloudEmail'),passEl=cloudEl('cloudPassword');
-  if(!modal||!urlEl||!keyEl||!emailEl||!passEl)throw new Error('Formulaire Cloud introuvable dans cette version.');
-  const c=getCloudConfig();urlEl.value=c.url||'';keyEl.value=c.anonKey||'';emailEl.value=c.email||'';passEl.value='';modal.classList.add('open');
- }catch(e){alert('Impossible d’ouvrir la configuration Cloud : '+e.message)}
-}
-function closeCloudConfigModal(){const modal=cloudEl('cloudConfigModal');if(modal)modal.classList.remove('open')}
-function saveCloudConfig(){
- if(!requirePermission('security.manage'))return;
- const urlEl=cloudEl('cloudUrl'),keyEl=cloudEl('cloudAnonKey'),emailEl=cloudEl('cloudEmail');
- if(!urlEl||!keyEl||!emailEl){alert('Formulaire Cloud introuvable.');return}
- const url=(urlEl.value||'').trim(),anonKey=(keyEl.value||'').trim(),email=(emailEl.value||'').trim();
- if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}
- saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})
-}"""
-          if old not in s:
-              raise SystemExit('Expected cloud modal block not found')
-          s=s.replace(old,new)
-          s=s.replace("const password=(cloudConfigModal?.classList.contains('open')?cloudPassword.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';", "const modal=cloudEl('cloudConfigModal'),passEl=cloudEl('cloudPassword');const password=((modal&&modal.classList.contains('open')&&passEl)?passEl.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';")
-          s=s.replace('CHEBSEL v1.5.2 — Centre de gestion','CHEBSEL v1.5.3 — Centre de gestion')
-          s=s.replace('>v1.5.2<','>v1.5.3<')
-          s=s.replace("const APP_VERSION='1.5.2'", "const APP_VERSION='1.5.3'")
-          p.write_text(s,encoding='utf-8')
-          sw=Path('sw.js')
-          t=sw.read_text(encoding='utf-8').replace("chebsel-pwa-stable-v152","chebsel-pwa-stable-v153")
-          sw.write_text(t,encoding='utf-8')
-          PY
           git rm .github/workflows/hotfix-v153.yml
           git config user.name 'CHEBSEL Deployment'
           git config user.email 'actions@users.noreply.github.com'
