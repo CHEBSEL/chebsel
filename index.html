@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.3 — Centre de gestion</title>
+<title>CHEBSEL v1.5.4 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.3</span>
+  <div class="topactions"><span class="versionChip">v1.5.4</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -1158,8 +1158,8 @@ setInterval(()=>{if(!SYNC_READY_BOOTING)syncReadyReconcile(true)},15000);
 
 
 var CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
-const CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
-const CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
+var CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
+var CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
 let CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
 function getCloudConfig(){const x=safeParse(CLOUD_CONFIG_KEY),c=x&&typeof x==='object'?x:{};return {url:c.url||CLOUD_DEFAULT_URL,anonKey:c.anonKey||CLOUD_DEFAULT_PUBLISHABLE_KEY,email:c.email||'',configuredAt:c.configuredAt||''}}
 function cloudConfigured(){const c=getCloudConfig();return !!(c.url&&c.anonKey)}
