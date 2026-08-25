@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.4 — Centre de gestion</title>
+<title>CHEBSEL v1.5.5 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.4</span>
+  <div class="topactions"><span class="versionChip">v1.5.5</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -883,7 +883,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.5.1';
+const APP_VERSION='1.5.5';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1160,7 +1160,7 @@ setInterval(()=>{if(!SYNC_READY_BOOTING)syncReadyReconcile(true)},15000);
 var CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
 var CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
 var CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
-let CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
+var CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
 function getCloudConfig(){const x=safeParse(CLOUD_CONFIG_KEY),c=x&&typeof x==='object'?x:{};return {url:c.url||CLOUD_DEFAULT_URL,anonKey:c.anonKey||CLOUD_DEFAULT_PUBLISHABLE_KEY,email:c.email||'',configuredAt:c.configuredAt||''}}
 function cloudConfigured(){const c=getCloudConfig();return !!(c.url&&c.anonKey)}
 async function loadSupabaseSDK(){if(globalThis.supabase?.createClient)return globalThis.supabase;if(CLOUD_SDK_LOADING)return CLOUD_SDK_LOADING;CLOUD_SDK_LOADING=new Promise((resolve,reject)=>{if(!navigator.onLine){reject(new Error('Internet requis pour charger Supabase la première fois.'));return}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.async=true;s.onload=()=>resolve(globalThis.supabase);s.onerror=()=>reject(new Error('Impossible de charger supabase-js.'));document.head.appendChild(s)});return CLOUD_SDK_LOADING}
