@@ -1,0 +1,48 @@
+name: CHEBSEL v1.5.7 Storage Key Init Fix
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v157.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix shared storage key initialization
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="const ATT_KEY='chebsel_attendance_app_v1';\nconst FIN_KEY='chebsel_finance_app_v1';\nconst MASTER_KEY='chebsel_master_members_v1';"
+          new="const ATT_KEY='chebsel_attendance_app_v1';\nconst FIN_KEY='chebsel_finance_app_v1';\nconst MASTER_KEY='chebsel_master_members_v1';\nconst CALENDAR_KEY='chebsel_calendar_v1';\nconst CALENDAR_OVERRIDE_KEY='chebsel_calendar_overrides_v1';"
+          if old not in s:
+              raise SystemExit('Base storage key block not found')
+          s=s.replace(old,new,1)
+          later="\n\nconst CALENDAR_KEY='chebsel_calendar_v1';\n\nconst CALENDAR_OVERRIDE_KEY='chebsel_calendar_overrides_v1';"
+          if later not in s:
+              raise SystemExit('Later calendar key block not found')
+          s=s.replace(later,'\n',1)
+          s=s.replace('CHEBSEL v1.5.6 — Centre de gestion','CHEBSEL v1.5.7 — Centre de gestion')
+          s=s.replace('>v1.5.6<','>v1.5.7<')
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js')
+          x=sw.read_text(encoding='utf-8')
+          x=x.replace('chebsel-pwa-stable-v156','chebsel-pwa-stable-v157')
+          sw.write_text(x,encoding='utf-8')
+          PY
+      - name: Verify fix
+        run: |
+          grep -q "CHEBSEL v1.5.7" index.html
+          test "$(grep -o "const CALENDAR_KEY='chebsel_calendar_v1'" index.html | wc -l)" -eq 1
+          test "$(grep -o "const CALENDAR_OVERRIDE_KEY='chebsel_calendar_overrides_v1'" index.html | wc -l)" -eq 1
+          grep -q "chebsel-pwa-stable-v157" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'CHEBSEL Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Fix storage key initialization and bump v1.5.7'
+          git push
