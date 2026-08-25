@@ -1,0 +1,39 @@
+name: CHEBSEL v1.5.2 hotfix
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v152.yml'
+permissions:
+  contents: write
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply hotfix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('CHEBSEL v1.5.1 — Centre de gestion','CHEBSEL v1.5.2 — Centre de gestion')
+          s=s.replace('<span class="versionChip">v1.5.1</span>','<span class="versionChip">v1.5.2</span>')
+          s=s.replace('Contrôle d’intégrité CHEBSEL v1.5.1','Contrôle d’intégrité CHEBSEL v1.5.2')
+          s=s.replace("const CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';","var CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';")
+          s=s.replace("if(!email){alert('Ajoutez l’email cloud dans Configuration.');return}","if(!email){openCloudConfigModal();alert('Ajoutez votre email Supabase et votre mot de passe dans le formulaire qui vient de s’ouvrir.');return}")
+          s=s.replace('Aucun cloud n’est connecté dans cette version.','Le stockage local reste actif; la connexion Supabase est disponible ci-dessous.')
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js')
+          w=sw.read_text(encoding='utf-8').replace("chebsel-pwa-stable-v151","chebsel-pwa-stable-v152")
+          sw.write_text(w,encoding='utf-8')
+          PY
+          grep -q 'v1.5.2' index.html
+          grep -q "var CLOUD_CONFIG_KEY" index.html
+          grep -q 'chebsel-pwa-stable-v152' sw.js
+      - name: Commit hotfix
+        run: |
+          git config user.name 'CHEBSEL Deployment'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Fix cloud login initialization and publish v1.5.2'
+          git push
