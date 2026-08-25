@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.5.1 — Centre de gestion</title>
+<title>CHEBSEL v1.5.2 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -146,7 +146,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.5.1</span>
+  <div class="topactions"><span class="versionChip">v1.5.2</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -164,7 +164,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
  <div class="syncReadyHead">
   <div>
    <h3>🔄 Fondation Sync-Ready</h3>
-   <div class="memberMeta">IndexedDB locale + file de synchronisation. Aucun cloud n’est connecté dans cette version.</div>
+   <div class="memberMeta">IndexedDB locale + file de synchronisation. Le stockage local reste actif; la connexion Supabase est disponible ci-dessous.</div>
   </div>
   <span class="syncState" id="syncReadyState">Initialisation…</span>
  </div>
@@ -369,7 +369,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
  <div class="modalActions"><button class="save" onclick="saveActivity()">Enregistrer</button><button class="cancel" onclick="closeActivityModal()">Annuler</button></div>
 </div></div>
 
-<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.5.1</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
+<div class="membersView" id="diagnosticsView"><div class="viewerbar"><button class="back" onclick="closeDiagnostics()">← Retour</button><div class="viewtitle"><b>Diagnostic du système</b><span>Contrôle d’intégrité CHEBSEL v1.5.2</span></div></div><div class="membersBody"><div class="profilePanel"><div class="diagGrid" id="diagSummary"></div><div class="memberActions" style="margin-top:12px"><button class="quickBtn" onclick="renderDiagnostics()">Relancer le diagnostic</button></div></div><div class="profilePanel"><h3>Résultats</h3><div id="diagIssues"></div></div></div></div>
 <div class="membersView" id="securityView"><div class="viewerbar"><button class="back" onclick="closeSecurity()">← Retour</button><div class="viewtitle"><b>Sécurité & rôles</b><span>Accès local protégé par PIN</span></div></div><div class="membersBody"><div class="profilePanel" id="securitySummary"></div><div class="profilePanel"><h3>Profils autorisés</h3><div id="securityUsers"></div></div><div class="profilePanel"><h3>Matrice des droits</h3><div id="permissionMatrix"></div></div></div></div>
 <div class="membersView" id="handoverView"><div class="viewerbar"><button class="back" onclick="closeHandover()">← Retour</button><div class="viewtitle"><b>Passation de comité</b><span>Fiche de transfert de responsabilité</span></div></div><div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Date de passation</label><input type="date" id="handoverDate"></div><div><label>Observation</label><input id="handoverNote" placeholder="Ex. fin de mandat / renouvellement"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="renderHandover()">Actualiser</button><button class="secondaryQuick" onclick="printHandover()">Imprimer / PDF</button><button class="secondaryQuick" onclick="portalBackup()">Sauvegarde finale</button></div></div><div id="handoverBody"></div></div></div>
 <div class="membersView" id="helpView"><div class="viewerbar"><button class="back" onclick="closeHelp()">← Retour</button><div class="viewtitle"><b>Manuel CHEBSEL</b><span>Version 1.5.0 stable</span></div></div><div class="membersBody"><div class="profilePanel" id="helpBody"></div></div></div>
@@ -1157,7 +1157,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setInterval(()=>{if(!SYNC_READY_BOOTING)syncReadyReconcile(true)},15000);
 
 
-const CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
+var CLOUD_CONFIG_KEY='chebsel_cloud_config_v1',CLOUD_META_KEY='chebsel_cloud_meta_v1';
 const CLOUD_DEFAULT_URL="https://obgpocmsmtlpvfwblqvi.supabase.co";
 const CLOUD_DEFAULT_PUBLISHABLE_KEY="sb_publishable_-EcBi0HIvojuaEuzqvORRA_xwAnRFYV";
 let CLOUD_CLIENT=null,CLOUD_SDK_LOADING=null;
@@ -1169,7 +1169,7 @@ function openCloudConfigModal(){if(isVisitor()){alert('Accès réservé aux resp
 function closeCloudConfigModal(){cloudConfigModal.classList.remove('open')}
 function saveCloudConfig(){if(!requirePermission('security.manage'))return;const url=(cloudUrl.value||'').trim(),anonKey=(cloudAnonKey.value||'').trim(),email=(cloudEmail.value||'').trim();if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})}
 async function cloudSessionInfo(){if(!cloudConfigured())return null;try{const c=await getCloudClient(),{data}=await c.auth.getSession();return data?.session||null}catch(e){return null}}
-async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey){openCloudConfigModal();return}const email=(cfg.email||'').trim();if(!email){alert('Ajoutez l’email cloud dans Configuration.');return}const password=(cloudConfigModal?.classList.contains('open')?cloudPassword.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';if(!password)return;const c=await getCloudClient(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||''});await registerCloudDevice();updateCloudUI();alert('Connexion CHEBSEL Cloud réussie.')}catch(e){alert('Connexion cloud impossible : '+e.message);updateCloudUI()}}
+async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey){openCloudConfigModal();return}const email=(cfg.email||'').trim();if(!email){openCloudConfigModal();alert('Ajoutez votre email Supabase et votre mot de passe dans le formulaire qui vient de s’ouvrir.');return}const password=(cloudConfigModal?.classList.contains('open')?cloudPassword.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';if(!password)return;const c=await getCloudClient(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;saveJSON(CLOUD_META_KEY,{...(safeParse(CLOUD_META_KEY)||{}),signedInAt:syncNowISO(),userId:data.user?.id||''});await registerCloudDevice();updateCloudUI();alert('Connexion CHEBSEL Cloud réussie.')}catch(e){alert('Connexion cloud impossible : '+e.message);updateCloudUI()}}
 async function cloudSignOut(){try{if(CLOUD_CLIENT)await CLOUD_CLIENT.auth.signOut();CLOUD_CLIENT=null;updateCloudUI()}catch(e){alert(e.message)}}
 async function registerCloudDevice(){try{const c=await getCloudClient(),session=await cloudSessionInfo();if(!session)return;let id=localStorage.getItem('chebsel_device_id_v1');if(!id){id=uuidv4();localStorage.setItem('chebsel_device_id_v1',id)}const {error}=await c.from('devices').upsert({id,auth_user_id:session.user.id,device_name:navigator.userAgent.slice(0,180),platform:navigator.platform||'',last_seen_at:syncNowISO(),active:true},{onConflict:'id'});if(error)throw error}catch(e){console.warn(e)}}
 async function getCloudProfile(){const c=await getCloudClient(),s=await cloudSessionInfo();if(!s)throw new Error('Connexion cloud requise.');const {data,error}=await c.from('user_profiles').select('auth_user_id,organization_id,role,active').eq('auth_user_id',s.user.id).single();if(error)throw error;if(!data?.active)throw new Error('Compte cloud inactif.');return data}
