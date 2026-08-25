@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.10.3 — Centre de gestion</title>
+<title>CHEBSEL v1.10.4 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -253,6 +253,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
   <div><label>Catégorie</label><input id="mCategory" value="Membre"></div>
   <div><label>Groupe / section</label><input id="mGroup" value="Chœur d’Homme"></div>
   <div><label>Téléphone</label><input id="mPhone" inputmode="tel"></div>
+  <div><label>Mwa kòmansman kotizasyon</label><input id="mContributionStart" type="month"><div class="memberMeta">Premye mwa manm sa a dwe kòmanse peye kotizasyon mansyèl.</div></div>
   <div><label>Statut</label><select id="mActive"><option value="true">Actif</option><option value="false">Inactif</option></select></div>
   <div class="wide"><label>Observation</label><textarea id="mNote"></textarea></div>
  </div>
@@ -529,13 +530,13 @@ function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','
 function openMemberModal(mid=''){
  const m=centralMembers().find(x=>x.id===mid);
  modalTitle.textContent=m?'Modifier le membre':'Ajouter un membre';
- mId.value=m?.id||'';mNo.value=m?.no||String(centralMembers().length+1);mFirst.value=m?.first||'';mLast.value=m?.last||'';mSex.value=m?.sex||'';mFunction.value=m?.function||'';mCategory.value=m?.category||'Membre';mGroup.value=m?.group||'Chœur d’Homme';mPhone.value=m?.phone||'';mActive.value=String(m?.active??true);mNote.value=m?.note||'';
+ mId.value=m?.id||'';mNo.value=m?.no||String(centralMembers().length+1);mFirst.value=m?.first||'';mLast.value=m?.last||'';mSex.value=m?.sex||'';mFunction.value=m?.function||'';mCategory.value=m?.category||'Membre';mGroup.value=m?.group||'Chœur d’Homme';mPhone.value=m?.phone||'';mContributionStart.value=m?.contributionStartMonth||String(m?.joinedAt||'').slice(0,7)||new Date().toISOString().slice(0,7);mActive.value=String(m?.active??true);mNote.value=m?.note||'';
  memberModal.classList.add('open')
 }
 function closeMemberModal(){memberModal.classList.remove('open')}
 function saveCentralMember(){
  if(!mFirst.value.trim()&&!mLast.value.trim()){alert('Saisissez au moins un prénom ou un nom.');return}
- const list=centralMembers(),obj={id:mId.value||uid(),no:mNo.value.trim(),first:mFirst.value.trim(),last:mLast.value.trim(),sex:mSex.value,function:mFunction.value.trim(),category:mCategory.value.trim()||'Membre',group:mGroup.value.trim()||'Chœur d’Homme',phone:mPhone.value.trim(),active:mActive.value==='true',note:mNote.value.trim()};
+ const list=centralMembers(),obj={id:mId.value||uid(),no:mNo.value.trim(),first:mFirst.value.trim(),last:mLast.value.trim(),sex:mSex.value,function:mFunction.value.trim(),category:mCategory.value.trim()||'Membre',group:mGroup.value.trim()||'Chœur d’Homme',phone:mPhone.value.trim(),contributionStartMonth:mContributionStart.value||new Date().toISOString().slice(0,7),active:mActive.value==='true',note:mNote.value.trim()};
  const i=list.findIndex(x=>x.id===obj.id);if(i>=0)list[i]=obj;else list.push(obj);
  writeCentralMembers(list);audit(i>=0?'Membre modifié':'Membre ajouté',fullName(obj));closeMemberModal();renderCentralMembers();refreshHome()
 }
@@ -910,9 +911,10 @@ function renderDebtors(){
 }
 function openVisitorDebtorProfile(mid){
  const x=(publicVisitorSnapshot()?.debtors||[]).find(d=>String(d.member_id||'')===String(mid||''));if(!x)return;
- const days=x.oldest_date?daysOld(x.oldest_date):0;
+ const a=x.attendance_stats||{},ah=x.attendance_history||[],fh=x.financial_history||[],ph=x.payment_history||[];
+ const due=fh.reduce((t,e)=>t+Number(e.due||0),0),paid=fh.reduce((t,e)=>t+Number(e.paid||0),0),activities=Number(a.activities||0),present=Number(a.present||0),late=Number(a.late||0),absent=Number(a.absent||0),rate=activities?((present/activities)*100).toFixed(1).replace('.',',')+' %':'0,0 %';
  debtorsView.classList.remove('open');profileView.classList.add('open');
- profileBody.innerHTML=`<div class="profilePanel"><div class="profileTitle"><div><h3>${escapeHtml(x.name||'—')}</h3><div class="memberMeta">Fiche débiteur — lecture seule</div></div><span class="readonlyTag">Visiteur</span></div><div class="memberStats"><div class="mini"><b>${money(Number(x.debt||0))}</b><span>Dette</span></div><div class="mini"><b>${days}</b><span>Jour(s) de dette</span></div></div><div class="smallnote">Aucune opération financière ne peut être enregistrée en mode Visiteur.</div></div>`;
+ profileBody.innerHTML=`<div class="profilePanel"><div class="profileTitle"><div><h3>${escapeHtml(x.name||'—')}</h3><div class="memberMeta">N° ${escapeHtml(x.member_no||'—')} • Fiche membre — lecture seule</div></div><span class="status ${x.active!==false?'active':''}">${x.active!==false?'Actif':'Inactif'}</span></div><div class="memberStats"><div class="mini"><b>${activities}</b><span>Activités</span></div><div class="mini"><b>${present}</b><span>Présences</span></div><div class="mini"><b>${late}</b><span>Retards</span></div><div class="mini"><b>${rate}</b><span>Taux</span></div><div class="mini"><b>${absent}</b><span>Absences</span></div><div class="mini"><b>${money(due)}</b><span>Dû</span></div><div class="mini"><b>${money(paid)}</b><span>Payé</span></div><div class="mini"><b>${money(Number(x.debt||0))}</b><span>Dette</span></div></div></div><div class="profilePanel"><h3>Historique financier</h3>${fh.length?fh.map(e=>`<div class="ledgerRow"><div><div class="ledgerMain">${escapeHtml(e.label||e.type||'Écriture')}</div><div class="ledgerMeta">${escapeHtml(e.date||'')} • Dû ${money(e.due||0)} • Payé ${money(e.paid||0)}</div></div><div>${Number(e.balance||0)>0?'<span class="debtTag">Solde '+money(e.balance)+'</span>':'<span class="paidTag">Soldé</span>'}</div></div>`).join(''):'<div class="empty">Aucune écriture financière.</div>'}</div><div class="profilePanel"><h3>Paiements enregistrés</h3>${ph.length?ph.map(e=>`<div class="ledgerRow"><div><div class="ledgerMain">${money(e.amount||0)}</div><div class="ledgerMeta">${escapeHtml(e.date||'')} ${e.receipt_number?'• Reçu '+escapeHtml(e.receipt_number):''}</div></div></div>`).join(''):'<div class="empty">Aucun paiement enregistré.</div>'}</div><div class="profilePanel"><h3>Historique de présence</h3>${ah.length?ah.map(e=>`<div class="ledgerRow"><div><div class="ledgerMain">${escapeHtml(e.activity||'Activité')}</div><div class="ledgerMeta">${escapeHtml(e.date||'')} • ${escapeHtml(({P:'Présent',RM:'Retard motivé',R:'Retard motivé',RNM:'Retard non motivé',AM:'Absence motivée',A:'Absence motivée',ANM:'Absence non motivée',ANMP:'Absence non motivée — prestation'})[String(e.status||'').toUpperCase()]||e.status||'Non renseigné')}</div></div></div>`).join(''):'<div class="empty">Aucun historique de présence.</div>'}</div>`;
 }
 function openProfileFromDebtors(mid){debtorsView.classList.remove('open');if(isVisitor()){openVisitorDebtorProfile(mid);return}openProfile(mid)}
 
@@ -1021,7 +1023,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.10.3';
+const APP_VERSION='1.10.4';
 const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
 let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
@@ -1339,7 +1341,7 @@ async function cloudSignIn(){if(isVisitor()){alert('Accès réservé aux respons
 async function cloudSignOut(){try{if(CLOUD_CLIENT)await CLOUD_CLIENT.auth.signOut();CLOUD_CLIENT=null;updateCloudUI()}catch(e){alert(e.message)}}
 async function registerCloudDevice(){try{const c=await getCloudClient(),session=await cloudSessionInfo();if(!session)return;let id=localStorage.getItem('chebsel_device_id_v1');if(!id){id=uuidv4();localStorage.setItem('chebsel_device_id_v1',id)}const {error}=await c.from('devices').upsert({id,auth_user_id:session.user.id,device_name:navigator.userAgent.slice(0,180),platform:navigator.platform||'',last_seen_at:syncNowISO(),active:true},{onConflict:'id'});if(error)throw error}catch(e){console.warn(e)}}
 async function getCloudProfile(){const c=await getCloudClient(),s=await cloudSessionInfo();if(!s)throw new Error('Connexion cloud requise.');const {data,error}=await c.from('user_profiles').select('auth_user_id,organization_id,role,active').eq('auth_user_id',s.user.id).single();if(error)throw error;if(!data?.active)throw new Error('Compte cloud inactif.');return data}
-function cloudMemberPayload(m,org){return {id:m.syncId,organization_id:org,legacy_id:m.id||null,member_no:m.no||null,first_name:m.first||'',last_name:m.last||'',phone:m.phone||null,active:m.active!==false,notes:m.note||null,updated_at:syncNowISO(),deleted_at:m._deletedAt||null}}
+function cloudMemberPayload(m,org){return {id:m.syncId,organization_id:org,legacy_id:m.id||null,member_no:m.no||null,first_name:m.first||'',last_name:m.last||'',phone:m.phone||null,active:m.active!==false,notes:m.note||null,contribution_start_month:m.contributionStartMonth||null,updated_at:syncNowISO(),deleted_at:m._deletedAt||null}}
 function cloudCalendarPayload(e,org){return {id:e.syncId,organization_id:org,legacy_id:e.id||null,title:e.title||'',event_date:e.date||null,start_time:e.time||null,location:e.location||null,event_type:'custom',status:e.status||'scheduled',reason:e.note||null,updated_at:syncNowISO(),deleted_at:e._deletedAt||null}}
 async function alignCloudMemberIds(org){
  const c=await getCloudClient(),{data,error}=await c.from('members').select('id,legacy_id').eq('organization_id',org).is('deleted_at',null);
@@ -1351,7 +1353,7 @@ async function alignCloudMemberIds(org){
  return changed
 }
 async function pushPilotEntity(store,table,payloadFn,org){const rows=(await idbAll(store)).filter(x=>!x._deletedAt);if(!rows.length)return 0;const c=await getCloudClient(),{error}=await c.from(table).upsert(rows.map(x=>payloadFn(x,org)),{onConflict:'id'});if(error)throw error;return rows.length}
-async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(clean));syncMembersToApps()}return (data||[]).length}
+async function pullCloudMembers(org){const c=await getCloudClient(),{data,error}=await c.from('members').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=centralMembers(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,no:r.member_no||cur.no,first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',contributionStartMonth:r.contribution_start_month||cur.contributionStartMonth||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,no:r.member_no||'',first:r.first_name||'',last:r.last_name||'',phone:r.phone||'',active:r.active!==false,note:r.notes||'',contributionStartMonth:r.contribution_start_month||'',category:'Membre',group:'Chœur d’Homme',_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed){localStorage.setItem(MASTER_KEY,JSON.stringify(clean));syncMembersToApps()}return (data||[]).length}
 async function pullCloudCalendar(org){const c=await getCloudClient(),{data,error}=await c.from('calendar_events').select('*').eq('organization_id',org).is('deleted_at',null);if(error)throw error;const local=customActivities(),bySync=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x])),byLegacy=new Map(local.filter(x=>x.id).map(x=>[String(x.id),x]));let changed=false;for(const r of data||[]){const cur=(r.legacy_id&&byLegacy.get(String(r.legacy_id)))||bySync.get(r.id);if(cur){Object.assign(cur,{syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',_serverUpdatedAt:r.updated_at});changed=true}else{const n={id:r.legacy_id||('cloud_'+r.id.slice(0,8)),syncId:r.id,title:r.title||'',date:r.event_date||'',time:r.start_time||'',location:r.location||'',status:r.status||'active',note:r.reason||'',auto:false,_serverUpdatedAt:r.updated_at};local.push(n);bySync.set(r.id,n);if(r.legacy_id)byLegacy.set(String(r.legacy_id),n);changed=true}}const seenSync=new Set(),seenId=new Set(),clean=[];for(const x of local){const sid=x.syncId||'',lid=String(x.id||'');if((sid&&seenSync.has(sid))||(lid&&seenId.has(lid)))continue;if(sid)seenSync.add(sid);if(lid)seenId.add(lid);clean.push(x)}if(clean.length!==local.length)changed=true;if(changed)localStorage.setItem(CALENDAR_KEY,JSON.stringify(clean));return (data||[]).length}
 
 function canonicalV159Members(){
@@ -1773,8 +1775,8 @@ function closePinModal(){pinModal.classList.remove('open')}
 async function saveUserPin(){if(!requirePermission('security.manage'))return;const k=pinTarget.value,p1=pinNew.value.trim(),p2=pinConfirm.value.trim();if(!/^\d{4,12}$/.test(p1)){alert('Le PIN doit contenir 4 à 12 chiffres.');return}if(p1!==p2){alert('Les PIN ne correspondent pas.');return}const a=getAuth(),u=a.users[k],before={configured:!!u.pinHash,configuredAt:u.configuredAt};u.salt=randomSalt();u.pinHash=await hashPin(p1,u.salt);u.configuredAt=new Date().toISOString();saveJSON(AUTH_KEY,a);audit('PIN configuré / réinitialisé',u.name,{entity:'security',entityId:k,before,after:{configured:true,configuredAt:u.configuredAt}});closePinModal();renderSecurity()}
 function openSecurity(){if(!roleCanView('security')){alert('Accès non autorisé pour ce profil.');return}securityView.classList.add('open');renderSecurity()} function closeSecurity(){securityView.classList.remove('open')}
 function renderSecurity(){const a=getAuth(),u=currentUser();securitySummary.innerHTML=`<h3>État de sécurité</h3><div class="statusGood" style="margin:8px 0">✓ Codes d’accès globaux actifs sur tous les appareils</div><div class="memberMeta">Session : ${u?escapeHtml(u.name+' — '+u.role):'Lecture seule'}.</div><div class="permissionNote">Les PIN sont hashés localement. Ils ne sont ni publiés sur GitHub ni exportés dans les sauvegardes.</div>`;securityUsers.innerHTML=Object.values(a.users).map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(x.name)}</div><div class="memberMeta">${escapeHtml(x.role)}</div></div><span class="${x.pinHash?'paidTag':'debtTag'}">${x.pinHash?'PIN configuré':'PIN non configuré'}</span></div>${can('security.manage')?`<div class="memberActions"><button class="secondaryQuick" onclick="openPinModal('${x.key}')">${x.pinHash?'Réinitialiser PIN':'Configurer PIN'}</button></div>`:''}</div>`).join('');permissionMatrix.innerHTML='<div class="table-wrap"><table><thead><tr><th>Profil</th><th>Droits</th></tr></thead><tbody><tr><td>Président</td><td>Accès complet, sécurité, suppression, restauration, réouverture.</td></tr><tr><td>Secrétaire</td><td>Membres et fiche d’appel.</td></tr><tr><td>Trésorier</td><td>Cotisations, amendes, paiements et clôture.</td></tr><tr><td>Lecture seule</td><td>Consultation sans modification.</td></tr></tbody></table></div>'}
-function openMemberModal(mid=''){if(!requirePermission('members.write'))return;const m=centralMembers().find(x=>x.id===mid);modalTitle.textContent=m?'Modifier le membre':'Ajouter un membre';mId.value=m?.id||'';mNo.value=m?.no||String(centralMembers().length+1);mFirst.value=m?.first||'';mLast.value=m?.last||'';mSex.value=m?.sex||'';mFunction.value=m?.function||'';mCategory.value=m?.category||'Membre';mGroup.value=m?.group||'Chœur d’Homme';mPhone.value=m?.phone||'';mActive.value=String(m?.active??true);mNote.value=m?.note||'';memberModal.classList.add('open')}
-function saveCentralMember(){if(!requirePermission('members.write'))return;if(!mFirst.value.trim()&&!mLast.value.trim()){alert('Saisissez au moins un prénom ou un nom.');return}const list=centralMembers(),obj={id:mId.value||uid(),no:mNo.value.trim(),first:mFirst.value.trim(),last:mLast.value.trim(),sex:mSex.value,function:mFunction.value.trim(),category:mCategory.value.trim()||'Membre',group:mGroup.value.trim()||'Chœur d’Homme',phone:mPhone.value.trim(),active:mActive.value==='true',note:mNote.value.trim()},i=list.findIndex(x=>x.id===obj.id),before=i>=0?JSON.parse(JSON.stringify(list[i])):null;if(i>=0)list[i]=obj;else list.push(obj);writeCentralMembers(list);audit(i>=0?'Membre modifié':'Membre ajouté',fullName(obj),{entity:'member',entityId:obj.id,before,after:obj});closeMemberModal();renderCentralMembers();refreshHome()}
+function openMemberModal(mid=''){if(!requirePermission('members.write'))return;const m=centralMembers().find(x=>x.id===mid);modalTitle.textContent=m?'Modifier le membre':'Ajouter un membre';mId.value=m?.id||'';mNo.value=m?.no||String(centralMembers().length+1);mFirst.value=m?.first||'';mLast.value=m?.last||'';mSex.value=m?.sex||'';mFunction.value=m?.function||'';mCategory.value=m?.category||'Membre';mGroup.value=m?.group||'Chœur d’Homme';mPhone.value=m?.phone||'';mContributionStart.value=m?.contributionStartMonth||String(m?.joinedAt||'').slice(0,7)||new Date().toISOString().slice(0,7);mActive.value=String(m?.active??true);mNote.value=m?.note||'';memberModal.classList.add('open')}
+function saveCentralMember(){if(!requirePermission('members.write'))return;if(!mFirst.value.trim()&&!mLast.value.trim()){alert('Saisissez au moins un prénom ou un nom.');return}const list=centralMembers(),obj={id:mId.value||uid(),no:mNo.value.trim(),first:mFirst.value.trim(),last:mLast.value.trim(),sex:mSex.value,function:mFunction.value.trim(),category:mCategory.value.trim()||'Membre',group:mGroup.value.trim()||'Chœur d’Homme',phone:mPhone.value.trim(),contributionStartMonth:mContributionStart.value||new Date().toISOString().slice(0,7),active:mActive.value==='true',note:mNote.value.trim()},i=list.findIndex(x=>x.id===obj.id),before=i>=0?JSON.parse(JSON.stringify(list[i])):null;if(i>=0)list[i]=obj;else list.push(obj);writeCentralMembers(list);audit(i>=0?'Membre modifié':'Membre ajouté',fullName(obj),{entity:'member',entityId:obj.id,before,after:obj});closeMemberModal();renderCentralMembers();refreshHome()}
 function toggleMemberActive(mid){if(!requirePermission('members.write'))return;const list=centralMembers(),m=list.find(x=>x.id===mid);if(!m)return;const before=JSON.parse(JSON.stringify(m));m.active=!m.active;writeCentralMembers(list);audit(m.active?'Membre réactivé':'Membre désactivé',fullName(m),{entity:'member',entityId:m.id,before,after:m});renderCentralMembers();refreshHome()}
 async function deleteCentralMember(mid){if(!requirePermission('members.delete'))return;if(!(await criticalGuard('members.delete','Suppression définitive d’un membre')))return;const a=safeParse(ATT_KEY)||{},f=safeParse(FIN_KEY)||{},hasA=(a.calls||[]).some(c=>c.records&&c.records[mid]),hasF=(f.entries||[]).some(e=>e.memberId===mid);if(hasA||hasF){alert('Ce membre possède un historique. Désactivez-le au lieu de le supprimer.');return}const m=centralMembers().find(x=>x.id===mid);if(!m||!confirm('Supprimer définitivement '+fullName(m)+' ?'))return;writeCentralMembers(centralMembers().filter(x=>x.id!==mid));audit('Membre supprimé',fullName(m),{entity:'member',entityId:mid,before:m,after:null});renderCentralMembers();refreshHome()}
 function renderCentralMembers(){const q=(memberSearch.value||'').toLowerCase().trim(),filter=memberFilter.value;let list=centralMembers().filter(m=>(filter==='all'||(filter==='active'?m.active:!m.active))&&(!q||fullName(m).toLowerCase().includes(q)||(m.no||'').toLowerCase().includes(q)||(m.phone||'').includes(q))).sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));centralMembersList.innerHTML=list.length?list.map(m=>{const a=memberAttendance(m.id),f=memberFinancial(m.id);return `<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(fullName(m))}</div><div class="memberMeta">N° ${escapeHtml(m.no||'—')} ${m.function?'• '+escapeHtml(m.function):''} ${m.group?'• '+escapeHtml(m.group):''}</div></div><span class="status ${m.active?'active':''}">${m.active?'Actif':'Inactif'}</span></div><div class="memberStats"><div class="mini"><b>${a.activities}</b><span>Activités</span></div><div class="mini"><b>${a.present}</b><span>Présences</span></div><div class="mini"><b>${a.late}</b><span>Retards</span></div><div class="mini"><b>${money(f.balance)}</b><span>Dette</span></div></div><div class="memberActions"><button class="secondaryQuick" onclick="openProfile('${m.id}')">Fiche</button>${can('members.write')?`<button class="edit" onclick="openMemberModal('${m.id}')">Modifier</button><button class="inactiveBtn" onclick="toggleMemberActive('${m.id}')">${m.active?'Désactiver':'Réactiver'}</button>`:''}${can('members.delete')?`<button class="delete" onclick="deleteCentralMember('${m.id}')">Supprimer</button>`:''}</div></div>`}).join(''):'<div class="empty">Aucun membre trouvé.</div>';updateAuthUI()}
@@ -1786,8 +1788,9 @@ function syncBridge(){repairLegacyPerformanceFines();syncMembersToApps();const a
 function openPaymentModal(mid){if(!requirePermission('finance.payment'))return;payMemberId.value=mid;payAmount.value='';payDate.value=new Date().toISOString().slice(0,10);payRef.value='';paymentModal.classList.add('open')}
 async function applySmartPayment(){if(!requirePermission('finance.payment'))return;if(!(await criticalGuard('finance.payment','Enregistrement / modification d’un paiement')))return;const mid=payMemberId.value,amount=Number(payAmount.value||0),date=payDate.value||new Date().toISOString().slice(0,10),ref=(payRef.value||'').trim();if(amount<=0){alert('Saisissez un montant valide.');return}const pl=safeParse(PAYMENT_LOG_KEY)||[];if(pl.some(p=>p.memberId===mid&&p.date===date&&Number(p.amount)===amount&&(p.ref||'')===ref)){alert('Paiement en double détecté.');return}const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const debts=f.entries.filter(e=>e.memberId===mid&&Math.max(0,Number(e.due||0)-Number(e.paid||0))>0).sort((a,b)=>(a.date||'').localeCompare(b.date||''));if(!debts.length){alert('Aucune dette ouverte.');return}let remain=amount,applied=0,alloc=[];for(const e of debts){if(remain<=0)break;const bal=Math.max(0,Number(e.due||0)-Number(e.paid||0)),x=Math.min(bal,remain),before=Number(e.paid||0);e.paid=before+x;e.paidDate=date;e.updatedAt=new Date().toISOString();remain-=x;applied+=x;alloc.push({entryId:e.id,label:e.typeLabel||e.type,amount:x,beforePaid:before,afterPaid:e.paid})}saveJSON(FIN_KEY,f);const rec={id:uid(),memberId:mid,date,amount,applied,unapplied:remain,ref,alloc,user:currentUser()?.name||'',at:new Date().toISOString()};pl.unshift(rec);saveJSON(PAYMENT_LOG_KEY,pl.slice(0,3000));audit('Paiement enregistré',`${fullName(centralMembers().find(x=>x.id===mid))} : ${money(applied)}`,{entity:'payment',entityId:rec.id,after:rec});closePaymentModal();syncBridge();renderProfile(mid);refreshHome();showReceipt(mid,applied,date,ref,alloc,remain)}
 
-const MONTHLY_DUE_START='2026-08';
 const MONTHLY_DUE_AMOUNT=125;
+function currentMonthYM(){return new Date().toISOString().slice(0,7)}
+function memberContributionStart(m){return String(m?.contributionStartMonth||m?.joinedAt||currentMonthYM()).slice(0,7)}
 
 function monthLabelFR(ym){
  const [y,m]=ym.split('-').map(Number);
@@ -1801,13 +1804,7 @@ function nextMonth(ym){
  const [y,m]=ym.split('-').map(Number),d=new Date(y,m,1);
  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
-function completedMonthsSinceStart(){
- const now=new Date(),current=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
- const lastCompleted=monthBefore(current),out=[];
- let ym=MONTHLY_DUE_START;
- while(ym<=lastCompleted){out.push(ym);ym=nextMonth(ym)}
- return out
-}
+function completedMonthsSinceStart(){const ms=centralMembers().filter(m=>m.active!==false).map(memberContributionStart).filter(Boolean).sort();if(!ms.length)return [];const last=monthBefore(currentMonthYM()),out=[];let ym=ms[0];while(ym<=last){out.push(ym);ym=nextMonth(ym)}return out}
 function isMonthlyEntry(e){
  const t=String(e.type||'').toLowerCase(),lbl=String(e.typeLabel||'').toLowerCase();
  return t==='monthly'||t==='cotisation'||lbl.includes('cotisation mensuelle');
@@ -1825,55 +1822,8 @@ function removePrematureCurrentMonthDebts(){
  const removed=before-f.entries.length;if(removed>0)saveJSON(FIN_KEY,f);return removed;
 }
 
-function ensureCompletedMonthlyDebts(){
- const months=completedMonthsSinceStart();
- if(!months.length)return {created:0,months:[]};
- const f=safeParse(FIN_KEY)||{};
- if(!Array.isArray(f.entries))f.entries=[];
- const members=centralMembers().filter(m=>m.active!==false);
- let created=0,createdMonths=new Set();
- for(const ym of months){
-  for(const m of members){
-   const existing=monthlyEntryFor(f.entries,m.id,ym);
-   if(existing)continue;
-   const id=`monthly-${ym}-${m.id}`;
-   f.entries.push({
-    id,memberId:m.id,type:'monthly',typeLabel:`Cotisation mensuelle — ${monthLabelFR(ym)}`,
-    date:`${ym}-01`,due:MONTHLY_DUE_AMOUNT,paid:0,paidDate:'',
-    autoMonthly:true,sourceMonth:ym,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
-   });
-   created++;createdMonths.add(ym)
-  }
- }
- f.settings=f.settings||{};
- f.settings.monthly=MONTHLY_DUE_AMOUNT;
- saveJSON(FIN_KEY,f);
- if(created){
-  audit('Cotisations mensuelles générées automatiquement',
-    `${created} dette(s) créée(s) pour ${Array.from(createdMonths).join(', ')}`,
-    {entity:'monthly_contribution',after:{created,months:Array.from(createdMonths)}})
- }
- return {created,months:Array.from(createdMonths)}
-}
-function ensureMonthBeforeClosing(ym){
- if(ym<MONTHLY_DUE_START)return;
- const f=safeParse(FIN_KEY)||{};
- if(!Array.isArray(f.entries))f.entries=[];
- const members=centralMembers().filter(m=>m.active!==false);
- let created=0;
- for(const m of members){
-  if(monthlyEntryFor(f.entries,m.id,ym))continue;
-  f.entries.push({
-   id:`monthly-${ym}-${m.id}`,memberId:m.id,type:'monthly',
-   typeLabel:`Cotisation mensuelle — ${monthLabelFR(ym)}`,
-   date:`${ym}-01`,due:MONTHLY_DUE_AMOUNT,paid:0,paidDate:'',
-   autoMonthly:true,sourceMonth:ym,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
-  });
-  created++
- }
- f.settings=f.settings||{};f.settings.monthly=MONTHLY_DUE_AMOUNT;saveJSON(FIN_KEY,f);
- if(created) audit('Cotisations du mois générées avant clôture',`${ym} • ${created} dette(s)`,{entity:'monthly_contribution',after:{month:ym,created}})
-}
+function ensureCompletedMonthlyDebts(){const last=monthBefore(currentMonthYM()),f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const members=centralMembers().filter(m=>m.active!==false);let created=0,months=new Set();for(const m of members){let ym=memberContributionStart(m);while(ym&&ym<=last){if(!monthlyEntryFor(f.entries,m.id,ym)){f.entries.push({id:`monthly-${ym}-${m.id}`,memberId:m.id,type:'monthly',typeLabel:`Cotisation mensuelle — ${monthLabelFR(ym)}`,date:`${ym}-01`,due:MONTHLY_DUE_AMOUNT,paid:0,paidDate:'',autoMonthly:true,sourceMonth:ym,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});created++;months.add(ym)}ym=nextMonth(ym)}}if(created)saveJSON(FIN_KEY,f);return {created,months:Array.from(months)}}
+function ensureMonthBeforeClosing(ym){if(!ym)return;const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const members=centralMembers().filter(m=>m.active!==false&&memberContributionStart(m)<=ym);let created=0;for(const m of members){if(monthlyEntryFor(f.entries,m.id,ym))continue;f.entries.push({id:`monthly-${ym}-${m.id}`,memberId:m.id,type:'monthly',typeLabel:`Cotisation mensuelle — ${monthLabelFR(ym)}`,date:`${ym}-01`,due:MONTHLY_DUE_AMOUNT,paid:0,paidDate:'',autoMonthly:true,sourceMonth:ym,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});created++}if(created)saveJSON(FIN_KEY,f)}
 
 
 function calendarOverrides(){const x=safeParse(CALENDAR_OVERRIDE_KEY);return x&&typeof x==='object'?x:{}}
