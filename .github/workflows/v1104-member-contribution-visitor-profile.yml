@@ -1,0 +1,50 @@
+name: CHEBSEL v1.10.4 Member Contribution + Visitor Profile
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v1104_contribution_start.py'
+      - 'scripts/v1104_visitor_full_readonly_profile.py'
+      - '.github/workflows/v1104-member-contribution-visitor-profile.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply per-member contribution start
+        run: python scripts/v1104_contribution_start.py
+      - name: Restore visitor full read-only debtor fiche
+        run: python scripts/v1104_visitor_full_readonly_profile.py
+      - name: Bump service worker cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('sw.js')
+          if p.exists():
+              s=p.read_text(encoding='utf-8')
+              s=re.sub(r'chebsel-pwa-stable-v[0-9]+','chebsel-pwa-stable-v1104',s)
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'CHEBSEL v1.10.4' index.html
+          grep -q 'mContributionStart' index.html
+          grep -q 'contribution_start_month' index.html
+          grep -q 'memberContributionStart' index.html
+          grep -q 'Historique financier' index.html
+          grep -q 'Historique de présence' index.html
+          ! grep -q "MONTHLY_DUE_START" index.html
+      - name: Commit release
+        run: |
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html sw.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Release CHEBSEL v1.10.4 flexible contributions and visitor fiche'
+          git push
