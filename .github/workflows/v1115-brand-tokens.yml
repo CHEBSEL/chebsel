@@ -1,0 +1,35 @@
+name: CHEBSEL v1.11.5 Official Brand Tokens
+
+on:
+  push:
+    paths:
+      - 'scripts/v1115_brand_tokens.py'
+      - '.github/workflows/v1115-brand-tokens.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply official CHEBSEL palette tokens
+        run: python scripts/v1115_brand_tokens.py
+      - name: Commit release
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest
+          if git diff --cached --quiet; then
+            echo "No release changes"
+          else
+            git commit -m "Release CHEBSEL v1.11.5 official brand palette"
+            git push origin main
+          fi
