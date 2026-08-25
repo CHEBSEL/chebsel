@@ -1,0 +1,35 @@
+name: CHEBSEL v1.11.2 Login Privacy + Premium Icons
+
+on:
+  push:
+    paths:
+      - 'scripts/v1112_login_privacy_premium_icons.py'
+      - '.github/workflows/v1112-login-privacy-premium-icons.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.11.2 login privacy patch
+        run: python scripts/v1112_login_privacy_premium_icons.py
+      - name: Commit release
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest
+          if git diff --cached --quiet; then
+            echo "No release changes"
+          else
+            git commit -m "Release CHEBSEL v1.11.2 private login and premium icons"
+            git push origin main
+          fi
