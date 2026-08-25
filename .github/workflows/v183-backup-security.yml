@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/v183-backup-security.yml'
+      - 'scripts/v183_backup_security.py'
 permissions:
   contents: write
 jobs:
@@ -11,56 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Restrict backup and restore to President
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          assert 'CHEBSEL v1.8.2' in s
-          assert "const APP_VERSION='1.8.2';" in s
-          s=s.replace('CHEBSEL v1.8.2 — Centre de gestion','CHEBSEL v1.8.3 — Centre de gestion')
-          s=s.replace('<span class="versionChip">v1.8.2</span>','<span class="versionChip">v1.8.3</span>')
-          s=s.replace("const APP_VERSION='1.8.2';","const APP_VERSION='1.8.3';")
-
-          # Give the top backup button a stable id.
-          s=s.replace('<button class="topbtn" onclick="portalBackup()" title="Sauvegarder les données" aria-label="Sauvegarder">💾</button>',
-                      '<button class="topbtn" id="backupTopBtn" onclick="portalBackup()" title="Sauvegarder les données" aria-label="Sauvegarder">💾</button>')
-
-          # Hide every backup/restore entry point and its containing panel unless President.
-          needle=" const president=r==='president';\n"
-          insert=""" const president=r==='president';
- const backupSelector='[onclick*=\"portalBackup\"],[onclick*=\"openRestoreModal\"],[onclick*=\"openRestoreTestModal\"]';
- document.querySelectorAll(backupSelector).forEach(e=>e.classList.toggle('role-hidden',!president));
- document.querySelectorAll('.profilePanel').forEach(panel=>{if(panel.querySelector(backupSelector))panel.classList.toggle('role-hidden',!president)});
-"""
-          assert needle in s
-          s=s.replace(needle,insert,1)
-
-          # Defense in depth: even a direct function call must fail outside President role.
-          marker='applyShellTheme(localStorage.getItem(SHELL_THEME)'
-          guard="""const _chebselPortalBackup=portalBackup;
-portalBackup=function(){if(currentRoleView()!=='president'){alert('Sauvegarde réservée au Président.');return false}return _chebselPortalBackup.apply(this,arguments)};
-const _chebselOpenRestoreModal=openRestoreModal;
-openRestoreModal=function(){if(currentRoleView()!=='president'){alert('Restauration réservée au Président.');return false}return _chebselOpenRestoreModal.apply(this,arguments)};
-const _chebselOpenRestoreTestModal=openRestoreTestModal;
-openRestoreTestModal=function(){if(currentRoleView()!=='president'){alert('Test de sauvegarde réservé au Président.');return false}return _chebselOpenRestoreTestModal.apply(this,arguments)};
-
-"""
-          assert marker in s
-          s=s.replace(marker,guard+marker,1)
-          p.write_text(s,encoding='utf-8')
-          PY
+        run: python3 scripts/v183_backup_security.py
       - name: Bump service worker cache
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('sw.js')
-          s=p.read_text(encoding='utf-8')
-          s=re.sub(r'chebsel-pwa-stable-v\d+', 'chebsel-pwa-stable-v183', s)
-          p.write_text(s,encoding='utf-8')
-          PY
+          python3 -c "from pathlib import Path; import re; p=Path('sw.js'); s=p.read_text(); p.write_text(re.sub(r'chebsel-pwa-stable-v[0-9]+','chebsel-pwa-stable-v183',s))"
       - name: Verify
         run: |
           grep -q "CHEBSEL v1.8.3" index.html
