@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.10.1 — Centre de gestion</title>
+<title>CHEBSEL v1.10.2 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -155,7 +155,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.10.1</span>
+  <div class="topactions"><span class="versionChip">v1.10.2</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -887,10 +887,16 @@ async function pullCloudExpenses(org){
  const c=await getCloudClient(),{data,error}=await c.from('expenses').select('*').eq('organization_id',org);if(error)throw error;const local=treasuryExpenses(),by=new Map(local.filter(x=>x.syncId).map(x=>[x.syncId,x]));for(const r of data||[]){let x=by.get(r.id);if(!x){x={id:'EXP-'+r.id.slice(0,8),syncId:r.id};local.push(x);by.set(r.id,x)}Object.assign(x,{date:r.expense_date,amount:Number(r.amount||0),category:r.category||'',reason:r.reason||'',reference:r.reference||'',notes:r.notes||'',createdAt:r.created_at||x.createdAt||syncNowISO(),updatedAt:r.updated_at||'',deletedAt:r.deleted_at||null})}localStorage.setItem(EXPENSE_KEY,JSON.stringify(local));return (data||[]).length
 }
 
-function openDebtors(){syncBridge();debtorsView.classList.add('open');renderDebtors()}
+function openDebtors(){if(!isVisitor())syncBridge();debtorsView.classList.add('open');renderDebtors()}
 function closeDebtors(){debtorsView.classList.remove('open');refreshHome()}
 function renderDebtors(){
- const q=(debtSearch.value||'').toLowerCase().trim(),bucket=debtAge.value,f=safeParse(FIN_KEY)||{},members=centralMembers();
+ const q=(debtSearch.value||'').toLowerCase().trim(),bucket=debtAge.value;
+ if(isVisitor()&&publicVisitorSnapshot()){
+  let rows=(publicVisitorSnapshot().debtors||[]).map(x=>({name:x.name||'—',balance:Number(x.debt||0),count:Number(x.debt_count||0),days:x.oldest_date?daysOld(x.oldest_date):0}));
+  rows=rows.filter(x=>(!q||x.name.toLowerCase().includes(q))&&(bucket==='all'||ageBucket(x.days)===bucket)).sort((a,b)=>b.balance-a.balance);
+  debtorsList.innerHTML=rows.length?rows.map(x=>`<div class="memberCard"><div class="memberHead"><div><div class="memberName">${escapeHtml(x.name)}</div><div class="memberMeta">${x.count} dette(s) • plus ancienne : ${x.days} jour(s)</div></div><span class="debtTag">${money(x.balance)}</span></div></div>`).join(''):'<div class="empty">Aucun débiteur dans ce filtre.</div>';return
+ }
+ const f=safeParse(FIN_KEY)||{},members=centralMembers();
  const rows=[];
  for(const m of members){
    const debts=(f.entries||[]).filter(e=>e.memberId===m.id&&Math.max(0,Number(e.due||0)-Number(e.paid||0))>0);
@@ -1009,7 +1015,9 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.10.1';
+const APP_VERSION='1.10.2';
+const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
+let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
@@ -1292,6 +1300,26 @@ function getCloudConfig(){const x=safeParse(CLOUD_CONFIG_KEY),c=x&&typeof x==='o
 function cloudConfigured(){const c=getCloudConfig();return !!(c.url&&c.anonKey)}
 async function loadSupabaseSDK(){if(globalThis.supabase?.createClient)return globalThis.supabase;if(CLOUD_SDK_LOADING)return CLOUD_SDK_LOADING;CLOUD_SDK_LOADING=new Promise((resolve,reject)=>{if(!navigator.onLine){reject(new Error('Internet requis pour charger Supabase la première fois.'));return}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.async=true;s.onload=()=>resolve(globalThis.supabase);s.onerror=()=>reject(new Error('Impossible de charger supabase-js.'));document.head.appendChild(s)});return CLOUD_SDK_LOADING}
 async function getCloudClient(){if(CLOUD_CLIENT)return CLOUD_CLIENT;if(!cloudConfigured())throw new Error('CHEBSEL Cloud n’est pas configuré.');const sdk=await loadSupabaseSDK(),c=getCloudConfig();CLOUD_CLIENT=sdk.createClient(c.url,c.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return CLOUD_CLIENT}
+function publicVisitorSnapshot(){const x=safeParse(PUBLIC_SNAPSHOT_KEY);return x&&typeof x==='object'?x:null}
+async function syncVisitorPublicSnapshot(silent=true){
+ if(!isVisitor()||!navigator.onLine||VISITOR_PUBLIC_SYNC_RUNNING)return false;
+ VISITOR_PUBLIC_SYNC_RUNNING=true;
+ try{
+  const cfg=getCloudConfig();if(!cfg.url||!cfg.anonKey)throw new Error('Configuration cloud absente.');
+  const r=await fetch(cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/chebsel_public_snapshot',{method:'POST',headers:{apikey:cfg.anonKey,'Content-Type':'application/json'},body:'{}',cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const data=await r.json();if(!data||typeof data!=='object'||data.error)throw new Error(data?.error||'Snapshot invalide');
+  saveJSON(PUBLIC_SNAPSHOT_KEY,data);
+  refreshHome();if(debtorsView?.classList.contains('open'))renderDebtors();
+  return true;
+ }catch(e){if(!silent)alert('Impossible de mettre à jour les informations publiques : '+e.message);console.warn('Visitor public sync:',e);return false}
+ finally{VISITOR_PUBLIC_SYNC_RUNNING=false}
+}
+function visitorPublicCalendarEvents(year){
+ const snap=publicVisitorSnapshot(),recurring=annualRecurringEvents(year);
+ const custom=(snap?.calendar_events||[]).map(x=>({id:x.legacy_id||x.id,auto:false,title:x.title||'Activité',date:String(x.date||''),time:String(x.start_time||'').slice(0,5),location:x.location||'',note:'',status:x.status||'active',overrideReason:x.reason||''}));
+ return [...recurring,...custom].sort((a,b)=>(a.date+' '+(a.time||'')).localeCompare(b.date+' '+(b.time||'')))
+}
 function cloudEl(id){return document.getElementById(id)}
 function openCloudConfigModal(){if(isVisitor()){alert('Accès réservé aux responsables.');return}try{const modal=cloudEl('cloudConfigModal'),urlEl=cloudEl('cloudUrl'),keyEl=cloudEl('cloudAnonKey'),emailEl=cloudEl('cloudEmail'),passEl=cloudEl('cloudPassword');if(!modal||!urlEl||!keyEl||!emailEl||!passEl)throw new Error('Formulaire Cloud introuvable dans cette version.');const c=getCloudConfig();urlEl.value=c.url||'';keyEl.value=c.anonKey||'';emailEl.value=c.email||'';passEl.value='';modal.classList.add('open')}catch(e){alert('Impossible d’ouvrir la configuration Cloud : '+e.message)}}
 function closeCloudConfigModal(){const modal=cloudEl('cloudConfigModal');if(modal)modal.classList.remove('open')}
@@ -1637,7 +1665,7 @@ function openLoginModal(){
  resetLoginChoice();loginModal.classList.add('open')
 }
 function closeLoginModal(){if(currentUser()||isVisitor())loginModal.classList.remove('open')}
-function enterVisitorMode(){sessionStorage.removeItem(SESSION_KEY);sessionStorage.setItem(VISITOR_KEY,'1');audit('Accès visiteur','Ouverture de CHEBSEL en lecture seule',{entity:'security'});loginModal.classList.remove('open');updateAuthUI();refreshHome()}
+function enterVisitorMode(){sessionStorage.removeItem(SESSION_KEY);sessionStorage.setItem(VISITOR_KEY,'1');audit('Accès visiteur','Ouverture de CHEBSEL en lecture seule',{entity:'security'});loginModal.classList.remove('open');updateAuthUI();refreshHome();syncVisitorPublicSnapshot(true)}
 function requireStartupLogin(){updateAuthUI();if(!currentUser()&&!isVisitor())setTimeout(openLoginModal,120)}
 const ROLE_CLOUD_EMAILS={president:'presidanchebsel@outlook.fr',secretary:'secretairechebsel@gmail.com',treasurer:'tresorierdugroupe@outlook.com'};
 const OFFLINE_AUTH_KEY='chebsel_offline_auth_v1';
@@ -1873,7 +1901,7 @@ function eventCard(ev){
  const reason=ev.overrideReason?`<br><b>Motif :</b> ${escapeHtml(ev.overrideReason)}`:'';
  return `<div class="calendarEvent ${cancelled?'cancelled':''}"><div class="dateBadge">${day}<br><span style="font-size:.7rem">${escapeHtml(mon)}</span></div><div style="flex:1"><div class="eventTitle">${escapeHtml(ev.title)} ${tags}</div><div class="eventMeta">${ev.time?escapeHtml(ev.time)+' • ':''}${escapeHtml(ev.location||'')}${ev.note?'<br>'+escapeHtml(ev.note):''}${reason}</div>${actions}</div></div>`
 }
-function renderCurrentMonthCalendar(){const n=new Date(),ym=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`,events=allCalendarEvents(n.getFullYear()).filter(x=>x.date.startsWith(ym));calendarCurrentTitle.textContent='Activités de '+monthNameFR(ym);calendarCurrentEvents.innerHTML=events.length?events.map(eventCard).join(''):'<div class="empty">Aucune activité enregistrée pour ce mois.</div>'}
+function renderCurrentMonthCalendar(){const n=new Date(),ym=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`,events=(isVisitor()&&publicVisitorSnapshot()?visitorPublicCalendarEvents(n.getFullYear()):allCalendarEvents(n.getFullYear())).filter(x=>x.date.startsWith(ym));calendarCurrentTitle.textContent='Activités de '+monthNameFR(ym);calendarCurrentEvents.innerHTML=events.length?events.map(eventCard).join(''):'<div class="empty">Aucune activité enregistrée pour ce mois.</div>'}
 function openCalendar(){if(isVisitor()){alert('Le mode visiteur affiche uniquement le calendrier du mois en cours.');return}calendarView.classList.add('open');renderAnnualCalendar()}
 function closeCalendar(){calendarView.classList.remove('open')}
 function renderAnnualCalendar(selectedYm=''){const n=new Date(),year=selectedYm?Number(selectedYm.slice(0,4)):n.getFullYear(),evs=allCalendarEvents(year);calendarYearTitle.textContent='Calendrier '+year;calendarYearGrid.innerHTML=Array.from({length:12},(_,i)=>{const ym=`${year}-${String(i+1).padStart(2,'0')}`,count=evs.filter(e=>e.date.startsWith(ym)).length;return `<button class="monthBox" onclick="renderCalendarMonth('${ym}')"><b>${escapeHtml(new Date(year,i,1).toLocaleDateString('fr-FR',{month:'long'}))}</b><span>${count} activité(s)</span></button>`}).join('');renderCalendarMonth(selectedYm||`${year}-${String(n.getMonth()+1).padStart(2,'0')}`)}
@@ -1933,7 +1961,7 @@ function normalizeAttendanceStatus(raw,isPerformance=false){
 }
 
 function monthlySnapshot(month){const f=safeParse(FIN_KEY)||{},a=safeParse(ATT_KEY)||{},members=centralMembers(),es=(f.entries||[]).filter(e=>String(e.date||'').startsWith(month)),calls=(a.calls||[]).filter(c=>String(c.date||'').startsWith(month));const due=es.reduce((s,e)=>s+Number(e.due||0),0),paid=es.reduce((s,e)=>s+Number(e.paid||0),0),balance=es.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0);let current=0,debtors=0;for(const m of members.filter(x=>x.active)){const b=es.filter(e=>e.memberId===m.id).reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0);if(b>0)debtors++;else current++}let P=0,R=0,A=0,total=0;for(const c of calls)for(const r of Object.values(c.records||{})){if(!r.status)continue;total++;if(r.status==='P')P++;if(r.status==='R'||r.status==='RNM')R++;if(r.status==='A'||r.status==='ANM')A++}return {month,due,paid,balance,recovery:due?Math.round(paid/due*100):0,current,debtors,calls:calls.length,present:P,late:R,absent:A,attendanceRate:total?Math.round(P/total*100):0}}
-function renderMonthlyDashboard(){const month=new Date().toISOString().slice(0,7),s=monthlySnapshot(month);monthlyDashboardTitle.textContent=new Date(month+'-01T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});monthlyDashboard.innerHTML=[['Activités',s.calls],['Présence',s.attendanceRate+' %'],['Retards',s.late],['Absences',s.absent],['Dû',money(s.due)],['Encaissé',money(s.paid)],['Créances',money(s.balance)],['Recouvrement',s.recovery+' %']].map(x=>`<div class="diagItem"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}
+function renderMonthlyDashboard(){const month=new Date().toISOString().slice(0,7),pub=isVisitor()?publicVisitorSnapshot()?.monthly_dashboard:null,s=pub?{calls:Number(pub.activities||0),attendanceRate:Number(pub.attendance_rate||0),late:Number(pub.late||0),absent:Number(pub.absent||0),due:Number(pub.due||0),paid:Number(pub.paid||0),balance:Number(pub.balance||0),recovery:Number(pub.recovery||0)}:monthlySnapshot(month);monthlyDashboardTitle.textContent=new Date(month+'-01T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});monthlyDashboard.innerHTML=[['Activités',s.calls],['Présence',s.attendanceRate+' %'],['Retards',s.late],['Absences',s.absent],['Dû',money(s.due)],['Encaissé',money(s.paid)],['Créances',money(s.balance)],['Recouvrement',s.recovery+' %']].map(x=>`<div class="diagItem"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}
 function renderMonthlyClose(){const month=closeMonth.value||new Date().toISOString().slice(0,7),s=monthlySnapshot(month),cl=safeParse(CLOSE_KEY)||{},saved=cl[month];monthlyCloseBody.innerHTML=`<div class="profilePanel"><div class="memberStats"><div class="mini"><b>${money(s.due)}</b><span>Dû actuel</span></div><div class="mini"><b>${money(s.paid)}</b><span>Payé actuel</span></div><div class="mini"><b>${money(s.balance)}</b><span>Solde actuel</span></div><div class="mini"><b>${s.recovery}%</b><span>Recouvrement</span></div><div class="mini"><b>${s.current}</b><span>À jour</span></div><div class="mini"><b>${s.debtors}</b><span>Débiteurs</span></div></div>${saved?`<div style="margin-top:12px"><span class="lockTag">🔒 Mois clôturé</span><div class="small" style="margin-top:8px">Clôturé le ${new Date(saved.at).toLocaleString('fr-FR')} par ${escapeHtml(saved.by||'—')} • snapshot : dû ${money(saved.snapshot?.due||0)}, payé ${money(saved.snapshot?.paid||0)}, solde ${money(saved.snapshot?.balance||0)}</div>${can('month.reopen')?`<div class="memberActions" style="margin-top:8px"><button class="secondaryQuick" onclick="reopenMonth('${month}')">Réouvrir le mois</button></div>`:''}</div>`:'<div class="small" style="margin-top:12px">Ce mois n’est pas clôturé.</div>'}</div>`}
 async function saveMonthlyClose(){if(!requirePermission('month.close'))return;if(!(await criticalGuard('month.close','Clôture mensuelle')))return;const month=closeMonth.value;if(!month)return;const cl=safeParse(CLOSE_KEY)||{};if(cl[month]?.locked){alert('Ce mois est déjà clôturé.');return}const s=monthlySnapshot(month),u=currentUser();cl[month]={at:new Date().toISOString(),note:closeNote.value||'',locked:true,by:u?.name||'',snapshot:s};saveJSON(CLOSE_KEY,cl);audit('Clôture mensuelle',`${month} • solde ${money(s.balance)}`,{entity:'monthly_close',entityId:month,after:cl[month]});renderMonthlyClose();refreshHome()}
 function reopenMonth(month){(async()=>{if(!requirePermission('month.reopen'))return;if(!(await criticalGuard('month.reopen','Réouverture du mois '+month)))return;const cl=safeParse(CLOSE_KEY)||{},before=cl[month];if(!before)return;delete cl[month];saveJSON(CLOSE_KEY,cl);audit('Mois réouvert',month,{entity:'monthly_close',entityId:month,before,after:null});renderMonthlyClose();refreshHome()})()}
@@ -1952,7 +1980,11 @@ function renderHandover(){const f=safeParse(FIN_KEY)||{},cl=safeParse(CLOSE_KEY)
 function printHandover(){const e=document.getElementById('handoverPrint');if(!e)return;const w=window.open('','_blank');w.document.write('<html><head><title>Passation CHEBSEL</title></head><body>'+e.outerHTML+'</body></html>');w.document.close();w.print()}
 function openHelp(){if(!roleCanView('help')){alert('Accès non autorisé pou pwofil sa a.');return}helpView.classList.add('open');renderHelp()} function closeHelp(){helpView.classList.remove('open')}
 function renderHelp(){helpBody.innerHTML=`<h2>CHEBSEL v1.5.1 — Manuel</h2><div class="helpSection"><h4>Connexion</h4><p>Lecture seule par défaut. Le Président initialise le premier PIN; il configure ensuite les PIN du Secrétaire et du Trésorier.</p></div><div class="helpSection"><h4>Rôles</h4><p>Président : accès complet. Secrétaire : membres et appel. Trésorier : finances, paiements et clôture.</p></div><div class="helpSection"><h4>Règles financières</h4><p>Cotisation mensuelle 125 G; RNM 25 G; ANM 50 G; ANM pendant une prestation 250 G.</p></div><div class="helpSection"><h4>Discipline</h4><p>Le règlement prévoit qu’un retard jusqu’à 15 minutes reste un retard; au-delà, il est considéré comme une absence.</p></div><div class="helpSection"><h4>Sauvegarde</h4><p>Sauvegarder après les saisies importantes et au minimum chaque mois. Tester le JSON avant passation/restauration.</p></div><div class="helpSection"><h4>Journal des mises à jour</h4><p><b>v1.5.1 :</b> projet Supabase CHEBSEL préconfiguré avec Project URL et clé publishable publique ; aucun secret serveur n’est intégré. <br><b>v1.5.0 :</b> Cloud Foundation : configuration Supabase, authentification cloud, registre d’appareil et synchronisation pilote Membres + Calendrier. Appels et finances restent locaux. <br><b>v1.4.0 :</b> fondation Sync-Ready hors cloud : IndexedDB locale normalisée, UUID pour les nouveaux enregistrements, migration des données existantes, file d’opérations en attente, tombstones de suppression, métadonnées de version, diagnostic de synchronisation et indicateur en ligne/hors ligne. <br><b>v1.3.2 :</b> normalisation des statuts d’appel : Présent, Retard motivé, RNM, Absence motivée, ANM et ANM prestation ; seules les situations non motivées génèrent une amende. <br><b>v1.3.1 :</b> calendrier entièrement administrable : ajout/modification/suppression d’activités, annulation motivée ou réactivation d’une prestation régulière du 2e dimanche sans supprimer la règle récurrente. <br><b>v1.3.0 :</b> calendrier annuel d’activités avec prestations automatiques tous les 2e dimanches à 7h00 et 17h00 ; mode visiteur limité aux indicateurs synthétiques, calendrier du mois, tableau de bord mensuel et débiteurs. <br><b>v1.2.3 :</b> correction des paiements rendue flexible : remplacement immédiat facultatif ou simple annulation avec réenregistrement ultérieur. <br><b>v1.2.2 :</b> correction et annulation sécurisées des paiements, traçabilité des affectations, restauration automatique des dettes et audit avant/après. <br><b>v1.2.1 :</b> ANM prestation portée à 250 G ; cotisation mensuelle obligatoire de 125 G automatiquement comptabilisée en dette pour chaque mois civil non payé à partir d’août 2026. <br><b>Correctifs v1.1.2 :</b> version visible uniformisée, bug VISITOR_KEY corrigé, connexion forcée à chaque lancement, conservation des PIN déjà enregistrés dans chebsel_auth_v1. <br><b>v1.1.2 :</b> PIN, rôles, lecture seule, verrouillage critique, audit enrichi, détection des doublons, diagnostic, tableau mensuel, clôture verrouillée, passation et test de sauvegarde.</p></div>`}
-function refreshHome(){syncBridge();const members=centralMembers(),a=safeParse(ATT_KEY)||{},f=safeParse(FIN_KEY)||{},calls=Array.isArray(a.calls)?a.calls:[],entries=Array.isArray(f.entries)?f.entries:[],active=members.filter(m=>m.active).length,last=[...calls].sort((x,y)=>(y.date||'').localeCompare(x.date||''))[0];let present='—';if(last?.records)present=Object.values(last.records).filter(r=>r.status==='P').length;const debt=entries.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),auto=entries.filter(e=>e.bridgeAuto===true).length;renderBackupHealth();renderMonthlyDashboard();renderCurrentMonthCalendar();updateAuthUI();homeStats.innerHTML=[["Membres actifs",active],["Présents dernier appel",present],["Dette totale",money(debt)],["Amendes liées",auto]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}
+function refreshHome(){if(isVisitor()){
+ const ps=publicVisitorSnapshot();renderBackupHealth();renderMonthlyDashboard();renderCurrentMonthCalendar();updateAuthUI();
+ if(ps){homeStats.innerHTML=[["Membres actifs",Number(ps.active_members||0)],["Présents dernier appel",Number(ps.last_attendance?.present||0)],["Dette totale",money(Number(ps.total_debt||0))],["Amendes liées",Number(ps.linked_fines||0)]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');return}
+ }
+ syncBridge();const members=centralMembers(),a=safeParse(ATT_KEY)||{},f=safeParse(FIN_KEY)||{},calls=Array.isArray(a.calls)?a.calls:[],entries=Array.isArray(f.entries)?f.entries:[],active=members.filter(m=>m.active).length,last=[...calls].sort((x,y)=>(y.date||'').localeCompare(x.date||''))[0];let present='—';if(last?.records)present=Object.values(last.records).filter(r=>r.status==='P').length;const debt=entries.reduce((s,e)=>s+Math.max(0,Number(e.due||0)-Number(e.paid||0)),0),auto=entries.filter(e=>e.bridgeAuto===true).length;renderBackupHealth();renderMonthlyDashboard();renderCurrentMonthCalendar();updateAuthUI();homeStats.innerHTML=[["Membres actifs",active],["Présents dernier appel",present],["Dette totale",money(debt)],["Amendes liées",auto]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}
 
 cloudConfigModal.addEventListener('click',e=>{if(e.target===cloudConfigModal)closeCloudConfigModal()});memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});paymentCorrectionModal.addEventListener('click',e=>{if(e.target===paymentCorrectionModal)closePaymentCorrectionModal()});activityModal.addEventListener('click',e=>{if(e.target===activityModal)closeActivityModal()});recurringOverrideModal.addEventListener('click',e=>{if(e.target===recurringOverrideModal)closeRecurringOverrideModal()});
 window.addEventListener('storage',()=>{syncBridge();refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()});
@@ -1979,6 +2011,11 @@ cloudPilotSync=async function(silent=false){
 updateCompactStatus();
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
 initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
+
+window.addEventListener('online',()=>{if(isVisitor())syncVisitorPublicSnapshot(true)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)});
+setInterval(()=>{if(isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)},60000);
+setTimeout(()=>{if(isVisitor()&&navigator.onLine)syncVisitorPublicSnapshot(true)},700);
 </script>
 </body>
 </html>
