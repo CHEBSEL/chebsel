@@ -1,0 +1,57 @@
+name: CHEBSEL v1.5.3 Hotfix
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v153.yml'
+permissions:
+  contents: write
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch cloud modal for mobile PWA
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="""function openCloudConfigModal(){if(isVisitor()){alert('Accès réservé aux responsables.');return}const c=getCloudConfig();cloudUrl.value=c.url||'';cloudAnonKey.value=c.anonKey||'';cloudEmail.value=c.email||'';cloudPassword.value='';cloudConfigModal.classList.add('open')}
+function closeCloudConfigModal(){cloudConfigModal.classList.remove('open')}
+function saveCloudConfig(){if(!requirePermission('security.manage'))return;const url=(cloudUrl.value||'').trim(),anonKey=(cloudAnonKey.value||'').trim(),email=(cloudEmail.value||'').trim();if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})}"""
+          new="""function cloudEl(id){return document.getElementById(id)}
+function openCloudConfigModal(){
+ if(isVisitor()){alert('Accès réservé aux responsables.');return}
+ try{
+  const modal=cloudEl('cloudConfigModal'),urlEl=cloudEl('cloudUrl'),keyEl=cloudEl('cloudAnonKey'),emailEl=cloudEl('cloudEmail'),passEl=cloudEl('cloudPassword');
+  if(!modal||!urlEl||!keyEl||!emailEl||!passEl)throw new Error('Formulaire Cloud introuvable dans cette version.');
+  const c=getCloudConfig();urlEl.value=c.url||'';keyEl.value=c.anonKey||'';emailEl.value=c.email||'';passEl.value='';modal.classList.add('open');
+ }catch(e){alert('Impossible d’ouvrir la configuration Cloud : '+e.message)}
+}
+function closeCloudConfigModal(){const modal=cloudEl('cloudConfigModal');if(modal)modal.classList.remove('open')}
+function saveCloudConfig(){
+ if(!requirePermission('security.manage'))return;
+ const urlEl=cloudEl('cloudUrl'),keyEl=cloudEl('cloudAnonKey'),emailEl=cloudEl('cloudEmail');
+ if(!urlEl||!keyEl||!emailEl){alert('Formulaire Cloud introuvable.');return}
+ const url=(urlEl.value||'').trim(),anonKey=(keyEl.value||'').trim(),email=(emailEl.value||'').trim();
+ if(!url||!anonKey){alert('URL Supabase et clé publique obligatoires.');return}
+ saveJSON(CLOUD_CONFIG_KEY,{url,anonKey,email,configuredAt:syncNowISO()});CLOUD_CLIENT=null;closeCloudConfigModal();updateCloudUI();audit('Configuration cloud mise à jour','Supabase configuré localement',{entity:'cloud_config'})
+}"""
+          if old not in s:
+              raise SystemExit('Expected cloud modal block not found')
+          s=s.replace(old,new)
+          s=s.replace("const password=(cloudConfigModal?.classList.contains('open')?cloudPassword.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';", "const modal=cloudEl('cloudConfigModal'),passEl=cloudEl('cloudPassword');const password=((modal&&modal.classList.contains('open')&&passEl)?passEl.value:'')||prompt('Mot de passe Supabase pour '+email+':')||'';")
+          s=s.replace('CHEBSEL v1.5.2 — Centre de gestion','CHEBSEL v1.5.3 — Centre de gestion')
+          s=s.replace('>v1.5.2<','>v1.5.3<')
+          s=s.replace("const APP_VERSION='1.5.2'", "const APP_VERSION='1.5.3'")
+          p.write_text(s,encoding='utf-8')
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8').replace("chebsel-pwa-stable-v152","chebsel-pwa-stable-v153")
+          sw.write_text(t,encoding='utf-8')
+          PY
+          git rm .github/workflows/hotfix-v153.yml
+          git config user.name 'CHEBSEL Deployment'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Fix Cloud configuration modal on mobile PWA — v1.5.3'
+          git push
