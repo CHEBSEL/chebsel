@@ -1,0 +1,43 @@
+name: CHEBSEL v1.10.3 Visitor Debt Readonly
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/v1103_visitor_debt_readonly.py'
+      - '.github/workflows/v1103-visitor-debt-readonly.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.10.3 patch
+        run: python scripts/v1103_visitor_debt_readonly.py
+      - name: Verify patch
+        run: |
+          grep -q 'CHEBSEL v1.10.3' index.html
+          grep -q "const APP_VERSION='1.10.3';" index.html
+          grep -q 'openVisitorDebtorProfile' index.html
+          grep -q 'removePrematureCurrentMonthDebts' index.html
+      - name: Commit release
+        run: |
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Release CHEBSEL v1.10.3 visitor debt readonly'
+            git push origin main
+          fi
