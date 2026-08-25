@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.8.2 — Centre de gestion</title>
+<title>CHEBSEL v1.8.3 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -148,11 +148,11 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.8.2</span>
+  <div class="topactions"><span class="versionChip">v1.8.3</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
-   <button class="topbtn" onclick="portalBackup()" title="Sauvegarder les données" aria-label="Sauvegarder">💾</button>
+   <button class="topbtn" id="backupTopBtn" onclick="portalBackup()" title="Sauvegarder les données" aria-label="Sauvegarder">💾</button>
    <button class="topbtn" id="globalBackBtn" onclick="globalBack()" title="Retour" aria-label="Retour">←</button>
   </div>
  </div>
@@ -887,7 +887,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.8.2';
+const APP_VERSION='1.8.3';
 const AUTH_KEY='chebsel_auth_v1',SESSION_KEY='chebsel_session_v1',VISITOR_KEY='chebsel_visitor_v1',PAYMENT_LOG_KEY='chebsel_payment_log_v1',REG_APPLIED_KEY='chebsel_regulation_defaults_v1';
 const GLOBAL_ACCESS={president:{salt:'c9602285b2fe25e11a4a1dc8d0eb8a68',hash:'1a3f792f829c9fb9ff340777bc30bd794980fff8c84c8beb363a5a526ecb46a4',iterations:310000},secretary:{salt:'79b8172bd315e8aba8cd5a27060de4a0',hash:'226e33148f63e79800c5f8d8ab0410e20f887ce2b556dea81b6d7eeda94cdea3',iterations:310000},treasurer:{salt:'86e8d3c0386a4b60243aaef861d5728b',hash:'bd2f03dbc65ee42ea9c1df23f2dec84e0c481d799cd429e01078f40d74f1f513',iterations:310000}};
 const COMMITTEE={president:{key:'president',name:'Sinsurin Jacques',role:'Administrateur / Président'},secretary:{key:'secretary',name:'Jose Sterlin',role:'Secrétaire'},treasurer:{key:'treasurer',name:'Chery Agnace',role:'Trésorier'}};
@@ -1491,6 +1491,9 @@ function applyRoleVisibility(){
  const map={openMembers:'members',openAttendance:'attendance',openFinance:'finance',openDebtors:'debtors',openMonthlyClose:'close',openAudit:'audit',openDiagnostics:'diagnostics',openSecurity:'security',openHandover:'handover',openHelp:'help'};
  document.querySelectorAll('button.launch[onclick]').forEach(b=>{const oc=b.getAttribute('onclick')||'';let mod='';for(const [fn,m] of Object.entries(map))if(oc.includes(fn)){mod=m;break}if(mod)b.classList.toggle('role-hidden',!roleCanView(mod))});
  const president=r==='president';
+ const backupSelector='[onclick*="portalBackup"],[onclick*="openRestoreModal"],[onclick*="openRestoreTestModal"]';
+ document.querySelectorAll(backupSelector).forEach(e=>e.classList.toggle('role-hidden',!president));
+ document.querySelectorAll('.profilePanel').forEach(panel=>{if(panel.querySelector(backupSelector))panel.classList.toggle('role-hidden',!president)});
  ['cloudFoundationPanel','syncReadyPanel','backupHealth'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('role-hidden',!president)});
  if(syncMessage)syncMessage.classList.toggle('role-hidden',!president);
  document.querySelectorAll('p.smallnote').forEach(e=>e.classList.toggle('role-hidden',!president));
@@ -1808,6 +1811,13 @@ function refreshHome(){syncBridge();const members=centralMembers(),a=safeParse(A
 cloudConfigModal.addEventListener('click',e=>{if(e.target===cloudConfigModal)closeCloudConfigModal()});memberModal.addEventListener('click',e=>{if(e.target===memberModal)closeMemberModal()});paymentModal.addEventListener('click',e=>{if(e.target===paymentModal)closePaymentModal()});receiptModal.addEventListener('click',e=>{if(e.target===receiptModal)closeReceipt()});restoreModal.addEventListener('click',e=>{if(e.target===restoreModal)closeRestoreModal()});loginModal.addEventListener('click',e=>{if(e.target===loginModal&&(currentUser()||isVisitor()))closeLoginModal()});pinModal.addEventListener('click',e=>{if(e.target===pinModal)closePinModal()});restoreTestModal.addEventListener('click',e=>{if(e.target===restoreTestModal)closeRestoreTestModal()});paymentCorrectionModal.addEventListener('click',e=>{if(e.target===paymentCorrectionModal)closePaymentCorrectionModal()});activityModal.addEventListener('click',e=>{if(e.target===activityModal)closeActivityModal()});recurringOverrideModal.addEventListener('click',e=>{if(e.target===recurringOverrideModal)closeRecurringOverrideModal()});
 window.addEventListener('storage',()=>{syncBridge();refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()});
 setInterval(()=>{syncBridge();if(!viewer.classList.contains('open')){refreshHome();if(membersView.classList.contains('open'))renderCentralMembers()}},1400);
+
+const _chebselPortalBackup=portalBackup;
+portalBackup=function(){if(currentRoleView()!=='president'){alert('Sauvegarde réservée au Président.');return false}return _chebselPortalBackup.apply(this,arguments)};
+const _chebselOpenRestoreModal=openRestoreModal;
+openRestoreModal=function(){if(currentRoleView()!=='president'){alert('Restauration réservée au Président.');return false}return _chebselOpenRestoreModal.apply(this,arguments)};
+const _chebselOpenRestoreTestModal=openRestoreTestModal;
+openRestoreTestModal=function(){if(currentRoleView()!=='president'){alert('Test de sauvegarde réservé au Président.');return false}return _chebselOpenRestoreTestModal.apply(this,arguments)};
 
 applyShellTheme(localStorage.getItem(SHELL_THEME)==='dark'?'dark':'light');
 initializeMasterMembers();getAuth();syncMembersToApps();applyRegulatoryDefaults();ensureCompletedMonthlyDebts();syncBridge();updateAuthUI();refreshHome();requireStartupLogin();initSyncReady();updateCloudUI();
