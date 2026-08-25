@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.11.2 — Centre de gestion</title>
+<title>CHEBSEL v1.11.3 — Centre de gestion</title>
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--line:#dfe5ee;--top:#0b1220;
@@ -127,7 +127,7 @@ body.visitor-mode .visitorOnlyNote{display:block}body.visitor-mode .visitor-hidd
 .cloudHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.cloudState{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-size:.72rem;font-weight:900}.cloudGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.cloudGrid>div{border:1px solid var(--line);border-radius:12px;padding:9px;background:var(--soft)}.cloudGrid span{display:block;font-size:.68rem;color:var(--muted)}.cloudGrid b{display:block;margin-top:3px}@media(min-width:760px){.cloudGrid{grid-template-columns:repeat(4,1fr)}}
 
 
-.roleChoiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.roleChoice{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:16px;padding:16px 10px;font-weight:900;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.roleChoice span{font-size:1.45rem}.roleChoice.active{outline:3px solid var(--primary);background:var(--card)}.roleChoice.visitor{grid-column:1/-1}.loginRoleName{text-align:center;font-weight:900;margin:4px 0 10px}.role-hidden{display:none!important}@media(min-width:620px){.roleChoiceGrid{grid-template-columns:repeat(4,1fr)}.roleChoice.visitor{grid-column:auto}}
+.roleChoiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.roleChoice{border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:16px;padding:16px 10px;font-weight:900;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.roleChoice span{font-size:1.45rem}.roleChoice.active{outline:3px solid var(--primary);background:var(--card)}.roleChoice[data-login-role="president"]{grid-column:1/-1}.roleChoice.visitor{grid-column:1/-1}.loginRoleName{text-align:center;font-weight:900;margin:4px 0 10px}.role-hidden{display:none!important}@media(min-width:620px){.roleChoiceGrid{grid-template-columns:repeat(4,1fr)}.roleChoice[data-login-role="president"],.roleChoice.visitor{grid-column:auto}}
 
 .connectionDot{width:11px;height:11px;border-radius:999px;background:var(--red);box-shadow:0 0 0 3px rgba(255,255,255,.10);flex:0 0 11px}.connectionDot.online{background:var(--green)}.syncToggle{width:42px;height:24px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.14);position:relative;padding:0}.syncToggle:after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s}.syncToggle.on{background:#16794b}.syncToggle.on:after{left:21px}.syncCheck{font-size:.74rem;font-weight:900;opacity:.82}.utilityMenu{display:grid;grid-template-columns:1fr;gap:10px}.utilityBtn{border:1px solid var(--line);border-radius:14px;background:var(--soft);color:var(--text);padding:13px;text-align:left;font-weight:850}.utilityBtn span{display:block;color:var(--muted);font-size:.73rem;font-weight:600;margin-top:3px}.presidentCompact{display:flex;align-items:center;gap:7px}.old-tech-panel{display:none!important}@media(min-width:700px){.utilityMenu{grid-template-columns:repeat(2,1fr)}}
 
@@ -1114,7 +1114,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.11.2';
+const APP_VERSION='1.11.3';
 const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
 let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
