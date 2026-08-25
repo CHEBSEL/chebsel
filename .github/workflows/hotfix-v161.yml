@@ -1,0 +1,28 @@
+name: CHEBSEL v1.6.1 Member ID Alignment
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v161.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.6.1 patch
+        run: python scripts/patch_v161.py
+      - name: Verify v1.6.1
+        run: |
+          grep -q "CHEBSEL v1.6.1" index.html
+          grep -q "alignCloudMemberIds" index.html
+          grep -q "Alignement des identifiants membres" index.html
+          grep -q "chebsel-pwa-stable-v161" sw.js
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git diff --cached --quiet || git commit -m "Fix member cloud UUID alignment and bump v1.6.1"
+          git push
