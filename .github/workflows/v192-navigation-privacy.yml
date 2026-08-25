@@ -1,0 +1,31 @@
+name: CHEBSEL v1.9.2 Navigation Privacy Cleanup
+on:
+  push:
+    paths:
+      - '.github/workflows/v192-navigation-privacy.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply navigation/privacy cleanup
+        run: python3 scripts/v192_navigation_privacy.py
+      - name: Bump service worker cache
+        run: |
+          python3 -c "from pathlib import Path; import re; p=Path('sw.js'); s=p.read_text(); p.write_text(re.sub(r'chebsel-pwa-stable-v[0-9]+','chebsel-pwa-stable-v192',s))"
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.9.2" index.html
+          grep -q "Journal<span>Historique des opérations" index.html
+          grep -q "#globalBackBtn" index.html
+          grep -q "style=\"display:none!important\"" index.html
+          ! grep -q "<h3>Sauvegarde & restauration</h3>" index.html
+      - name: Commit
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js
+          git commit -m "Release CHEBSEL v1.9.2 navigation privacy cleanup" || exit 0
+          git push
