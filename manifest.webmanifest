@@ -1,7 +1,8 @@
 {
-  "name": "CHEBSEL v1.5.1 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "id": "./",
+  "name": "CHEBSEL v1.11.1 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
   "short_name": "CHEBSEL",
-  "description": "CHEBSEL v1.5.1 : projet Supabase CHEBSEL préconfiguré, synchronisation pilote Membres + Calendrier.",
+  "description": "CHEBSEL v1.11.1 — gestion des membres, présences, cotisations, amendes, dettes, trésorerie et synchronisation.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
