@@ -1,0 +1,27 @@
+name: CHEBSEL v1.5.10 Cloud Sync Repair
+on:
+  push:
+    paths:
+      - '.github/workflows/hotfix-v1510.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.5.10 fix
+        run: python3 scripts/hotfix_v1510.py
+      - name: Verify
+        run: |
+          grep -q "CHEBSEL v1.5.10" index.html
+          grep -q "repairV159LocalState" index.html
+          grep -q "Réception des membres" index.html
+          grep -q "chebsel-pwa-stable-v1510" sw.js
+      - name: Commit
+        run: |
+          git config user.name 'CHEBSEL Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Repair cloud pilot sync flow v1.5.10'
+          git push
