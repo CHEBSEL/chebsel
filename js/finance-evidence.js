@@ -56,6 +56,13 @@
    const baseRender=renderTreasuryReport;
    window.renderTreasuryReport=renderTreasuryReport=function(){const x=baseRender.apply(this,arguments);setTimeout(()=>refreshTreasuryReportEvidence(),0);return x};
  }
+ if(typeof openPaymentModal==='function'){
+   const baseOpenPayment=openPaymentModal;
+   window.openPaymentModal=openPaymentModal=function(){
+     const input=document.getElementById('payEvidenceFile');if(input)input.value='';
+     return baseOpenPayment.apply(this,arguments);
+   };
+ }
  if(typeof applySmartPayment==='function'){
    const basePay=applySmartPayment;
    window.applySmartPayment=applySmartPayment=async function(){
@@ -67,7 +74,7 @@
      const created=after.find(x=>!before.has(x.id));
      if(created&&file){
        try{await upload('payment',created.id,file,'Justificatif de paiement');input.value='';audit('Justificatif paiement archivé',created.id,{entity:'finance_evidence',entityId:created.id})}
-       catch(e){alert('Paiement enregistré avec succès, mais l’image justificative n’a pas pu être envoyée. Vous pourrez l’archiver plus tard. Détail : '+(e?.message||e))}
+       catch(e){alert('Paiement enregistré avec succès, mais l’image justificative n’a pas pu être envoyée. Le paiement lui-même n’a pas été annulé. Détail : '+(e?.message||e))}
      }
      return out;
    };
