@@ -1,0 +1,35 @@
+name: CHEBSEL v1.11.6 Sync + Auth Stability
+
+on:
+  push:
+    paths:
+      - 'scripts/v1116_sync_auth_stability.py'
+      - '.github/workflows/v1116-sync-auth-stability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.11.6 stabilization patch
+        run: python scripts/v1116_sync_auth_stability.py
+      - name: Commit release
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest
+          if git diff --cached --quiet; then
+            echo "No release changes"
+          else
+            git commit -m "Release CHEBSEL v1.11.6 sync and auth stability"
+            git push origin main
+          fi
