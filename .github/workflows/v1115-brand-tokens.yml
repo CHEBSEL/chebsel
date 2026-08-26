@@ -1,9 +1,10 @@
-name: CHEBSEL v1.11.5 Official Brand Tokens
+name: CHEBSEL v1.11.6 Stabilization Release
 
 on:
   push:
     paths:
       - 'scripts/v1115_brand_tokens.py'
+      - 'scripts/v1116_sync_auth_stability.py'
       - '.github/workflows/v1115-brand-tokens.yml'
   workflow_dispatch:
 
@@ -20,8 +21,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply official CHEBSEL palette tokens
+      - name: Preserve CHEBSEL brand tokens
         run: python scripts/v1115_brand_tokens.py
+      - name: Apply v1.11.6 sync and auth stabilization
+        run: python scripts/v1116_sync_auth_stability.py
       - name: Commit release
         run: |
           git config user.name "CHEBSEL"
@@ -30,6 +33,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No release changes"
           else
-            git commit -m "Release CHEBSEL v1.11.5 official brand palette"
+            git commit -m "Release CHEBSEL v1.11.6 sync and auth stability"
             git push origin main
           fi
