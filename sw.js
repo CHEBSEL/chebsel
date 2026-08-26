@@ -1,8 +1,15 @@
-const CACHE_NAME='chebsel-pwa-stable-v1116';
+const CACHE_NAME='chebsel-pwa-stable-v1120';
 const APP_SHELL=[
  './',
  './index.html',
  './manifest.webmanifest',
+ './js/bootstrap.js',
+ './js/finance-evidence.js',
+ './js/sync-policy.js',
+ './js/auth-security.js',
+ './js/legacy-core.js',
+ './js/embedded-apps.js',
+ './css/app.css',
  './icons/chebsel-logo.png',
  './icons/icon-192.png',
  './icons/icon-512.png',
