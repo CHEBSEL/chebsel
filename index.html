@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.11.5 — Centre de gestion</title>
+<title>CHEBSEL v1.11.6 — Centre de gestion</title>
 <style>
 :root{
  /* CHEBSEL official brand tokens */
@@ -263,6 +263,9 @@ body{letter-spacing:-.006em}
 
 
 .loginPraiseVerse{margin:18px auto 2px;max-width:520px;text-align:center;padding:14px 16px;border-top:1px solid rgba(197,157,63,.28);color:var(--brand-gold)}.loginPraiseVerse blockquote{margin:0;font-size:.88rem;line-height:1.55;font-style:italic;font-weight:650;color:var(--brand-gold-light)}.loginPraiseVerse cite{display:block;margin-top:6px;font-size:.72rem;font-style:normal;font-weight:800;letter-spacing:.045em;color:var(--brand-gold)}html[data-theme="dark"] .loginPraiseVerse blockquote{color:#e2c36c}html[data-theme="dark"] .loginPraiseVerse cite{color:#cda64d}
+
+/* v1.11.6 — auth + sync stabilization */
+.passwordFieldWrap{position:relative;display:flex;align-items:center}.passwordFieldWrap input{padding-right:52px!important}.passwordEye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;border-radius:10px;background:var(--chip);color:var(--text);display:grid;place-items:center}.passwordEye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.passwordEye:hover{background:var(--soft)}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -283,7 +286,7 @@ body{letter-spacing:-.006em}
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.11.5</span>
+  <div class="topactions"><span class="versionChip">v1.11.6</span>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -539,7 +542,7 @@ body{letter-spacing:-.006em}
 <div class="membersView" id="privacyHub"><div class="viewerbar"><button class="back" onclick="closePrivacyHub()">← Retour</button><div class="viewtitle"><b>Confidentialité</b><span>Données sensibles et transfert</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closePrivacyHub();openAudit()">🧾 Journal<span>Historique des opérations et modifications.</span></button><button class="utilityBtn" onclick="closePrivacyHub();openHandover()">🤝 Passation de comité<span>Préparer un transfert de responsabilité.</span></button><button class="utilityBtn" onclick="portalBackup()">💾 Sauvegarder<span>Exporter une copie des données CHEBSEL.</span></button><button class="utilityBtn" onclick="openRestoreModal()">↥ Restaurer<span>Restaurer une sauvegarde autorisée.</span></button><button class="utilityBtn" onclick="openRestoreTestModal()">✓ Tester une sauvegarde<span>Contrôler un fichier sans modifier les données.</span></button></div></div></div></div>
 <div class="membersView" id="aboutHub"><div class="viewerbar"><button class="back" onclick="closeAboutHub()">← Retour</button><div class="viewtitle"><b>À propos</b><span>CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><h2 style="margin-top:0">CHEBSEL <span id="aboutVersion"></span></h2><p class="memberMeta">Centre de gestion du Chœur d’Homme de l’Église Baptiste Sel et Lumière.</p><div class="utilityMenu" style="margin-top:12px"><button class="utilityBtn" onclick="closeAboutHub();openHelp()">📘 Manuel de l’application<span>Aide, règles et utilisation générale.</span></button></div></div></div></div>
 <div class="modal" id="cloudConfigModal"><div class="modalBox"><h3 style="margin-top:0">Configuration CHEBSEL Cloud</h3><div class="form"><div class="wide"><label>Supabase Project URL</label><input id="cloudUrl" placeholder="https://xxxxx.supabase.co"></div><div class="wide"><label>Publishable / anon key</label><input id="cloudAnonKey" placeholder="Clé publique client"></div><div class="wide"><label>Email utilisateur cloud</label><input id="cloudEmail" type="email" placeholder="responsable@..."></div><div class="wide"><label>Mot de passe</label><input id="cloudPassword" type="password" placeholder="Mot de passe Supabase Auth"></div></div><p class="small">La clé <b>service_role</b> est interdite dans cette application. Utilisez uniquement la clé publique prévue pour le navigateur.</p><div class="modalActions"><button class="save" onclick="saveCloudConfig()">Enregistrer</button><button class="cancel" onclick="closeCloudConfigModal()">Fermer</button></div></div></div>
-<div class="modal loginGate" id="loginModal"><div class="modalBox loginGateBox"><div class="loginBrand"><img src="icons/chebsel-logo.png" alt="CHEBSEL"><div><strong>CHEBSEL</strong><span>Centre de gestion sécurisé</span></div></div><h3 class="loginTitle">Connexion CHEBSEL</h3><p class="small loginIntro" id="loginHelp">Chwazi pwofil ou.</p><div class="roleChoiceGrid"><button class="roleChoice" data-login-role="president" onclick="chooseLoginRole('president',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16M5 17h14l-1-9-4 4-2-7-2 7-4-4-1 9Z"/></svg></span><b>Président</b><small>Administration</small></button><button class="roleChoice" data-login-role="secretary" onclick="chooseLoginRole('secretary',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6V3Z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg></span><b>Secrétaire</b><small>Membres & appel</small></button><button class="roleChoice" data-login-role="treasurer" onclick="chooseLoginRole('treasurer',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4V7Z"/><path d="M16 7V5H8v2M8 13h8M12 10v6"/></svg></span><b>Trésorier</b><small>Finances</small></button><button class="roleChoice visitor" onclick="enterVisitorMode()"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></span><b>Visiteur</b><small>Lecture seule</small></button></div><select id="loginUser" style="display:none"></select><div id="loginPasswordWrap" style="display:none"><div class="loginRoleName" id="loginRoleName"></div><div class="form"><div class="wide"><label>Mot de passe CHEBSEL</label><input type="password" id="loginPin" autocomplete="current-password" placeholder="Mot de passe CHEBSEL"></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Se connecter</button><button class="cancel" onclick="resetLoginChoice()">Changer de profil</button></div><div class="permissionNote" style="margin-top:10px;text-align:center">Sou yon nouvo aparèy, premye koneksyon an bezwen entènèt. Apre sa menm modpas la mache offline.</div></div><div class="loginPraiseVerse"><blockquote>« Que tout ce qui respire loue l’Éternel ! Louez l’Éternel ! »</blockquote><cite>Psaume 150:6</cite></div></div></div>
+<div class="modal loginGate" id="loginModal"><div class="modalBox loginGateBox"><div class="loginBrand"><img src="icons/chebsel-logo.png" alt="CHEBSEL"><div><strong>CHEBSEL</strong><span>Centre de gestion sécurisé</span></div></div><h3 class="loginTitle">Connexion CHEBSEL</h3><p class="small loginIntro" id="loginHelp">Chwazi pwofil ou.</p><div class="roleChoiceGrid"><button class="roleChoice" data-login-role="president" onclick="chooseLoginRole('president',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16M5 17h14l-1-9-4 4-2-7-2 7-4-4-1 9Z"/></svg></span><b>Président</b><small>Administration</small></button><button class="roleChoice" data-login-role="secretary" onclick="chooseLoginRole('secretary',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6V3Z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg></span><b>Secrétaire</b><small>Membres & appel</small></button><button class="roleChoice" data-login-role="treasurer" onclick="chooseLoginRole('treasurer',this)"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4V7Z"/><path d="M16 7V5H8v2M8 13h8M12 10v6"/></svg></span><b>Trésorier</b><small>Finances</small></button><button class="roleChoice visitor" onclick="enterVisitorMode()"><span class="premiumRoleIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></span><b>Visiteur</b><small>Lecture seule</small></button></div><select id="loginUser" style="display:none"></select><div id="loginPasswordWrap" style="display:none"><div class="loginRoleName" id="loginRoleName"></div><div class="form"><div class="wide"><label>Mot de passe CHEBSEL</label><div class="passwordFieldWrap"><input type="password" id="loginPin" autocomplete="current-password" placeholder="Mot de passe CHEBSEL"><button type="button" class="passwordEye" id="loginPasswordEye" onclick="toggleLoginPassword()" aria-label="Afficher le mot de passe" title="Voir / masquer le mot de passe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button></div></div></div><div class="modalActions"><button class="save" onclick="loginUserAction()">Se connecter</button><button class="cancel" onclick="resetLoginChoice()">Changer de profil</button></div><div class="permissionNote" style="margin-top:10px;text-align:center">Sou yon nouvo aparèy, premye koneksyon an bezwen entènèt. Apre sa menm modpas la mache offline.</div></div><div class="loginPraiseVerse"><blockquote>« Que tout ce qui respire loue l’Éternel ! Louez l’Éternel ! »</blockquote><cite>Psaume 150:6</cite></div></div></div>
 <div class="modal" id="pinModal"><div class="modalBox"><h3 id="pinModalTitle" style="margin-top:0">Configurer un PIN</h3><input type="hidden" id="pinTarget"><div class="form"><div class="wide"><label>Nouveau PIN (4 à 12 chiffres)</label><input type="password" id="pinNew" inputmode="numeric" maxlength="12"></div><div class="wide"><label>Confirmer</label><input type="password" id="pinConfirm" inputmode="numeric" maxlength="12"></div></div><div class="modalActions"><button class="save" onclick="saveUserPin()">Enregistrer</button><button class="cancel" onclick="closePinModal()">Annuler</button></div></div></div>
 <div class="modal" id="restoreTestModal"><div class="modalBox"><h3 style="margin-top:0">Tester une sauvegarde</h3><p class="small">Le test ne modifie aucune donnée.</p><div class="form"><div class="wide"><label>Fichier JSON</label><input type="file" id="restoreTestFile" accept=".json,application/json"></div></div><div id="restoreTestResult" class="profilePanel" style="margin-top:12px">Sélectionnez un fichier.</div><div class="modalActions"><button class="save" onclick="testBackupFile()">Tester</button><button class="cancel" onclick="closeRestoreTestModal()">Fermer</button></div></div></div>
 
@@ -1055,7 +1058,7 @@ function renderMonthlyClose(){
  const closes=safeParse(CLOSE_KEY)||{},saved=closes[month];
  monthlyCloseBody.innerHTML=`<div class="profilePanel"><div class="memberStats"><div class="mini"><b>${money(due)}</b><span>Dû</span></div><div class="mini"><b>${money(paid)}</b><span>Payé</span></div><div class="mini"><b>${money(bal)}</b><span>Solde</span></div><div class="mini"><b>${due?Math.round(paid/due*100):0}%</b><span>Recouvrement</span></div><div class="mini"><b>${current}</b><span>Membres à jour</span></div><div class="mini"><b>${debtors}</b><span>Débiteurs</span></div></div>${saved?`<div class="small" style="margin-top:12px">Clôture enregistrée le ${new Date(saved.at).toLocaleString('fr-FR')} • ${escapeHtml(saved.note||'')}</div>`:''}</div>`
 }
-function saveMonthlyClose(){const month=closeMonth.value;if(!month)return;ensureMonthBeforeClosing(month);const closes=safeParse(CLOSE_KEY)||{};closes[month]={at:new Date().toISOString(),note:closeNote.value||''};saveJSON(CLOSE_KEY,closes);audit('Clôture mensuelle',`${month} • ${closeNote.value||'sans observation'}`);renderMonthlyClose()}
+function saveMonthlyClose(){const month=closeMonth.value;if(!month)return;ensureMonthBeforeClosing(month);const closes=safeParse(CLOSE_KEY)||{};closes[month]={at:new Date().toISOString(),note:closeNote.value||''};saveJSON(CLOSE_KEY,closes);audit('Clôture mensuelle',`${month} • ${closeNote.value||'sans observation'}`);renderMonthlyClose();scheduleAutoCloudSync('cloture-mensuelle',120)}
 
 function openAudit(){auditView.classList.add('open');renderAudit()}
 function closeAudit(){auditView.classList.remove('open')}
@@ -1151,7 +1154,7 @@ function refreshHome(){
 }
 
 
-const APP_VERSION='1.11.4';
+const APP_VERSION='1.11.6';
 const PUBLIC_SNAPSHOT_KEY='chebsel_public_snapshot_v1';
 let VISITOR_PUBLIC_SYNC_RUNNING=false;
 const EXPENSE_KEY='chebsel_expenses_v1';
@@ -1672,8 +1675,9 @@ async function pullCloudFinance(org){
   client.from('monthly_closings').select('*').eq('organization_id',org)
  ]);if(ee)throw ee;if(pe)throw pe;if(ae)throw ae;if(ce)throw ce;
  const activePaymentIds=new Set((payments||[]).filter(p=>p.status!=='cancelled').map(p=>p.id));const paidByEntry=new Map();for(const a of allocs||[]){if(!activePaymentIds.has(a.payment_id))continue;paidByEntry.set(a.financial_entry_id,(paidByEntry.get(a.financial_entry_id)||0)+Number(a.amount||0))}
- const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const bySync=new Map(f.entries.filter(x=>x.syncId).map(x=>[x.syncId,x]));
- for(const r of entries||[]){const legacyMember=maps.byCloud.get(r.member_id);if(!legacyMember)continue;let e=bySync.get(r.id);if(!e){e={id:'cloudfin_'+r.id.slice(0,8),syncId:r.id,memberId:legacyMember};f.entries.push(e);bySync.set(r.id,e)}Object.assign(e,{memberId:legacyMember,type:r.entry_type||'other',typeLabel:r.description||r.entry_type||'Écriture',due:Number(r.due_amount||0),paid:Number(paidByEntry.get(r.id)||0),date:r.entry_date||'',note:r.description||'',updatedAt:r.updated_at||syncNowISO()})}
+ const f=safeParse(FIN_KEY)||{};if(!Array.isArray(f.entries))f.entries=[];const bySync=new Map(f.entries.filter(x=>x.syncId).map(x=>[x.syncId,x]));const byMonthly=new Map(f.entries.filter(x=>isMonthlyEntry(x)).map(x=>[String(x.memberId||'')+'|'+String(entryMonth(x)||''),x]));
+ for(const r of entries||[]){const legacyMember=maps.byCloud.get(r.member_id);if(!legacyMember)continue;let e=bySync.get(r.id);const monthlyKey=String(legacyMember)+'|'+String(r.month_reference||'');if(!e&&r.entry_type==='monthly'&&r.month_reference)e=byMonthly.get(monthlyKey);if(!e){e={id:'cloudfin_'+r.id.slice(0,8),memberId:legacyMember};f.entries.push(e)}e.syncId=r.id;bySync.set(r.id,e);if(r.entry_type==='monthly'&&r.month_reference)byMonthly.set(monthlyKey,e);Object.assign(e,{memberId:legacyMember,type:r.entry_type||'other',typeLabel:r.description||r.entry_type||'Écriture',due:Number(r.due_amount||0),paid:Number(paidByEntry.get(r.id)||0),date:r.entry_date||'',sourceMonth:r.month_reference||e.sourceMonth||'',note:r.description||'',updatedAt:r.updated_at||syncNowISO()})}
+ const seenMonthly=new Set();f.entries=f.entries.filter(e=>{if(!isMonthlyEntry(e))return true;const k=String(e.memberId||'')+'|'+String(entryMonth(e)||'');if(seenMonthly.has(k))return false;seenMonthly.add(k);return true});
  localStorage.setItem(FIN_KEY,JSON.stringify(f));
  const localP=safeParse(PAYMENT_LOG_KEY)||[],pBySync=new Map((Array.isArray(localP)?localP:[]).filter(x=>x.syncId).map(x=>[x.syncId,x])),entryLegacyByCloud=new Map(f.entries.filter(x=>x.syncId).map(x=>[x.syncId,x.id]));
  for(const r of payments||[]){const legacyMember=maps.byCloud.get(r.member_id);if(!legacyMember)continue;let p=pBySync.get(r.id);if(!p){p={id:r.receipt_number||('cloudpay_'+r.id.slice(0,8)),syncId:r.id,memberId:legacyMember,alloc:[]};localP.push(p);pBySync.set(r.id,p)}Object.assign(p,{memberId:legacyMember,date:r.payment_date||'',amount:Number(r.amount||0),ref:r.reference||'',status:r.status||'posted',at:r.created_at||syncNowISO()});p.alloc=(allocs||[]).filter(a=>a.payment_id===r.id).map(a=>({syncId:a.id,entryId:entryLegacyByCloud.get(a.financial_entry_id)||'',amount:Number(a.amount||0)}))}
@@ -1820,13 +1824,38 @@ function applyRoleVisibility(){
 }
 function updateAuthUI(){const u=currentUser(),visitor=isVisitor();if(authUserLabel)authUserLabel.textContent=u?u.name+' • '+u.role:(visitor?'Visiteur • Lecture seule':'Connexion requise');if(authBtn)authBtn.textContent=u?'🔓':(visitor?'👁':'🔐');const add=document.getElementById('addMemberBtn');if(add)add.style.display=can('members.write')?'block':'none';applyVisitorRestrictions();applyRoleVisibility()}
 const LOGIN_ROLE_LABELS={president:'Président',secretary:'Secrétaire',treasurer:'Trésorier'};
+function toggleLoginPassword(){
+ const visible=loginPin.type==='text';loginPin.type=visible?'password':'text';
+ if(window.loginPasswordEye)loginPasswordEye.setAttribute('aria-label',visible?'Afficher le mot de passe':'Masquer le mot de passe');
+ loginPin.focus();
+}
+function authCredentialError(e){const m=String(e?.message||'').toLowerCase();return Number(e?.status||0)===400&&(m.includes('invalid login credentials')||m.includes('invalid credentials')||m.includes('email or password'));}
+function authRateLimitError(e){return Number(e?.status||0)===429||String(e?.message||'').toLowerCase().includes('rate limit');}
+function sleepCHEBSEL(ms){return new Promise(r=>setTimeout(r,ms))}
+async function reliableRoleSignIn(role,password){
+ const c=await getCloudClient(),email=ROLE_CLOUD_EMAILS[role];let last=null;
+ for(let attempt=0;attempt<2;attempt++){
+  try{const {data,error}=await c.auth.signInWithPassword({email,password});if(!error)return {client:c,data};last=error;if(authCredentialError(error)||authRateLimitError(error))throw error}catch(e){last=e;if(authCredentialError(e)||authRateLimitError(e))throw e}
+  if(attempt===0)await sleepCHEBSEL(650);
+ }
+ throw last||new Error('Connexion cloud indisponible.');
+}
+async function cloudBootstrapFresh(){
+ if(!navigator.onLine)return false;const ss=await cloudSessionInfo();if(!ss)return false;
+ const p=await getCloudProfile(),org=p?.organization_id||p?.org_id;if(!org)throw new Error('Organisation CHEBSEL introuvable.');
+ cloudState.textContent='Chargement des données à jour…';
+ await pullCloudMembers(org);await pullCloudCalendar(org);await pullCloudAttendance(org);await pullCloudFinance(org);
+ try{if(['president','treasurer'].includes(String(p?.role||'').toLowerCase()))await pullCloudExpenses(org)}catch(e){console.warn('Bootstrap dépenses:',e)}
+ await syncReadyReconcilePilot(false);refreshHome();await updateCloudUI();return true;
+}
+
 function chooseLoginRole(role,btn){
  if(!['president','secretary','treasurer'].includes(role))return;
  loginUser.value=role;document.querySelectorAll('[data-login-role]').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');
  loginRoleName.textContent=LOGIN_ROLE_LABELS[role];loginPasswordWrap.style.display='block';loginPin.value='';loginPin.focus();
  loginHelp.textContent='Antre Mot de passe CHEBSEL ou.';
 }
-function resetLoginChoice(){loginUser.value='';loginPin.value='';loginPasswordWrap.style.display='none';loginRoleName.textContent='';document.querySelectorAll('[data-login-role]').forEach(x=>x.classList.remove('active'));loginHelp.textContent='Chwazi pwofil ou.'}
+function resetLoginChoice(){loginUser.value='';loginPin.value='';loginPin.type='password';if(window.loginPasswordEye){loginPasswordEye.setAttribute('aria-label','Afficher le mot de passe')}loginPasswordWrap.style.display='none';loginRoleName.textContent='';document.querySelectorAll('[data-login-role]').forEach(x=>x.classList.remove('active'));loginHelp.textContent='Chwazi pwofil ou.'}
 function openLoginModal(){
  loginUser.innerHTML='<option value=""></option><option value="president">Président</option><option value="secretary">Secrétaire</option><option value="treasurer">Trésorier</option>';
  resetLoginChoice();loginModal.classList.add('open')
@@ -1914,21 +1943,25 @@ async function loginUserAction(){
  if(!password||password.length<6){alert('Antre Mot de passe CHEBSEL la.');return}
  if(navigator.onLine){
   try{
-   const c=await getCloudClient(),email=ROLE_CLOUD_EMAILS[role];
-   const {data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;
+   const signed=await reliableRoleSignIn(role,password),c=signed.client,data=signed.data;
    const profile=await ensureAuthorizedCloudProfile();
-   if(String(profile?.role||'').toLowerCase()!==role){await c.auth.signOut();throw new Error('Kont sa a pa koresponn ak wòl ou chwazi a.')}
+   if(String(profile?.role||'').toLowerCase()!==role){await c.auth.signOut({scope:'local'});throw new Error('Kont sa a pa koresponn ak wòl ou chwazi a.')}
    await cacheOfflinePassword(role,password,data.user?.id||'');
    await bindLocalSessionToCloud(profile,'password');await registerCloudDevice();
-   loginPin.value='';scheduleAutoCloudSync('login',250)
-  }catch(e){alert('Mot de passe CHEBSEL pa kòrèk oswa koneksyon an echwe : '+e.message)}
+   await cloudBootstrapFresh();
+   loginPin.value='';loginPin.type='password';scheduleAutoCloudSync('login',500)
+  }catch(e){
+   if(authCredentialError(e))alert('Mot de passe CHEBSEL la pa kòrèk pou pwofil sa a.');
+   else if(authRateLimitError(e))alert('Twòp tantativ koneksyon. Tann yon ti moman epi eseye ankò.');
+   else alert('Koneksyon CHEBSEL la pa reyisi. Modpas la pa nesesèman mal. Verifye entènèt la epi eseye ankò. Detay: '+(e?.message||e));
+  }
   return
  }
  const ok=await verifyOfflinePassword(role,password);
  if(!ok){alert('Premye koneksyon sou aparèy sa a dwe fèt ak entènèt. Si aparèy la te deja aktive, verifye modpas la.');return}
  await bindOfflineSession(role);loginPin.value=''
 }
-function logoutUser(){const u=currentUser();if(u)audit('Déconnexion',u.name,{entity:'security',entityId:u.key});sessionStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(VISITOR_KEY);loginModal.classList.remove('open');updateAuthUI();refreshHome();setTimeout(openLoginModal,80)}
+function logoutUser(){const u=currentUser();if(u)audit('Déconnexion',u.name,{entity:'security',entityId:u.key});try{getCloudClient().then(c=>c.auth.signOut({scope:'local'})).catch(()=>{})}catch(e){}sessionStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(VISITOR_KEY);loginModal.classList.remove('open');updateAuthUI();refreshHome();setTimeout(openLoginModal,80)}
 function openPinModal(k){if(!requirePermission('security.manage'))return;pinTarget.value=k;pinNew.value='';pinConfirm.value='';pinModalTitle.textContent='Configurer le PIN — '+getAuth().users[k].name;pinModal.classList.add('open')}
 function closePinModal(){pinModal.classList.remove('open')}
 async function saveUserPin(){if(!requirePermission('security.manage'))return;const k=pinTarget.value,p1=pinNew.value.trim(),p2=pinConfirm.value.trim();if(!/^\d{4,12}$/.test(p1)){alert('Le PIN doit contenir 4 à 12 chiffres.');return}if(p1!==p2){alert('Les PIN ne correspondent pas.');return}const a=getAuth(),u=a.users[k],before={configured:!!u.pinHash,configuredAt:u.configuredAt};u.salt=randomSalt();u.pinHash=await hashPin(p1,u.salt);u.configuredAt=new Date().toISOString();saveJSON(AUTH_KEY,a);audit('PIN configuré / réinitialisé',u.name,{entity:'security',entityId:k,before,after:{configured:true,configuredAt:u.configuredAt}});closePinModal();renderSecurity()}
