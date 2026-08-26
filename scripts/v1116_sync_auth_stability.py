@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# CHEBSEL v1.11.6 stabilization retrigger — 2026-08-26
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 
