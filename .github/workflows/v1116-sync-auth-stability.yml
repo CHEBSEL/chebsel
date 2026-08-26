@@ -12,7 +12,8 @@ permissions:
 
 jobs:
   patch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,4 +34,3 @@ jobs:
             git commit -m "Release CHEBSEL v1.11.6 sync and auth stability"
             git push origin main
           fi
-# retrigger stabilization workflow
