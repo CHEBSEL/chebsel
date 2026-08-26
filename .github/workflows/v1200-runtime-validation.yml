@@ -1,0 +1,37 @@
+name: CHEBSEL v1.12.0 Runtime Validation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v1200-runtime-validation.yml'
+      - 'js/**'
+      - 'css/**'
+      - 'index.html'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: JavaScript syntax checks
+        run: |
+          node --check js/embedded-apps.js
+          node --check js/legacy-core.js
+          node --check js/auth-security.js
+          node --check js/sync-policy.js
+          node --check js/finance-evidence.js
+          node --check js/bootstrap.js
+      - name: HTML architecture checks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html').read_text(encoding='utf-8')
+          assert '<style' not in p.lower()
+          assert "const ATT_B64='" not in p
+          assert "const FIN_B64='" not in p
+          assert 'payEvidenceFile' in p
+          assert 'treasuryReportEvidenceFile' in p
+          assert 'v1.12.0' in p
+          print('CHEBSEL v1.12.0 runtime structure OK')
+          PY
