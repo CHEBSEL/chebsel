@@ -1,0 +1,51 @@
+name: CHEBSEL v1.12.1 JPEG Reports
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v121_jpeg_reports.py'
+      - '.github/workflows/v121-jpeg-reports.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.12.1 patch
+        run: python scripts/v121_jpeg_reports.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/report-images.js
+          node --check js/legacy-core.js
+          node --check js/auth-security.js
+          node --check js/sync-policy.js
+          node --check js/bootstrap.js
+      - name: Validate expected UI
+        run: |
+          grep -q 'v1.12.1' index.html
+          grep -q 'saveReceiptJPEG' index.html
+          grep -q 'saveTreasuryReportJPEG' index.html
+          grep -q 'punctualityReportView' index.html
+          grep -q 'savePunctualityReportJPEG' index.html
+          ! grep -q 'treasuryEvidencePanel' index.html
+          ! grep -q 'finance-evidence.js' index.html
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js
+          git commit -m 'Release CHEBSEL v1.12.1 JPEG reports and punctuality'
+          git push
