@@ -1,0 +1,47 @@
+name: CHEBSEL v1.12.0 Architecture + Sync Priority + Evidence
+
+on:
+  push:
+    paths:
+      - 'scripts/v1200_architecture_sync_evidence.py'
+      - '.github/workflows/v1200-architecture-sync-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply architecture refactor
+        run: python scripts/v1200_architecture_sync_evidence.py
+      - name: Structural validation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html').read_text(encoding='utf-8')
+          assert 'CHEBSEL v1.12.0' in p
+          assert '<style' not in p.lower()
+          for f in ['css/app.css','js/embedded-apps.js','js/legacy-core.js','js/auth-security.js','js/sync-policy.js','js/finance-evidence.js','js/bootstrap.js']:
+              assert Path(f).exists(), f
+          print('v1.12.0 structure validated')
+          PY
+      - name: Commit release
+        run: |
+          git config user.name "CHEBSEL"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest css js
+          if git diff --cached --quiet; then
+            echo "No release changes"
+          else
+            git commit -m "Release CHEBSEL v1.12.0 modular architecture and role-priority sync"
+            git push origin main
+          fi
