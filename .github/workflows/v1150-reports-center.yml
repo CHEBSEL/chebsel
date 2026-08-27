@@ -1,0 +1,53 @@
+name: CHEBSEL v1.15.0 Reports Center
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/reports-center-1150.js'
+      - 'js/notification-routing-1142.js'
+      - 'scripts/v1150_reports_center.py'
+      - '.github/workflows/v1150-reports-center.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.15.0 patch
+        run: python scripts/v1150_reports_center.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/reports-center-1150.js
+          node --check js/notification-routing-1142.js
+          node --check js/institutional-ops.js
+          node --check js/monthly-governance-1140.js
+          node --check js/legacy-core.js
+      - name: Validate release wiring
+        run: |
+          grep -q 'CHEBSEL v1.15.0' index.html
+          grep -q 'reports-center-1150.js?v=1500' index.html
+          grep -q 'data-alert-id=' js/institutional-ops.js
+          grep -q 'markAlertRead' js/institutional-ops.js
+          grep -q 'chebsel-pwa-stable-v1150' sw.js
+          grep -q "'./js/reports-center-1150.js'" sw.js
+          grep -q 'CHEBSEL v1.15.0' manifest.webmanifest
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html css/app.css manifest.webmanifest sw.js js/bootstrap.js js/institutional-ops.js
+          git commit -m 'Release CHEBSEL v1.15.0 unified reports center and notification states'
+          git push
