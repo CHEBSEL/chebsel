@@ -1,0 +1,48 @@
+name: CHEBSEL v1.16.0 Role Shell
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/role-shell-1160.js'
+      - 'scripts/v1160_role_shell.py'
+      - '.github/workflows/v1160-role-shell.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply role shell
+        run: python scripts/v1160_role_shell.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/role-shell-1160.js
+          node --check js/reports-center-1150.js
+          node --check js/notification-routing-1142.js
+          node --check js/legacy-core.js
+      - name: Validate role navigation wiring
+        run: |
+          grep -q 'CHEBSEL v1.16.0' index.html
+          grep -q 'role-shell-1160.js' index.html
+          grep -q 'openSecretariatHub' js/role-shell-1160.js
+          grep -q 'openTreasuryHub' js/role-shell-1160.js
+          grep -q 'openScopedArchiveHub' js/role-shell-1160.js
+          grep -q 'openVisitorMembers' js/role-shell-1160.js
+          grep -q 'chebsel-pwa-stable-v1160' sw.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then echo 'No release diff required.'; exit 0; fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js
+          git commit -m 'Release CHEBSEL v1.16.0 role-aligned navigation'
+          git push
