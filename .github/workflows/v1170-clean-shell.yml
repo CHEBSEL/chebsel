@@ -1,0 +1,47 @@
+name: CHEBSEL v1.17.0 Clean Shell
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/clean-shell-1170.js'
+      - 'scripts/v1170_clean_shell.py'
+      - '.github/workflows/v1170-clean-shell.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply clean shell
+        run: python scripts/v1170_clean_shell.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/clean-shell-1170.js
+          node --check js/role-shell-1160.js
+          node --check js/reports-center-1150.js
+          node --check js/legacy-core.js
+      - name: Validate clean navigation
+        run: |
+          grep -q 'CHEBSEL v1.17.0' index.html
+          grep -q 'clean-shell-1170.js' index.html
+          grep -q 'chebsel-pwa-stable-v1170' sw.js
+          grep -q 'Cotisations & Amendes' js/clean-shell-1170.js && exit 1 || true
+          grep -q "\['👥','Membres','openVisitorMembers()'\]" js/clean-shell-1170.js
+          grep -q "\['📋','Débiteurs','openDebtors()'\]" js/clean-shell-1170.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then echo 'No release diff required.'; exit 0; fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html css/app.css manifest.webmanifest sw.js
+          git commit -m 'Release CHEBSEL v1.17.0 clean role shell'
+          git push
