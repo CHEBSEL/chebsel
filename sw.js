@@ -1,4 +1,4 @@
-const CACHE_NAME='chebsel-pwa-stable-v1150';
+const CACHE_NAME='chebsel-pwa-stable-v1160';
 const APP_SHELL=[
  './',
  './index.html',
@@ -15,6 +15,7 @@ const APP_SHELL=[
  './js/notification-routing-1142.js',
  './js/deletion-1141.js',
  './js/reports-center-1150.js',
+ './js/role-shell-1160.js',
  './js/auth-security.js',
  './js/legacy-core.js',
  './js/embedded-apps.js',
