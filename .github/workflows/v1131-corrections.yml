@@ -1,0 +1,51 @@
+name: CHEBSEL v1.13.1 Corrective Integration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v1131_corrections.py'
+      - 'js/corrections-1131.js'
+      - '.github/workflows/v1131-corrections.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.13.1 corrections
+        run: python scripts/v1131_corrections.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/corrections-1131.js
+          node --check js/institutional-ops.js
+          node --check js/report-images.js
+          node --check js/legacy-core.js
+          node --check js/bootstrap.js
+      - name: Validate expected corrections
+        run: |
+          grep -q 'v1.13.1' index.html
+          grep -q 'corrections-1131.js' index.html
+          ! grep -q 'payEvidenceFile' index.html
+          grep -q 'chebsel-pwa-stable-v1131' sw.js
+          grep -q "'./js/corrections-1131.js'" sw.js
+          grep -q 'viewerbar .back,.floating-back' css/app.css
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html css/app.css manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.13.1 corrective payment and navigation fixes'
+          git push
