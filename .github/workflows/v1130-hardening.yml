@@ -1,0 +1,48 @@
+name: CHEBSEL v1.13.0 Institutional Hardening
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v1130_hardening.py'
+      - '.github/workflows/v1130-hardening.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply hardening
+        run: python scripts/v1130_hardening.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/institutional-ops.js
+          node --check js/legacy-core.js
+          node --check js/report-images.js
+          node --check js/sync-policy.js
+          node --check js/auth-security.js
+      - name: Validate hardening
+        run: |
+          grep -q "treasurer:new Set(\['debtors','finance','treasury','close'\])" js/legacy-core.js
+          grep -q 'archiveMonth' index.html
+          grep -q 'institutional-ops.js?v=1301' index.html
+          grep -q 'chebsel-pwa-stable-v1130h1' sw.js
+      - name: Commit hardening
+        run: |
+          if git diff --quiet; then
+            echo 'No hardening diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html js/institutional-ops.js js/legacy-core.js sw.js
+          git commit -m 'Harden CHEBSEL v1.13.0 closing access and archive filters'
+          git push
