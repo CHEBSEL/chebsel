@@ -1,0 +1,54 @@
+name: CHEBSEL v1.13.0 Institutional Operations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v1130_institutional_ops.py'
+      - 'js/institutional-ops.js'
+      - '.github/workflows/v1130-institutional-ops.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.13.0 patch
+        run: python scripts/v1130_institutional_ops.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/institutional-ops.js
+          node --check js/report-images.js
+          node --check js/sync-policy.js
+          node --check js/auth-security.js
+          node --check js/legacy-core.js
+          node --check js/bootstrap.js
+      - name: Validate institutional UI
+        run: |
+          grep -q 'v1.13.0' index.html
+          grep -q 'notificationBtn' index.html
+          grep -q 'notificationsView' index.html
+          grep -q 'archivesView' index.html
+          grep -q 'conflictView' index.html
+          grep -q 'monthlyCloseActions' index.html
+          grep -q 'institutional-ops.js?v=1300' index.html
+          grep -q 'chebsel-pwa-stable-v1130' sw.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html css/app.css manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.13.0 institutional operations'
+          git push
