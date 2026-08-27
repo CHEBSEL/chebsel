@@ -10,9 +10,16 @@
 
  function hideLegacyHome(){
   const home=document.querySelector('main.home');if(!home)return;
-  home.querySelectorAll('.hero,.old-tech-panel,#backupHealth,#installCard,#syncMessage,.smallnote,.visitorOnlyNote,#roleShellGrid').forEach(x=>x.style.display='none');
-  home.querySelectorAll(':scope > section.grid,:scope > .treasury-launch-grid,:scope > #presidentUtilityCards').forEach(x=>x.style.display='none');
-  const oldReports=document.getElementById('reportsCenterLaunch');if(oldReports)oldReports.style.display='none';
+  // Preserve only the four intended home areas: overview stats, calendar, monthly dashboard, clean role menu.
+  const monthlyPanel=document.getElementById('monthlyDashboard')?.closest('.profilePanel');
+  [...home.children].forEach(x=>{
+   const keep=x.classList?.contains('stats')||x.id==='calendarHomePanel'||x===monthlyPanel||x.id==='cleanRoleRoot';
+   if(!keep)x.style.display='none';
+  });
+  ['strictRoleArea','roleShellGrid','reportsCenterLaunch','presidentUtilityCards','backupHealth','installCard','syncMessage'].forEach(id=>{
+   const x=document.getElementById(id);if(x){x.style.display='none';x.hidden=true;}
+  });
+  home.querySelectorAll('.hero,.old-tech-panel,.smallnote,.visitorOnlyNote,.treasury-launch-grid').forEach(x=>x.style.display='none');
  }
 
  function ensureCleanRoot(){
@@ -23,74 +30,48 @@
    const dash=document.getElementById('monthlyDashboard')?.closest('.profilePanel');
    if(dash?.parentNode)dash.parentNode.insertBefore(root,dash.nextSibling);else home.appendChild(root);
   }
+  root.style.display='block';root.hidden=false;
   return root
  }
 
  function menuFor(r){
   if(r==='secretary')return [
-   ['👥','Membres','openMembers()'],
-   ['✅','Fiche d’Appel','openSecretariatHub()'],
-   ['🕘','Historique','openAttendanceHistory()'],
-   ['📊','Rapport ponctualité','openReportsCenter()'],
-   ['📋','Débiteurs','openDebtors()'],
-   ['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']
+   ['👥','Membres','openMembers()'],['✅','Fiche d’Appel','openSecretariatHub()'],['🕘','Historique','openAttendanceHistory()'],['📊','Rapport ponctualité','openReportsCenter()'],['📋','Débiteurs','openDebtors()'],['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']
   ];
   if(r==='treasurer')return [
-   ['👥','Membres','openMembers()'],
-   ['💰','Paiements','openTreasuryPaymentHub()'],
-   ['📋','Débiteurs','openDebtors()'],
-   ['💸','Dépenses','openTreasuryExpenses()'],
-   ['📈','Historique / Histogramme','openFinanceHistory()'],
-   ['📊','Rapport financier','openReportsCenter()'],
-   ['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']
+   ['👥','Membres','openMembers()'],['💰','Paiements','openTreasuryPaymentHub()'],['📋','Débiteurs','openDebtors()'],['💸','Dépenses','openTreasuryExpenses()'],['📈','Historique / Histogramme','openFinanceHistory()'],['📊','Rapport financier','openReportsCenter()'],['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']
   ];
   if(r==='president')return [
-   ['👥','Membres','openMembers()'],
-   ['🗃️','Secrétariat','openSecretariatHub()'],
-   ['💼','Trésorerie','openTreasuryHub()'],
-   ['📚','Rapports','openReportsCenter()'],
-   ['🗂️','Archive générale','openScopedArchiveHub()'],
-   ['⚖️','Journal des conflits','openConflictJournal()'],
-   ['⚙️','Paramètres','openSettingsHub()'],
-   ['🔒','Confidentialités','openPrivacyHub()'],
-   ['ℹ️','À propos','openAboutHub()']
+   ['👥','Membres','openMembers()'],['🗃️','Secrétariat','openSecretariatHub()'],['💼','Trésorerie','openTreasuryHub()'],['📚','Rapports','openReportsCenter()'],['🗂️','Archive générale','openScopedArchiveHub()'],['⚖️','Journal des conflits','openConflictJournal()'],['⚙️','Paramètres','openSettingsHub()'],['🔒','Confidentialités','openPrivacyHub()'],['ℹ️','À propos','openAboutHub()']
   ];
-  return [
-   ['👥','Membres','openVisitorMembers()'],
-   ['📋','Débiteurs','openDebtors()']
-  ];
+  return [['👥','Membres','openVisitorMembers()'],['📋','Débiteurs','openDebtors()']];
  }
 
  function renderCleanRole(){
-  hideLegacyHome();
   const root=ensureCleanRoot();if(!root)return;
+  hideLegacyHome();
   const r=role();
   root.innerHTML=`<div class="cleanRoleHeader"><h2>${esc(labels[r]||'Visiteur')}</h2></div><div class="cleanRoleGrid">${menuFor(r).map(x=>btn(...x)).join('')}</div>`;
   applyCalendarPermissions(r);
-  // Visitor must never see finance entry points.
   if(r==='visitor'){
-   document.querySelectorAll('[onclick*="openFinance"],[onclick*="openTreasury"],[onclick*="openVisitorFinance"],#reportsCenterLaunch,#treasuryPaymentHub,#treasuryHub').forEach(x=>{if(x.closest('#cleanRoleRoot'))return;x.style.display='none'});
+   // Visitor can never see member contributions, payments, receipts or finance configuration.
+   document.querySelectorAll('[onclick*="openFinance"],[onclick*="openTreasury"],[onclick*="openVisitorFinance"],#treasuryPaymentHub,#treasuryHub,#treasuryExpensesView,#treasuryReportView').forEach(x=>x.style.display='none');
   }
  }
  window.renderCleanRole=renderCleanRole;
 
  function applyCalendarPermissions(r){
-  const canEdit=allowedCalendarEdit.has(r);
-  const panel=document.getElementById('calendarHomePanel');
+  const canEdit=allowedCalendarEdit.has(r),panel=document.getElementById('calendarHomePanel');
   if(panel){
+   panel.style.display='block';
    panel.querySelectorAll('button').forEach(b=>{
     const oc=b.getAttribute('onclick')||'',txt=(b.textContent||'').toLowerCase();
-    const editish=/edit|delete|remove|cancel|modifier|supprimer|annuler|openCalendar/.test(oc+' '+txt);
-    if(editish){
-     // full-calendar view remains available to all, but mutations only President/Secretary.
-     if(oc.includes('openCalendar')){b.style.display=''}
-     else b.style.display=canEdit?'':'none';
-    }
+    const editish=/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|créer|creer/.test(oc+' '+txt);
+    if(editish)b.style.display=canEdit?'':'none';
+    if(oc.includes('openCalendar')&&!editish)b.style.display='';
    });
   }
  }
-
- // Enforce calendar permissions even inside the full calendar view after it renders.
  function guardCalendarMutation(){
   if(allowedCalendarEdit.has(role()))return;
   document.querySelectorAll('#calendarView button,[data-calendar-action]').forEach(b=>{
@@ -98,10 +79,20 @@
    if(/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|add/.test(oc+' '+txt))b.style.display='none';
   });
  }
- const obs=new MutationObserver(()=>{guardCalendarMutation()});
- document.addEventListener('DOMContentLoaded',()=>{renderCleanRole();obs.observe(document.body,{subtree:true,childList:true});setTimeout(renderCleanRole,300)});
 
- // Re-render role shell after role/login/home refresh, without creating duplicate menus.
+ function enforceExclusiveShell(){
+  hideLegacyHome();
+  const root=document.getElementById('cleanRoleRoot');if(root){root.style.display='block';root.hidden=false;}
+  const strict=document.getElementById('strictRoleArea');if(strict){strict.style.display='none';strict.hidden=true;}
+  const old=document.getElementById('roleShellGrid');if(old){old.style.display='none';old.hidden=true;}
+  guardCalendarMutation();
+ }
+
+ document.addEventListener('DOMContentLoaded',()=>{renderCleanRole();setTimeout(renderCleanRole,250)});
+ window.addEventListener('load',()=>setTimeout(renderCleanRole,150));
+ const obs=new MutationObserver(()=>enforceExclusiveShell());
+ document.addEventListener('DOMContentLoaded',()=>obs.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class','hidden']}));
+
  if(typeof window.refreshHome==='function'&&!window.__cleanShellRefreshWrapped){
   window.__cleanShellRefreshWrapped=true;const base=window.refreshHome;
   window.refreshHome=function(){const out=base.apply(this,arguments);setTimeout(renderCleanRole,0);return out};
