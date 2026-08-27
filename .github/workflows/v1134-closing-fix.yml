@@ -1,0 +1,45 @@
+name: CHEBSEL v1.13.4 Canonical Closing Fix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/v1134_closing_fix.py'
+      - 'js/closing-canonical-1134.js'
+      - '.github/workflows/v1134-closing-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.13.4 patch
+        run: python scripts/v1134_closing_fix.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/closing-canonical-1134.js
+          node --check js/institutional-ops.js
+      - name: Validate release wiring
+        run: |
+          grep -q 'v1.13.4' index.html
+          grep -q 'closing-canonical-1134.js' index.html
+          grep -q 'chebsel-pwa-stable-v1134' sw.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.13.4 canonical monthly closing validation'
+          git push
