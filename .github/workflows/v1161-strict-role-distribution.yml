@@ -1,0 +1,46 @@
+name: CHEBSEL v1.16.1 Strict Role Distribution
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/strict-role-ui-1161.js'
+      - 'scripts/v1161_strict_roles.py'
+      - '.github/workflows/v1161-strict-role-distribution.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply strict role distribution
+        run: python scripts/v1161_strict_roles.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/strict-role-ui-1161.js
+          node --check js/role-shell-1160.js
+          node --check js/reports-center-1150.js
+          node --check js/legacy-core.js
+      - name: Validate strict role wiring
+        run: |
+          grep -q 'CHEBSEL v1.16.1' index.html
+          grep -q 'strict-role-ui-1161.js' index.html
+          grep -q 'strictRoleArea' css/app.css
+          grep -q 'chebsel-pwa-stable-v1161' sw.js
+          grep -q "'./js/strict-role-ui-1161.js'" sw.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then echo 'No release diff required.'; exit 0; fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html css/app.css manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.16.1 strict role distribution'
+          git push
