@@ -1254,7 +1254,7 @@ function currentRoleView(){if(isVisitor())return 'visitor';const u=currentUser()
 const ROLE_VIEW_MATRIX={
  visitor:new Set(['debtors']),
  secretary:new Set(['members','attendance']),
- treasurer:new Set(['debtors','finance','treasury']),
+ treasurer:new Set(['debtors','finance','treasury','close']),
  president:new Set(['members','attendance','finance','debtors','close','audit','diagnostics','security','handover','help','treasury'])
 };
 function roleCanView(module){const r=currentRoleView();return !!(r&&ROLE_VIEW_MATRIX[r]?.has(module))}

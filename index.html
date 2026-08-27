@@ -304,7 +304,7 @@
 
 <div class="membersView" id="archivesView">
  <div class="viewerbar"><button class="back" onclick="closeArchives()">← Retour</button><div class="viewtitle"><b>Archives CHEBSEL</b><span>Registre des documents générés par période</span></div></div>
- <div class="membersBody"><div class="profilePanel"><div class="memberTools"><select id="archiveYear" onchange="renderArchives()"><option value="">Toutes les années</option></select><select id="archiveType" onchange="renderArchives()"><option value="">Tous les types</option><option value="payment_receipt">Reçus de paiement</option><option value="financial_report">Rapports financiers</option><option value="punctuality_report">Rapports de ponctualité</option><option value="monthly_closing_prepared">Clôtures préparées</option><option value="monthly_closing_approved">Clôtures validées</option></select><button class="secondaryQuick" onclick="renderArchives()">Actualiser</button></div><div class="memberMeta">Le registre mémorise quel document JPEG a été généré, par qui et pour quelle période. Le fichier JPEG lui-même reste enregistré sur l’appareil utilisé.</div></div><div class="profilePanel" id="archiveList"></div></div>
+ <div class="membersBody"><div class="profilePanel"><div class="memberTools"><select id="archiveYear" onchange="renderArchives()"><option value="">Toutes les années</option></select><select id="archiveMonth" onchange="renderArchives()"><option value="">Tous les mois</option><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select><select id="archiveType" onchange="renderArchives()"><option value="">Tous les types</option><option value="payment_receipt">Reçus de paiement</option><option value="financial_report">Rapports financiers</option><option value="punctuality_report">Rapports de ponctualité</option><option value="monthly_closing_prepared">Clôtures préparées</option><option value="monthly_closing_approved">Clôtures validées</option></select><button class="secondaryQuick" onclick="renderArchives()">Actualiser</button></div><div class="memberMeta">Le registre mémorise quel document JPEG a été généré, par qui et pour quelle période. Le fichier JPEG lui-même reste enregistré sur l’appareil utilisé.</div></div><div class="profilePanel" id="archiveList"></div></div>
 </div>
 
 <div class="membersView" id="conflictView">
@@ -327,7 +327,7 @@
 <script src="./js/auth-security.js?v=1200"></script>
 <script src="./js/sync-policy.js?v=1200"></script>
 <script src="./js/report-images.js?v=1210"></script>
-<script src="./js/institutional-ops.js?v=1300"></script>
+<script src="./js/institutional-ops.js?v=1301"></script>
 <script src="./js/bootstrap.js?v=1300"></script>
 </body>
 </html>
