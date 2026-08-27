@@ -282,3 +282,14 @@ body{font-family:Arial,sans-serif;padding:24px}table{width:100%;border-collapse:
 /* CHEBSEL v1.13.3 monthly history controls */
 .monthlyHistoryNav{margin-left:auto;align-items:center;flex-wrap:wrap}.monthlyHistoryNav input[type=month]{min-width:150px;max-width:180px}.monthlyHistoryNav button:disabled{opacity:.4;cursor:not-allowed}.monthlyHistoryNav .secondaryQuick{min-width:46px}
 @media(max-width:680px){.profileTitle{align-items:flex-start;gap:10px;flex-wrap:wrap}.monthlyHistoryNav{width:100%;margin-left:0}.monthlyHistoryNav input[type=month]{flex:1;min-width:140px}}
+
+
+/* CHEBSEL v1.15.0 unified reports center */
+.reportsRoleGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:14px}
+.reportHubCard{width:100%;min-height:112px;display:flex;align-items:center;gap:14px;text-align:left;padding:17px;border-radius:18px;border:1px solid var(--border,#dfe5ee);background:var(--surface-card,#fff);color:inherit;cursor:pointer}
+.reportHubCard:hover{border-color:var(--brand-gold,#c59d3f)}
+.reportHubIcon{font-size:30px;flex:0 0 42px}.reportHubCopy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}.reportHubCopy b{font-size:16px}.reportHubCopy small{color:var(--text-muted,#667085);line-height:1.4}.reportHubCopy em{font-style:normal;font-size:11px;font-weight:800;color:var(--brand-gold,#c59d3f)}.reportHubArrow{font-size:24px}
+.reportPresets{margin-top:10px;flex-wrap:wrap}.reportGlobalResult h3{margin:18px 0 8px}.reportSynthesis{margin-top:16px;padding:12px;border-left:3px solid var(--brand-gold,#c59d3f)}
+.alertRow.actionableAlert{position:relative;padding-right:88px;transition:opacity .18s ease,background .18s ease,border-color .18s ease}.alertRow.alert-unread{font-weight:650;border-color:rgba(197,157,63,.65)!important;background:rgba(197,157,63,.08)}.alertRow.alert-read{opacity:.52;background:transparent!important}.alertRow.alert-read .alertRouteHint{opacity:.72}.alertRouteHint{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--brand-gold,#c59d3f)}
+#loginModal button[aria-busy="true"]{opacity:.72;cursor:wait;pointer-events:none}
+@media(max-width:520px){.reportsRoleGrid{grid-template-columns:1fr}.reportHubCard{min-height:96px;padding:14px}.alertRow.actionableAlert{padding-right:72px}.alertRouteHint{right:10px;font-size:11px}}
