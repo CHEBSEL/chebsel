@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.12.1 — Centre de gestion</title>
+<title>CHEBSEL v1.13.0 — Centre de gestion</title>
 
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CHEBSEL">
 
-<link rel="stylesheet" href="./css/app.css?v=1210">
+<link rel="stylesheet" href="./css/app.css?v=1300">
 </head>
 <body>
 <div class="shell">
@@ -26,7 +26,8 @@
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.12.1</span>
+  <div class="topactions"><span class="versionChip">v1.13.0</span>
+   <button class="topbtn notificationBtn" id="notificationBtn" onclick="openNotifications()" title="Alertes CHEBSEL" aria-label="Alertes" style="display:none"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notificationBadge" id="notificationBadge" style="display:none">0</span></button>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
    <button class="topbtn" id="themeBtn" onclick="toggleShellTheme()" title="Mode clair / sombre" aria-label="Mode clair / sombre">🌙</button>
@@ -86,6 +87,8 @@
  <section class="grid" style="margin-top:14px">
   <button class="launch" onclick="openDebtors()"><div class="icon">📋</div><h2>Débiteurs</h2><p>Voir les membres qui ont encore des dettes et leur ancienneté.</p><span class="go">Voir les débiteurs →</span></button>
   <button class="launch" onclick="openMonthlyClose()"><div class="icon">📅</div><h2>Clôture mensuelle</h2><p>Résumé mensuel : dû, payé, solde, membres à jour et débiteurs.</p><span class="go">Clôturer / consulter →</span></button>
+  <button class="launch visitor-hidden role-hidden" id="archivesLaunchCard" onclick="openArchives()"><div class="icon">🗂️</div><h2>Archives</h2><p>Registre des reçus, rapports et clôtures générés par période.</p><span class="go">Consulter les archives →</span></button>
+  <button class="launch visitor-hidden role-hidden" id="conflictsLaunchCard" onclick="openConflictJournal()"><div class="icon">⚖️</div><h2>Journal des conflits</h2><p>Voir les arbitrages automatiques lors de modifications concurrentes.</p><span class="go">Voir la traçabilité →</span></button>
  </section>
  <section class="grid" style="margin-top:14px" id="presidentUtilityCards">
   <button class="launch visitor-hidden" onclick="openSettingsHub()"><div class="icon">⚙️</div><h2>Paramètres</h2><p>Diagnostic, sécurité et gestion des rôles.</p><span class="go">Ouvrir les paramètres →</span></button>
@@ -144,8 +147,8 @@
 </div>
 
 <div class="membersView" id="monthlyView">
- <div class="viewerbar"><button class="back" onclick="closeMonthlyClose()">← Retour</button><div class="viewtitle"><b>Clôture mensuelle</b><span>Résumé financier du mois</span></div></div>
- <div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Mois</label><input type="month" id="closeMonth" onchange="renderMonthlyClose()"></div><div><label>Observation de clôture</label><input id="closeNote" placeholder="Observation facultative"></div></div><div class="memberActions" style="margin-top:10px"><button class="quickBtn" onclick="saveMonthlyClose()">Enregistrer la clôture</button></div></div><div id="monthlyCloseBody"></div></div>
+ <div class="viewerbar"><button class="back" onclick="closeMonthlyClose()">← Retour</button><div class="viewtitle"><b>Clôture mensuelle institutionnelle</b><span>Préparation Trésorier → Validation Président → Verrouillage</span></div></div>
+ <div class="membersBody"><div class="profilePanel"><div class="row two"><div><label>Mois</label><input type="month" id="closeMonth" onchange="renderMonthlyClose()"></div><div><label>Observation de clôture</label><input id="closeNote" placeholder="Observation facultative"></div></div><div class="memberActions" id="monthlyCloseActions" style="margin-top:10px"></div></div><div id="monthlyCloseBody"></div></div>
 </div>
 
 <div class="membersView" id="auditView">
@@ -293,6 +296,22 @@
  </div>
 </div>
 
+
+<div class="membersView" id="notificationsView">
+ <div class="viewerbar"><button class="back" onclick="closeNotifications()">← Retour</button><div class="viewtitle"><b>Centre d’alertes</b><span>Dettes, cotisations, clôtures et synchronisation</span></div></div>
+ <div class="membersBody"><div class="profilePanel"><div class="profileTitle"><div><h3>Alertes CHEBSEL</h3><div class="memberMeta">Les alertes sont calculées automatiquement à partir des données réelles.</div></div></div><div class="memberActions"><button class="secondaryQuick" onclick="renderAlertsPanel()">Actualiser</button><button class="secondaryQuick" onclick="markAllAlertsRead()">Tout marquer comme lu</button></div></div><div class="profilePanel" id="notificationList"></div></div>
+</div>
+
+<div class="membersView" id="archivesView">
+ <div class="viewerbar"><button class="back" onclick="closeArchives()">← Retour</button><div class="viewtitle"><b>Archives CHEBSEL</b><span>Registre des documents générés par période</span></div></div>
+ <div class="membersBody"><div class="profilePanel"><div class="memberTools"><select id="archiveYear" onchange="renderArchives()"><option value="">Toutes les années</option></select><select id="archiveType" onchange="renderArchives()"><option value="">Tous les types</option><option value="payment_receipt">Reçus de paiement</option><option value="financial_report">Rapports financiers</option><option value="punctuality_report">Rapports de ponctualité</option><option value="monthly_closing_prepared">Clôtures préparées</option><option value="monthly_closing_approved">Clôtures validées</option></select><button class="secondaryQuick" onclick="renderArchives()">Actualiser</button></div><div class="memberMeta">Le registre mémorise quel document JPEG a été généré, par qui et pour quelle période. Le fichier JPEG lui-même reste enregistré sur l’appareil utilisé.</div></div><div class="profilePanel" id="archiveList"></div></div>
+</div>
+
+<div class="membersView" id="conflictView">
+ <div class="viewerbar"><button class="back" onclick="closeConflictJournal()">← Retour</button><div class="viewtitle"><b>Journal des conflits</b><span>Arbitrage automatique multi-appareils</span></div></div>
+ <div class="membersBody"><div class="profilePanel"><div class="memberMeta">Président : tous les domaines • Secrétaire : Appel/Présence • Trésorier : Finance. La version gagnante est déterminée par la politique de priorité CHEBSEL.</div><div class="memberActions"><button class="secondaryQuick" onclick="renderConflictJournal()">Actualiser</button></div></div><div class="profilePanel" id="conflictList"></div></div>
+</div>
+
 <div class="membersView" id="settingsHub"><div class="viewerbar"><button class="back" onclick="closeSettingsHub()">← Retour</button><div class="viewtitle"><b>Paramètres</b><span>Administration CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closeSettingsHub();openDiagnostics()">🩺 Diagnostic<span>Vérifier l’intégrité et les incohérences.</span></button><button class="utilityBtn" onclick="closeSettingsHub();openSecurity()">🔐 Sécurité & rôles<span>Profils autorisés et droits d’accès.</span></button></div></div></div></div>
 <div class="membersView" id="privacyHub"><div class="viewerbar"><button class="back" onclick="closePrivacyHub()">← Retour</button><div class="viewtitle"><b>Confidentialité</b><span>Données sensibles et transfert</span></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu"><button class="utilityBtn" onclick="closePrivacyHub();openAudit()">🧾 Journal<span>Historique des opérations et modifications.</span></button><button class="utilityBtn" onclick="closePrivacyHub();openHandover()">🤝 Passation de comité<span>Préparer un transfert de responsabilité.</span></button><button class="utilityBtn" onclick="portalBackup()">💾 Sauvegarder<span>Exporter une copie des données CHEBSEL.</span></button><button class="utilityBtn" onclick="openRestoreModal()">↥ Restaurer<span>Restaurer une sauvegarde autorisée.</span></button><button class="utilityBtn" onclick="openRestoreTestModal()">✓ Tester une sauvegarde<span>Contrôler un fichier sans modifier les données.</span></button></div></div></div></div>
 <div class="membersView" id="aboutHub"><div class="viewerbar"><button class="back" onclick="closeAboutHub()">← Retour</button><div class="viewtitle"><b>À propos</b><span>CHEBSEL</span></div></div><div class="membersBody"><div class="profilePanel"><h2 style="margin-top:0">CHEBSEL <span id="aboutVersion"></span></h2><p class="memberMeta">Centre de gestion du Chœur d’Homme de l’Église Baptiste Sel et Lumière.</p><div class="utilityMenu" style="margin-top:12px"><button class="utilityBtn" onclick="closeAboutHub();openHelp()">📘 Manuel de l’application<span>Aide, règles et utilisation générale.</span></button></div></div></div></div>
@@ -308,7 +327,8 @@
 <script src="./js/auth-security.js?v=1200"></script>
 <script src="./js/sync-policy.js?v=1200"></script>
 <script src="./js/report-images.js?v=1210"></script>
-<script src="./js/bootstrap.js?v=1210"></script>
+<script src="./js/institutional-ops.js?v=1300"></script>
+<script src="./js/bootstrap.js?v=1300"></script>
 </body>
 </html>
 <!-- CHEBSEL Brand Palette v1.11.5: Navy + Royal Blue + Gold + White -->
