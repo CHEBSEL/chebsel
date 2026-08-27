@@ -1,0 +1,49 @@
+name: CHEBSEL v1.14.0 Double Closing + Global Monthly Report
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/monthly-governance-1140.js'
+      - 'scripts/v1140_monthly_governance.py'
+      - '.github/workflows/v1140-monthly-governance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.14.0 release patch
+        run: python scripts/v1140_monthly_governance.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/monthly-governance-1140.js
+          node --check js/closing-canonical-1134.js
+          node --check js/institutional-ops.js
+          node --check js/report-images.js
+      - name: Validate release wiring
+        run: |
+          grep -q 'CHEBSEL v1.14.0' index.html
+          grep -q 'monthly-governance-1140.js?v=1400' index.html
+          grep -q 'chebsel-pwa-stable-v1140' sw.js
+          grep -q "'./js/monthly-governance-1140.js'" sw.js
+          grep -q 'CHEBSEL v1.14.0' manifest.webmanifest
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.14.0 double closing and global monthly report'
+          git push
