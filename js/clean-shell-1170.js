@@ -7,19 +7,18 @@
  const allowedCalendarEdit=new Set(['president','secretary']);
 
  function btn(icon,title,fn){return `<button class="cleanNavCard" onclick="${fn}" aria-label="${esc(title)}"><span class="cleanNavIcon">${icon}</span><span class="cleanNavTitle">${esc(title)}</span></button>`}
+ function hideEl(x){if(!x)return;if(x.style.display!=='none')x.style.display='none';if(!x.hidden)x.hidden=true}
+ function showEl(x,display='block'){if(!x)return;if(x.style.display!==display)x.style.display=display;if(x.hidden)x.hidden=false}
 
  function hideLegacyHome(){
   const home=document.querySelector('main.home');if(!home)return;
-  // Preserve only the four intended home areas: overview stats, calendar, monthly dashboard, clean role menu.
   const monthlyPanel=document.getElementById('monthlyDashboard')?.closest('.profilePanel');
   [...home.children].forEach(x=>{
    const keep=x.classList?.contains('stats')||x.id==='calendarHomePanel'||x===monthlyPanel||x.id==='cleanRoleRoot';
-   if(!keep)x.style.display='none';
+   if(!keep)hideEl(x);
   });
-  ['strictRoleArea','roleShellGrid','reportsCenterLaunch','presidentUtilityCards','backupHealth','installCard','syncMessage'].forEach(id=>{
-   const x=document.getElementById(id);if(x){x.style.display='none';x.hidden=true;}
-  });
-  home.querySelectorAll('.hero,.old-tech-panel,.smallnote,.visitorOnlyNote,.treasury-launch-grid').forEach(x=>x.style.display='none');
+  ['strictRoleArea','roleShellGrid','reportsCenterLaunch','presidentUtilityCards','backupHealth','installCard','syncMessage'].forEach(id=>hideEl(document.getElementById(id)));
+  home.querySelectorAll('.hero,.old-tech-panel,.smallnote,.visitorOnlyNote,.treasury-launch-grid').forEach(hideEl);
  }
 
  function ensureCleanRoot(){
@@ -30,7 +29,7 @@
    const dash=document.getElementById('monthlyDashboard')?.closest('.profilePanel');
    if(dash?.parentNode)dash.parentNode.insertBefore(root,dash.nextSibling);else home.appendChild(root);
   }
-  root.style.display='block';root.hidden=false;
+  showEl(root);
   return root
  }
 
@@ -53,22 +52,19 @@
   const r=role();
   root.innerHTML=`<div class="cleanRoleHeader"><h2>${esc(labels[r]||'Visiteur')}</h2></div><div class="cleanRoleGrid">${menuFor(r).map(x=>btn(...x)).join('')}</div>`;
   applyCalendarPermissions(r);
-  if(r==='visitor'){
-   // Visitor can never see member contributions, payments, receipts or finance configuration.
-   document.querySelectorAll('[onclick*="openFinance"],[onclick*="openTreasury"],[onclick*="openVisitorFinance"],#treasuryPaymentHub,#treasuryHub,#treasuryExpensesView,#treasuryReportView').forEach(x=>x.style.display='none');
-  }
+  if(r==='visitor')document.querySelectorAll('[onclick*="openFinance"],[onclick*="openTreasury"],[onclick*="openVisitorFinance"],#treasuryPaymentHub,#treasuryHub,#treasuryExpensesView,#treasuryReportView').forEach(hideEl);
  }
  window.renderCleanRole=renderCleanRole;
 
  function applyCalendarPermissions(r){
   const canEdit=allowedCalendarEdit.has(r),panel=document.getElementById('calendarHomePanel');
   if(panel){
-   panel.style.display='block';
+   showEl(panel);
    panel.querySelectorAll('button').forEach(b=>{
     const oc=b.getAttribute('onclick')||'',txt=(b.textContent||'').toLowerCase();
     const editish=/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|créer|creer/.test(oc+' '+txt);
-    if(editish)b.style.display=canEdit?'':'none';
-    if(oc.includes('openCalendar')&&!editish)b.style.display='';
+    if(editish){if(canEdit)showEl(b,'');else hideEl(b)}
+    if(oc.includes('openCalendar')&&!editish)showEl(b,'');
    });
   }
  }
@@ -76,22 +72,15 @@
   if(allowedCalendarEdit.has(role()))return;
   document.querySelectorAll('#calendarView button,[data-calendar-action]').forEach(b=>{
    const oc=b.getAttribute('onclick')||'',txt=(b.textContent||'').toLowerCase();
-   if(/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|add/.test(oc+' '+txt))b.style.display='none';
+   if(/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|add/.test(oc+' '+txt))hideEl(b);
   });
  }
-
- function enforceExclusiveShell(){
-  hideLegacyHome();
-  const root=document.getElementById('cleanRoleRoot');if(root){root.style.display='block';root.hidden=false;}
-  const strict=document.getElementById('strictRoleArea');if(strict){strict.style.display='none';strict.hidden=true;}
-  const old=document.getElementById('roleShellGrid');if(old){old.style.display='none';old.hidden=true;}
-  guardCalendarMutation();
- }
+ function enforceExclusiveShell(){hideLegacyHome();showEl(document.getElementById('cleanRoleRoot'));hideEl(document.getElementById('strictRoleArea'));hideEl(document.getElementById('roleShellGrid'));guardCalendarMutation()}
 
  document.addEventListener('DOMContentLoaded',()=>{renderCleanRole();setTimeout(renderCleanRole,250)});
  window.addEventListener('load',()=>setTimeout(renderCleanRole,150));
  const obs=new MutationObserver(()=>enforceExclusiveShell());
- document.addEventListener('DOMContentLoaded',()=>obs.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class','hidden']}));
+ document.addEventListener('DOMContentLoaded',()=>obs.observe(document.body,{subtree:true,childList:true}));
 
  if(typeof window.refreshHome==='function'&&!window.__cleanShellRefreshWrapped){
   window.__cleanShellRefreshWrapped=true;const base=window.refreshHome;
