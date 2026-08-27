@@ -1,0 +1,45 @@
+name: CHEBSEL v1.14.1 Durable Deletion
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/deletion-1141.js'
+      - 'scripts/v1141_durable_deletion.py'
+      - '.github/workflows/v1141-durable-deletion.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.14.1 release patch
+        run: python scripts/v1141_durable_deletion.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/deletion-1141.js
+          node --check js/legacy-core.js
+          node --check js/sync-policy.js
+      - name: Validate release wiring
+        run: |
+          grep -q 'CHEBSEL v1.14.1' index.html
+          grep -q 'deletion-1141.js?v=1410' index.html
+          grep -q 'chebsel-pwa-stable-v1141' sw.js
+          grep -q "'./js/deletion-1141.js'" sw.js
+          grep -q 'CHEBSEL v1.14.1' manifest.webmanifest
+      - name: Commit release
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.14.1 durable deletions'
+          git push
