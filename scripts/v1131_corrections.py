@@ -8,14 +8,13 @@ s=s.replace('<span class="versionChip">v1.13.0</span>','<span class="versionChip
 s=s.replace('./css/app.css?v=1300','./css/app.css?v=1310')
 # Remove payment justificatif image upload from the payment form, permanently.
 s=re.sub(r'\s*<div class="wide"><label>Photo / reçu justificatif \(optionnel\)</label><input type="file" id="payEvidenceFile"[^>]*><div class="memberMeta">JPEG ou PNG.*?</div></div>','',s,flags=re.S)
-# Load corrective integration after institutional/report modules.
+# Load corrective integration after whatever current institutional-ops cache-bust is present.
 if './js/corrections-1131.js?v=1310' not in s:
-    anchor='<script src="./js/institutional-ops.js?v=1300"></script>'
-    if anchor not in s:
-        anchor='<script src="./js/institutional-ops.js?v=1300h1"></script>'
-    if anchor not in s:
+    m=re.search(r'<script src="\./js/institutional-ops\.js\?v=[^"]+"></script>',s)
+    if not m:
         raise SystemExit('institutional-ops script anchor not found')
-    s=s.replace(anchor,anchor+'\n<script src="./js/corrections-1131.js?v=1310"></script>')
+    anchor=m.group(0)
+    s=s.replace(anchor,anchor+'\n<script src="./js/corrections-1131.js?v=1310"></script>',1)
 idx.write_text(s,encoding='utf-8')
 
 css=root/'css/app.css'
