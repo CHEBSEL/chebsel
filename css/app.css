@@ -270,3 +270,11 @@ body{font-family:Arial,sans-serif;padding:24px}table{width:100%;border-collapse:
 .alertRow{display:grid;grid-template-columns:12px 1fr;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid var(--line)}.alertRow:last-child{border-bottom:0}.alertDot{width:9px;height:9px;border-radius:50%;margin-top:5px;background:var(--primary)}.alert-warn .alertDot{background:var(--amber)}.alert-critical .alertDot{background:var(--red)}.alert-read{opacity:.58}
 .closingStatus{padding:10px 12px;border-radius:12px;margin-bottom:12px;font-size:.78rem;letter-spacing:.02em}.closing-draft{background:var(--chip)}.closing-prepared{background:#fff4d8;color:#7b5100}.closing-approved{background:#e6f6ed;color:#11633d}.closing-reopened{background:#fee4e2;color:#9c1c13}html[data-theme="dark"] .closing-prepared{background:#372b0b;color:#ffd36d}html[data-theme="dark"] .closing-approved{background:#103422;color:#8ff0b5}html[data-theme="dark"] .closing-reopened{background:#3b1717;color:#ffb4ad}.institutionalMeta{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .archiveRow,.conflictRow{padding:12px 2px;border-bottom:1px solid var(--line)}.archiveRow:last-child,.conflictRow:last-child{border-bottom:0}.conflictHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.conflictHead span{font-size:.72rem;color:var(--muted)}
+
+
+/* CHEBSEL v1.13.1 corrective navigation */
+.viewerbar .back,.floating-back{display:none!important}
+#globalBackBtn{position:fixed!important;left:18px!important;bottom:18px!important;right:auto!important;top:auto!important;width:54px!important;height:54px!important;border-radius:999px!important;z-index:9000!important;background:var(--brand-navy)!important;border:1px solid rgba(197,157,63,.55)!important;box-shadow:0 14px 34px rgba(0,0,0,.34)!important;color:#fff!important;font-size:1.35rem!important;display:none;place-items:center!important}
+#globalBackBtn:hover{transform:translateY(-1px);background:var(--brand-navy-2)!important}
+#globalBackBtn:active{transform:translateY(0)}
+@media(max-width:520px){#globalBackBtn{left:12px!important;bottom:14px!important;width:50px!important;height:50px!important}}

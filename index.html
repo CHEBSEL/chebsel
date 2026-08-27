@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220" id="themeMeta">
-<title>CHEBSEL v1.13.0 — Centre de gestion</title>
+<title>CHEBSEL v1.13.1 — Centre de gestion</title>
 
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CHEBSEL">
 
-<link rel="stylesheet" href="./css/app.css?v=1300">
+<link rel="stylesheet" href="./css/app.css?v=1310">
 </head>
 <body>
 <div class="shell">
@@ -26,7 +26,7 @@
     <div class="brandsub">Centre de gestion • Membres • Appel • Cotisations & Amendes</div>
    </div>
   </div>
-  <div class="topactions"><span class="versionChip">v1.13.0</span>
+  <div class="topactions"><span class="versionChip">v1.13.1</span>
    <button class="topbtn notificationBtn" id="notificationBtn" onclick="openNotifications()" title="Alertes CHEBSEL" aria-label="Alertes" style="display:none"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notificationBadge" id="notificationBadge" style="display:none">0</span></button>
    <button class="topbtn" id="installBtn" onclick="installPWA()" title="Installer CHEBSEL" aria-label="Installer CHEBSEL" style="display:none">📲</button>
    <button class="topbtn" id="authBtn" onclick="openLoginModal()" title="Connexion / sécurité" aria-label="Connexion">🔐</button>
@@ -163,7 +163,6 @@
   <div><label>Montant reçu (HTG)</label><input type="number" min="0" step="0.01" id="payAmount"></div>
   <div><label>Date</label><input type="date" id="payDate"></div>
   <div class="wide"><label>Mode / référence</label><input id="payRef" placeholder="Espèces, transfert, référence..."></div>
-  <div class="wide"><label>Photo / reçu justificatif (optionnel)</label><input type="file" id="payEvidenceFile" accept="image/jpeg,image/png"><div class="memberMeta">JPEG ou PNG • 5 Mo maximum. Le paiement reste valide même si l’image ne peut pas être envoyée.</div></div>
  </div>
  <p class="small">Le paiement sera affecté automatiquement aux dettes les plus anciennes du membre.</p>
  <div class="modalActions"><button class="save" onclick="applySmartPayment()">Enregistrer</button><button class="cancel" onclick="closePaymentModal()">Annuler</button></div>
@@ -328,6 +327,7 @@
 <script src="./js/sync-policy.js?v=1200"></script>
 <script src="./js/report-images.js?v=1210"></script>
 <script src="./js/institutional-ops.js?v=1301"></script>
+<script src="./js/corrections-1131.js?v=1310"></script>
 <script src="./js/bootstrap.js?v=1300"></script>
 </body>
 </html>
