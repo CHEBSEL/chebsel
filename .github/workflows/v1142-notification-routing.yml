@@ -1,0 +1,46 @@
+name: CHEBSEL v1.14.2 Actionable Notifications
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/notification-routing-1142.js'
+      - 'scripts/v1142_notification_routing.py'
+      - '.github/workflows/v1142-notification-routing.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.14.2 patch
+        run: python scripts/v1142_notification_routing.py
+      - name: Validate JavaScript
+        run: node --check js/notification-routing-1142.js
+      - name: Validate release wiring
+        run: |
+          grep -q 'CHEBSEL v1.14.2' index.html
+          grep -q 'notification-routing-1142.js?v=1420' index.html
+          grep -q 'notification-routing-1142-style' index.html
+          grep -q 'chebsel-pwa-stable-v1142' sw.js
+          grep -q "'./js/notification-routing-1142.js'" sw.js
+          grep -q 'CHEBSEL v1.14.2' manifest.webmanifest
+      - name: Commit release
+        run: |
+          if git diff --quiet; then
+            echo 'No release diff required.'
+            exit 0
+          fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.14.2 actionable notifications'
+          git push
