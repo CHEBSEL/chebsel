@@ -293,3 +293,10 @@ body{font-family:Arial,sans-serif;padding:24px}table{width:100%;border-collapse:
 .alertRow.actionableAlert{position:relative;padding-right:88px;transition:opacity .18s ease,background .18s ease,border-color .18s ease}.alertRow.alert-unread{font-weight:650;border-color:rgba(197,157,63,.65)!important;background:rgba(197,157,63,.08)}.alertRow.alert-read{opacity:.52;background:transparent!important}.alertRow.alert-read .alertRouteHint{opacity:.72}.alertRouteHint{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--brand-gold,#c59d3f)}
 #loginModal button[aria-busy="true"]{opacity:.72;cursor:wait;pointer-events:none}
 @media(max-width:520px){.reportsRoleGrid{grid-template-columns:1fr}.reportHubCard{min-height:96px;padding:14px}.alertRow.actionableAlert{padding-right:72px}.alertRouteHint{right:10px;font-size:11px}}
+
+
+/* CHEBSEL v1.16.1 strict role distribution */
+.strictRoleArea{margin-top:18px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+.strictRoleHead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.strictRoleEyebrow{display:block;font-size:.68rem;letter-spacing:.11em;font-weight:900;color:var(--brand-gold);margin-bottom:3px}.strictRoleHead h2{margin:0;font-size:1.35rem}.strictRoleHead p{margin:5px 0 0;color:var(--muted);font-size:.82rem;line-height:1.45}.strictRoleBadge{display:inline-flex;padding:6px 10px;border:1px solid color-mix(in srgb,var(--brand-gold) 55%,var(--line));border-radius:999px;font-size:.72rem;font-weight:900;color:var(--brand-gold);white-space:nowrap}.strictRoleArea #roleShellGrid{display:grid!important;visibility:visible!important;opacity:1!important}.calendarRoleNote{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+@media(max-width:620px){.strictRoleHead{display:block}.strictRoleBadge{margin-top:9px}.strictRoleArea{padding:12px}}
