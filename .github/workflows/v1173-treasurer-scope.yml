@@ -1,0 +1,52 @@
+name: CHEBSEL v1.17.3 Treasurer Scope
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'js/treasurer-scope-1173.js'
+      - 'js/clean-shell-1170.js'
+      - 'scripts/v1173_treasurer_scope.py'
+      - '.github/workflows/v1173-treasurer-scope.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply v1.17.3 release
+        run: python scripts/v1173_treasurer_scope.py
+      - name: Validate JavaScript
+        run: |
+          node --check js/treasurer-scope-1173.js
+          node --check js/clean-shell-1170.js
+          node --check js/institutional-ops.js
+          node --check js/report-images.js
+      - name: Validate Treasurer workflow
+        run: |
+          grep -q 'CHEBSEL v1.17.3' index.html
+          grep -q 'treasurer-scope-1173.js?v=1730' index.html
+          grep -q 'openTreasurerPaymentHub' js/clean-shell-1170.js
+          grep -q 'openTreasurerReportsHub' js/clean-shell-1170.js
+          grep -q 'openTreasurerExpensesScoped' js/clean-shell-1170.js
+          grep -q 'openTreasurerFinanceHealth' js/clean-shell-1170.js
+          grep -q 'generateTreasurerMonthlyFinancialReport' js/treasurer-scope-1173.js
+          grep -q 'saveTreasurerMonthlyFinancialJPEG' js/treasurer-scope-1173.js
+          grep -q 'modifyTreasurerMonthlyFinancial' js/treasurer-scope-1173.js
+          grep -q 'chebsel-pwa-stable-v1173' sw.js
+      - name: Commit release
+        run: |
+          if git diff --quiet; then echo 'No release diff required.'; exit 0; fi
+          git config user.name 'CHEBSEL'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html manifest.webmanifest sw.js js/bootstrap.js
+          git commit -m 'Release CHEBSEL v1.17.3 strict Treasurer workflow'
+          git push
