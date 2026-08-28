@@ -1,0 +1,7 @@
+import {AppState,updateState} from './app-state.js';
+const KEYS={members:'chebsel_master_members_v1',attendance:'chebsel_attendance_app_v1',finance:'chebsel_finance_app_v1',session:'chebsel_v2_session',settings:'chebsel_v2_settings'};
+function parse(key,fallback){try{const v=JSON.parse(localStorage.getItem(key));return v??fallback}catch{return fallback}}
+export function save(key,value){localStorage.setItem(key,JSON.stringify(value))}
+export function loadLocalData(){const attendanceRaw=parse(KEYS.attendance,{}),financeRaw=parse(KEYS.finance,{});let members=parse(KEYS.members,null);if(!Array.isArray(members)||!members.length){if(Array.isArray(attendanceRaw?.members)&&attendanceRaw.members.length)members=attendanceRaw.members;else if(Array.isArray(financeRaw?.members))members=financeRaw.members;else members=[]}const settings=parse(KEYS.settings,{});updateState('data',{members,attendance:Array.isArray(attendanceRaw?.calls)?attendanceRaw.calls:[],finance:Array.isArray(financeRaw?.entries)?financeRaw.entries:[],settings});return AppState.data}
+export function saveMembersCompatible(list){save(KEYS.members,list);const a=parse(KEYS.attendance,null);if(a&&typeof a==='object'){a.members=list.map(x=>({...x}));save(KEYS.attendance,a)}const f=parse(KEYS.finance,null);if(f&&typeof f==='object'){f.members=list.map(x=>({...x}));save(KEYS.finance,f)}}
+export function loadSession(){return parse(KEYS.session,null)}export function saveSession(session){save(KEYS.session,session)}export function clearSession(){localStorage.removeItem(KEYS.session)}export {KEYS};
