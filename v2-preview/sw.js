@@ -1,0 +1,10 @@
+const APP_VERSION='2.0.0-alpha.2-preview';
+const STATIC_CACHE=`chebsel-v2-preview-static-${APP_VERSION}`;
+const HTML_CACHE=`chebsel-v2-preview-html-${APP_VERSION}`;
+const APP_SHELL=['./','./index.html','./manifest.webmanifest','./css/v2.css','./js/v2/app-state.js','./js/v2/router.js','./js/v2/role-config.js','./js/v2/storage.js','./js/v2/auth.js','./js/v2/updates.js','./js/v2/members.js','./js/v2/app.js','../icons/chebsel-logo.png','../icons/icon-192.png','../icons/icon-512.png','../icons/icon-maskable-512.png'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(STATIC_CACHE).then(c=>c.addAll(APP_SHELL))));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('chebsel-v2-preview-')&&!([STATIC_CACHE,HTML_CACHE].includes(k))).map(k=>caches.delete(k)));await self.clients.claim()})()));
+async function networkFirst(request){const cache=await caches.open(HTML_CACHE);try{const response=await fetch(request,{cache:'no-store'});if(response.ok)cache.put(request,response.clone());return response}catch{return (await cache.match(request))||(await caches.match('./index.html'))}}
+async function cacheFirstRefresh(request){const cache=await caches.open(STATIC_CACHE),cached=await cache.match(request,{ignoreSearch:true}),refresh=fetch(request).then(r=>{if(r.ok)cache.put(request,r.clone());return r}).catch(()=>null);if(cached){void refresh;return cached}return (await refresh)||Response.error()}
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin!==self.location.origin)return;if(event.request.mode==='navigate'||url.pathname.endsWith('.html'))event.respondWith(networkFirst(event.request));else event.respondWith(cacheFirstRefresh(event.request))});
+self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();if(event.data?.type==='GET_VERSION')event.ports?.[0]?.postMessage({version:APP_VERSION})});
