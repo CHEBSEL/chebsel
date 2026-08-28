@@ -1,4 +1,4 @@
-const APP_VERSION='2.0.0-alpha.12';
+const APP_VERSION='2.0.0-alpha.13';
 const STATIC_CACHE=`chebsel-v2-static-${APP_VERSION}`;
 const HTML_CACHE=`chebsel-v2-html-${APP_VERSION}`;
 const APP_SHELL=[
