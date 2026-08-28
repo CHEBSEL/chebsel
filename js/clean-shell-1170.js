@@ -1,6 +1,18 @@
-/* CHEBSEL v1.17.18 — stable clean role shell; no global DOM observer */
+/* CHEBSEL v1.17.19 — stable clean role shell + boot gate; no global DOM observer */
 'use strict';
 (function(){
+ const BOOT_STYLE_ID='chebsel-boot-gate-style';
+ function ensureBootGate(){
+  try{
+   document.documentElement.classList.add('chebsel-booting');
+   let st=document.getElementById(BOOT_STYLE_ID);
+   if(!st){st=document.createElement('style');st.id=BOOT_STYLE_ID;st.textContent=`html.chebsel-booting body{overflow:hidden!important}html.chebsel-booting body>.shell,html.chebsel-booting body>.membersView,html.chebsel-booting body>.viewer,html.chebsel-booting body>.modal{visibility:hidden!important}html.chebsel-booting body:before{content:"CHEBSEL";position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:#0d1117;color:#fff;font:800 30px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.08em}html.chebsel-booting body:after{content:"Chargement…";position:fixed;left:0;right:0;top:calc(50% + 44px);z-index:2147483647;text-align:center;color:#9fb3c8;font:600 14px/1.2 system-ui,-apple-system,Segoe UI,sans-serif}`;(document.head||document.documentElement).appendChild(st)}
+  }catch(e){}
+ }
+ function releaseBootGate(){
+  try{document.documentElement.classList.remove('chebsel-booting');document.documentElement.classList.add('chebsel-ready')}catch(e){}
+ }
+ ensureBootGate();
  const role=()=>{try{return String(currentRoleView?.()||'visitor').toLowerCase()}catch(e){return 'visitor'}};
  const esc=s=>{try{return escapeHtml(String(s??''))}catch(e){return String(s??'')}};
  const labels={president:'Président',secretary:'Secrétaire',treasurer:'Trésorier',visitor:'Visiteur'};
@@ -32,19 +44,22 @@
   panel.querySelectorAll('button').forEach(b=>{const oc=b.getAttribute('onclick')||'',txt=(b.textContent||'').toLowerCase(),editish=/edit|delete|remove|cancel|modifier|supprimer|annuler|ajouter|créer|creer/.test(oc+' '+txt);if(editish&&!canEdit)hideEl(b);else showEl(b,'')});
  }
  function renderCleanRole(){
-  const root=ensureCleanRoot();if(!root)return;hideLegacyHome();const r=role();
+  const root=ensureCleanRoot();if(!root)return false;hideLegacyHome();const r=role();
   root.innerHTML=`<div class="cleanRoleHeader"><h2>${esc(labels[r]||'Visiteur')}</h2></div><div class="cleanRoleGrid">${menuFor(r).map(x=>btn(...x)).join('')}</div>`;
   applyCalendarPermissions(r);
   if(r==='visitor')document.querySelectorAll('[onclick*="openFinance"],[onclick*="openTreasury"],[onclick*="openVisitorFinance"],#treasuryPaymentHub,#treasuryHub,#treasuryExpensesView,#treasuryReportView').forEach(hideEl);
+  requestAnimationFrame(()=>requestAnimationFrame(releaseBootGate));
+  return true;
  }
  window.renderCleanRole=renderCleanRole;
- function scheduleRender(){requestAnimationFrame(()=>{try{renderCleanRole()}catch(e){console.warn('CHEBSEL shell render',e)}})}
+ function scheduleRender(){requestAnimationFrame(()=>{try{if(!renderCleanRole())setTimeout(scheduleRender,40)}catch(e){console.warn('CHEBSEL shell render',e);setTimeout(scheduleRender,80)}})}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleRender,{once:true});else scheduleRender();
- window.addEventListener('load',scheduleRender,{once:true});
+ window.addEventListener('load',()=>{if(!document.documentElement.classList.contains('chebsel-ready'))scheduleRender()},{once:true});
  window.addEventListener('storage',e=>{if(!e.key||/session|role|auth/i.test(e.key))scheduleRender()});
- // Refresh Home may be called frequently; do not rebuild the shell every time unless role changed.
  if(typeof window.refreshHome==='function'&&!window.__cleanShellStableRefresh){
   window.__cleanShellStableRefresh=true;const base=window.refreshHome;let lastRole='';
   window.refreshHome=function(){const out=base.apply(this,arguments),r=role();if(r!==lastRole||!document.getElementById('cleanRoleRoot')){lastRole=r;scheduleRender()}return out};
  }
+ // Failsafe: never leave the user on a permanent splash if another module errors.
+ setTimeout(()=>{if(document.documentElement.classList.contains('chebsel-booting')){try{renderCleanRole()}catch(e){};setTimeout(releaseBootGate,250)}},3500);
 })();
