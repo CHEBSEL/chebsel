@@ -1,8 +1,7 @@
 import {AppState,updateState} from './app-state.js';
-import {navigate,back} from './router.js';
+import {navigate} from './router.js';
 import {saveMembersCompatible} from './storage.js';
 
-const $=(s,r=document)=>r.querySelector(s);
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`m_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
@@ -22,14 +21,14 @@ function normalizeMember(m={}){
     category:m.category??'Membre',
     group:m.group??'Chœur d’Homme',
     phone:m.phone??m.telephone??'',
-    contributionStartMonth:m.contributionStartMonth??String(m.joinedAt||'').slice(0,7)??'',
+    contributionStartMonth:m.contributionStartMonth??String(m.joinedAt||'').slice(0,7),
     active:m.active!==false,
     note:m.note??m.notes??''
   };
 }
 
 export function normalizeAllMembers(list){return (Array.isArray(list)?list:[]).map(normalizeMember)}
-export function canEditMembers(){return ['president','secretary'].includes(AppState.role)}
+export function canEditMembers(){return ['president','secretary','treasurer'].includes(AppState.role)}
 
 function attendanceStats(mid){
   const calls=Array.isArray(AppState.data.attendance)?AppState.data.attendance:[];
@@ -119,7 +118,7 @@ function editorDialog(){
   let d=document.getElementById('memberEditorV2');if(d)return d;
   d=document.createElement('dialog');d.id='memberEditorV2';d.className='member-dialog';d.innerHTML=`<form method="dialog" id="memberFormV2"><div class="dialog-head"><div><h2 id="memberDialogTitleV2">Membre</h2><p class="muted">Les données restent compatibles avec CHEBSEL v1.</p></div><button type="button" class="icon-close" data-close>×</button></div><input type="hidden" name="id"><div class="form-grid"><label>N° / Matricule<input name="no"></label><label>Prénom(s)<input name="first"></label><label>Nom<input name="last"></label><label>Sexe<select name="sex"><option value="">Non précisé</option><option>Homme</option><option>Femme</option></select></label><label>Fonction<input name="function"></label><label>Catégorie<input name="category" value="Membre"></label><label>Groupe<input name="group" value="Chœur d’Homme"></label><label>Téléphone<input name="phone" inputmode="tel"></label><label>Mois début cotisation<input name="contributionStartMonth" type="month"></label><label>Statut<select name="active"><option value="true">Actif</option><option value="false">Inactif</option></select></label><label class="wide">Observation<textarea name="note"></textarea></label></div><div class="dialog-actions"><button type="button" class="btn secondary" data-close>Annuler</button><button type="submit" class="btn primary">Enregistrer</button></div></form>`;
   document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());
-  d.querySelector('form').addEventListener('submit',e=>{e.preventDefault();saveEditor(d);});return d;
+  d.querySelector('form').addEventListener('submit',e=>{e.preventDefault();saveEditor(d)});return d;
 }
 
 export function openMemberEditor(id=''){
