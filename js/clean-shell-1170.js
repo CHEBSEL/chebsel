@@ -1,4 +1,4 @@
-/* CHEBSEL v1.17.1 — clean role shell: one menu, no duplicates */
+/* CHEBSEL v1.17.3 — clean role shell: one menu, no duplicates */
 'use strict';
 (function(){
  const role=()=>{try{return String(currentRoleView?.()||'visitor').toLowerCase()}catch(e){return 'visitor'}};
@@ -12,7 +12,7 @@
  function ensureCleanRoot(){const home=document.querySelector('main.home');if(!home)return null;let root=document.getElementById('cleanRoleRoot');if(!root){root=document.createElement('section');root.id='cleanRoleRoot';root.className='cleanRoleRoot';const dash=document.getElementById('monthlyDashboard')?.closest('.profilePanel');if(dash?.parentNode)dash.parentNode.insertBefore(root,dash.nextSibling);else home.appendChild(root)}showEl(root);return root}
  function menuFor(r){
   if(r==='secretary')return [['👥','Membres','openMembers()'],['✅','Fiche d’Appel','openSecretaryCallHub()'],['🕘','Historique','openAttendanceHistory()'],['📊','Rapport ponctualité','openSecretaryReportsHub()'],['📋','Débiteurs','openDebtors()'],['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']];
-  if(r==='treasurer')return [['👥','Membres','openMembers()'],['💰','Paiements','openTreasuryPaymentHub()'],['📋','Débiteurs','openDebtors()'],['💸','Dépenses','openTreasuryExpenses()'],['📈','Historique / Histogramme','openFinanceHistory()'],['📊','Rapport financier','openReportsCenter()'],['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']];
+  if(r==='treasurer')return [['👥','Membres','openMembers()'],['💰','Paiements','openTreasurerPaymentHub()'],['📋','Débiteurs','openDebtors()'],['💸','Dépenses','openTreasurerExpensesScoped()'],['📈','Historique / Histogramme','openTreasurerFinanceHealth()'],['📊','Rapport financier','openTreasurerReportsHub()'],['🗂️','Sauvegarde & Archives','openScopedArchiveHub()']];
   if(r==='president')return [['👥','Membres','openMembers()'],['🗃️','Secrétariat','openSecretariatHub()'],['💼','Trésorerie','openTreasuryHub()'],['📚','Rapports','openReportsCenter()'],['🗂️','Archive générale','openScopedArchiveHub()'],['⚖️','Journal des conflits','openConflictJournal()'],['⚙️','Paramètres','openSettingsHub()'],['🔒','Confidentialités','openPrivacyHub()'],['ℹ️','À propos','openAboutHub()']];
   return [['👥','Membres','openVisitorMembers()'],['📋','Débiteurs','openDebtors()']];
  }
