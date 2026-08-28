@@ -1,8 +1,8 @@
-const APP_VERSION='2.0.0-alpha.2';
+const APP_VERSION='2.0.0-alpha.3';
 const STATIC_CACHE=`chebsel-v2-static-${APP_VERSION}`;
 const HTML_CACHE=`chebsel-v2-html-${APP_VERSION}`;
 const APP_SHELL=[
-  './','./index.html','./manifest.webmanifest','./css/v2.css',
+  './','./index.html','./manifest.webmanifest','./css/v2.css','./css/attendance-v2.css',
   './js/v2/app-state.js','./js/v2/router.js','./js/v2/role-config.js','./js/v2/storage.js','./js/v2/auth.js','./js/v2/updates.js','./js/v2/members.js','./js/v2/app.js',
   './icons/chebsel-logo.png','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'
 ];
