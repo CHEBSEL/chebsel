@@ -1,4 +1,4 @@
-const CACHE_NAME='chebsel-pwa-stable-v1178';
+const CACHE_NAME='chebsel-pwa-stable-v1179';
 const APP_SHELL=[
  './',
  './index.html',
@@ -23,6 +23,7 @@ const APP_SHELL=[
  './js/president-scope-1176.js',
  './js/president-scope-1178.js',
  './js/update-manager-1177.js',
+ './js/root-back-1179.js',
  './js/strict-role-ui-1161.js',
  './js/auth-security.js',
  './js/legacy-core.js',
@@ -34,6 +35,6 @@ const APP_SHELL=[
  './icons/icon-maskable-512.png'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));self.skipWaiting();});
-self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});clients.forEach(c=>c.postMessage({type:'CHEBSEL_UPDATE_ACTIVE',version:'1.17.7'}));})());});
+self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});clients.forEach(c=>c.postMessage({type:'CHEBSEL_UPDATE_ACTIVE',version:'1.17.9'}));})());});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));return response;}).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))));});
 self.addEventListener('message',event=>{if(event.data&&event.data.type==='SKIP_WAITING')self.skipWaiting();});
