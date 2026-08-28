@@ -1,6 +1,6 @@
 import {AppState,setState} from './app-state.js';
 
-let initialized=false;
+let initialized=false,renderToken=0;
 const routes=new Map();
 
 export function registerRoute(id,renderer){routes.set(id,renderer)}
@@ -11,7 +11,7 @@ export function navigate(id,{replace=false}={}){
   if(replace)stack[stack.length-1]=id;
   else if(stack[stack.length-1]!==id)stack.push(id);
   setState({route:id,navigationStack:stack});
-  renderCurrent();
+  void renderCurrent();
 }
 
 export function back(){
@@ -20,31 +20,39 @@ export function back(){
   stack.pop();
   const route=stack[stack.length-1]||'home';
   setState({route,navigationStack:stack});
-  renderCurrent();
+  void renderCurrent();
   return true;
 }
 
 export function resetTo(id='home'){
   if(!routes.has(id))throw new Error(`Route inconnue: ${id}`);
   setState({route:id,navigationStack:[id]});
-  renderCurrent();
+  void renderCurrent();
 }
 
-export function renderCurrent(){
-  const outlet=document.getElementById('appOutlet');
-  if(!outlet)return;
-  const renderer=routes.get(AppState.route)||routes.get('home');
+export async function renderCurrent(){
+  const outlet=document.getElementById('appOutlet');if(!outlet)return;
+  const token=++renderToken,route=AppState.route;
+  const renderer=routes.get(route)||routes.get('home');
   outlet.replaceChildren();
-  const node=renderer?.(AppState);
-  if(node instanceof Node)outlet.appendChild(node);
-  else if(typeof node==='string')outlet.innerHTML=node;
-  window.scrollTo({top:0,behavior:'instant'});
+  const loading=document.createElement('div');loading.className='panel route-loading';loading.textContent='Chargement…';outlet.append(loading);
+  try{
+    const node=await renderer?.(AppState);
+    if(token!==renderToken||route!==AppState.route)return;
+    outlet.replaceChildren();
+    if(node instanceof Node)outlet.appendChild(node);
+    else if(typeof node==='string')outlet.innerHTML=node;
+    window.scrollTo({top:0,behavior:'instant'});
+  }catch(error){
+    if(token!==renderToken)return;
+    console.error('CHEBSEL route render',route,error);outlet.replaceChildren();
+    const box=document.createElement('div');box.className='panel';box.textContent='Erreur lors du chargement de cet écran.';outlet.append(box);
+  }
 }
 
 export function initRouter(){
   if(initialized)return;initialized=true;
-  const backBtn=document.getElementById('globalBackBtn');
-  backBtn?.addEventListener('click',e=>{e.preventDefault();back()});
+  document.getElementById('globalBackBtn')?.addEventListener('click',e=>{e.preventDefault();back()});
   window.addEventListener('popstate',()=>{
     if(AppState.navigationStack.length>1)back();
     else history.pushState({chebsel:true},'',location.href);
