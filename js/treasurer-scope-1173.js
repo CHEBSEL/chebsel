@@ -1,4 +1,4 @@
-/* CHEBSEL v1.17.3 — strict Treasurer scope, financial monthly document, health chart, contextual back */
+/* CHEBSEL v1.17.4 — Treasurer UX hotfix: reports, scoped finance, health chart, contextual back */
 'use strict';
 (function(){
  const role=()=>{try{return String(currentRoleView?.()||'').toLowerCase()}catch(e){return ''}};
@@ -7,6 +7,8 @@
  let financeScope=null;
  let monthlyApprovedRow=null;
  let treasurerBackTarget=null;
+ let iframeScopeObserver=null;
+ let iframeScopeTimer=null;
 
  function ensureHub(id,title){let v=document.getElementById(id);if(v)return v;v=document.createElement('div');v.className='membersView';v.id=id;v.innerHTML=`<div class="viewerbar"><div class="viewtitle"><b>${esc(title)}</b></div></div><div class="membersBody"><div class="profilePanel"><div class="utilityMenu" id="${id}Menu"></div></div></div>`;document.body.appendChild(v);return v}
  function item(icon,title,fn){return `<button class="utilityBtn" onclick="${fn}">${icon} ${esc(title)}</button>`}
@@ -19,28 +21,72 @@
   m.innerHTML=item('💵','Saisir',"closeTreasurerHub('treasurerPaymentHub1173');openTreasurerFinanceOnly('entry')")+item('⚙️','Paramètres',"closeTreasurerHub('treasurerPaymentHub1173');openTreasurerFinanceOnly('settings')");
   v.classList.add('open');
  };
+
  window.openTreasurerFinanceOnly=function(mode){
   if(role()!=='treasurer')return openFinance(mode);
-  financeScope=mode==='settings'?'settings':'entry';treasurerBackTarget='paymentHub';openFinance(financeScope);
-  const frame=document.getElementById('appFrame');if(frame){frame.addEventListener('load',applyFinanceScope,{once:true});setTimeout(applyFinanceScope,140)}
+  financeScope=mode==='settings'?'settings':'entry';treasurerBackTarget='paymentHub';
+  openFinance(financeScope);
+  const frame=document.getElementById('appFrame');
+  if(frame){
+   frame.addEventListener('load',()=>installFinanceScope(),{once:true});
+   [80,180,350,700].forEach(ms=>setTimeout(installFinanceScope,ms));
+  }
  };
  function norm(s){return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
  function applyFinanceScope(){
-  if(role()!=='treasurer'||!financeScope)return;const frame=document.getElementById('appFrame');let d;try{d=frame?.contentDocument}catch(e){return}if(!d)return;
-  const allowed=financeScope==='entry'?['saisir']:['parametre','parametres'];
+  if(role()!=='treasurer'||!financeScope)return;
+  const frame=document.getElementById('appFrame');let d,w;
+  try{d=frame?.contentDocument;w=frame?.contentWindow}catch(e){return}if(!d)return;
+  const keepEntry=financeScope==='entry';
+  const allowed=keepEntry?['saisir']:['parametre','parametres'];
   const names=['accueil','saisir','mois','historique','rapport','rapports','sauvegarde','sauvegardes','parametre','parametres'];
-  d.querySelectorAll('button,a,[role="tab"]').forEach(el=>{const t=norm(el.textContent);if(!t)return;if(names.some(x=>t===x||t.startsWith(x+' ')))el.style.display=allowed.some(x=>t===x||t.startsWith(x+' '))?'':'none'});
-  d.querySelectorAll('[data-view],[data-page],[data-section]').forEach(el=>{const key=norm(el.getAttribute('data-view')||el.getAttribute('data-page')||el.getAttribute('data-section'));if(!key)return;if(['home','accueil','entry','saisir','month','mois','history','historique','reports','rapport','rapports','backup','sauvegarde','settings','parametres'].includes(key)){const keep=financeScope==='entry'?['entry','saisir'].includes(key):['settings','parametres'].includes(key);if(!keep)el.style.display='none'}});
+  const nav=d.querySelector('#nav,.nav,[role="tablist"]');
+  (nav?nav.querySelectorAll('button,a,[role="tab"]'):d.querySelectorAll('button,a,[role="tab"]')).forEach(el=>{
+   const t=norm(el.textContent);if(!t)return;
+   if(names.some(x=>t===x||t.startsWith(x+' ')))el.style.setProperty('display',allowed.some(x=>t===x||t.startsWith(x+' '))?'':'none','important');
+  });
+  d.querySelectorAll('[data-view],[data-page],[data-section]').forEach(el=>{
+   const key=norm(el.getAttribute('data-view')||el.getAttribute('data-page')||el.getAttribute('data-section'));if(!key)return;
+   if(['home','dashboard','accueil','entry','saisir','month','mois','history','historique','reports','rapport','rapports','backup','sauvegarde','settings','parametre','parametres'].includes(key)){
+    const keep=keepEntry?['entry','saisir'].includes(key):['settings','parametre','parametres'].includes(key);
+    if(!keep)el.style.setProperty('display','none','important');
+   }
+  });
+  try{if(typeof w?.goPage==='function')w.goPage(keepEntry?'entry':'settings')}catch(e){}
+ }
+ function installFinanceScope(){
+  applyFinanceScope();
+  const frame=document.getElementById('appFrame');let d;try{d=frame?.contentDocument}catch(e){return}if(!d?.body)return;
+  try{iframeScopeObserver?.disconnect()}catch(e){}
+  iframeScopeObserver=new MutationObserver(()=>applyFinanceScope());
+  iframeScopeObserver.observe(d.body,{subtree:true,childList:true,attributes:false});
+  clearInterval(iframeScopeTimer);let n=0;iframeScopeTimer=setInterval(()=>{applyFinanceScope();if(++n>12)clearInterval(iframeScopeTimer)},150);
  }
 
  window.openTreasurerReportsHub=function(){
   if(role()!=='treasurer'){if(typeof openReportsCenter==='function')return openReportsCenter();return}
   treasurerBackTarget=null;const v=ensureHub('treasurerReportsHub1173','Rapport financier'),m=document.getElementById('treasurerReportsHub1173Menu');
-  m.innerHTML=item('📅','Rapport mensuel financier',"closeTreasurerHub('treasurerReportsHub1173');openTreasurerMonthlyFinancial()")+item('📊','Rapport financier — période libre',"closeTreasurerHub('treasurerReportsHub1173');openTreasurerFreeFinancial()");v.classList.add('open')
+  m.innerHTML=item('📅','Rapport mensuel financier',"closeTreasurerHub('treasurerReportsHub1173');openTreasurerMonthlyFinancial()")+item('📊','Rapport financier — période libre',"closeTreasurerHub('treasurerReportsHub1173');openTreasurerFreeFinancial()");
+  v.classList.add('open');
  };
- window.openTreasurerMonthlyFinancial=function(){if(role()!=='treasurer')return openMonthlyClose();treasurerBackTarget='reportsHub';monthlyApprovedRow=null;openMonthlyClose();setTimeout(refreshTreasurerMonthlyTools,180)};
- window.openTreasurerFreeFinancial=function(){if(role()!=='treasurer')return openTreasuryReport();treasurerBackTarget='reportsHub';const v=document.getElementById('treasuryReportView');if(v){v.classList.add('open');try{renderTreasuryReport?.()}catch(e){}}else openTreasuryReport()};
- window.openTreasurerExpensesScoped=function(){if(role()!=='treasurer')return openTreasuryExpenses();treasurerBackTarget=null;const v=document.getElementById('treasuryExpensesView');if(v){v.classList.add('open');try{renderTreasuryExpenses?.()}catch(e){}}else openTreasuryExpenses()};
+ window.openTreasurerMonthlyFinancial=function(){
+  if(role()!=='treasurer')return openMonthlyClose();
+  treasurerBackTarget='reportsHub';monthlyApprovedRow=null;
+  if(typeof openMonthlyClose==='function')openMonthlyClose();
+  setTimeout(refreshTreasurerMonthlyTools,100);setTimeout(refreshTreasurerMonthlyTools,300);
+ };
+ window.openTreasurerFreeFinancial=function(){
+  if(role()!=='treasurer')return openTreasuryReport();
+  treasurerBackTarget='reportsHub';
+  try{if(typeof openTreasuryReport==='function')openTreasuryReport();else document.getElementById('treasuryReportView')?.classList.add('open')}catch(e){document.getElementById('treasuryReportView')?.classList.add('open')}
+  setTimeout(()=>{try{renderTreasuryReport?.()}catch(e){}},80);
+ };
+ window.openTreasurerExpensesScoped=function(){
+  if(role()!=='treasurer')return openTreasuryExpenses();
+  treasurerBackTarget='expensesHome';
+  try{if(typeof openTreasuryExpenses==='function')openTreasuryExpenses();else document.getElementById('treasuryExpensesView')?.classList.add('open')}catch(e){document.getElementById('treasuryExpensesView')?.classList.add('open')}
+  setTimeout(()=>{try{renderTreasuryExpenses?.()}catch(e){}},80);
+ };
 
  async function cloudCtx(){const c=await getCloudClient(),p=await getCloudProfile(),org=p?.organization_id||p?.org_id;if(!c||!org)throw new Error('Session CHEBSEL Cloud incomplète.');return {c,org}}
  async function closingRow(month){const {c,org}=await cloudCtx(),q=await c.from('monthly_closings').select('*').eq('organization_id',org).eq('month_reference',month).maybeSingle();if(q.error)throw q.error;return q.data||null}
@@ -48,27 +94,48 @@
  function fmtMonth(month){try{return new Date(month+'-01T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}catch(e){return month}}
  function ensureMonthlyPanel(){const view=document.getElementById('monthlyView'),body=view?.querySelector('.membersBody')||view;if(!body)return null;let p=document.getElementById('treasurerMonthlyFinancialDocument');if(!p){p=document.createElement('div');p.className='profilePanel';p.id='treasurerMonthlyFinancialDocument';p.style.display='none';body.appendChild(p)}return p}
  function monthlyHTML(row){const s=row?.snapshot||{};return `<div class="profileTitle"><div><h2>Rapport mensuel financier CHEBSEL</h2><div class="memberMeta">${esc(fmtMonth(row.month_reference))} • Snapshot financier validé</div></div></div><div class="treasurySummary"><div class="mini"><b>${moneyX(s.due)}</b><span>Dû</span></div><div class="mini"><b>${moneyX(s.paid)}</b><span>Payé</span></div><div class="mini"><b>${moneyX(s.balance)}</b><span>Créances</span></div><div class="mini"><b>${moneyX(s.cashIn)}</b><span>Entrées caisse</span></div><div class="mini"><b>${moneyX(s.expenses)}</b><span>Dépenses</span></div><div class="mini"><b>${moneyX(s.net)}</b><span>Solde net</span></div></div><div class="memberMeta" style="margin-top:14px">Préparé : ${row.prepared_at?new Date(row.prepared_at).toLocaleString('fr-FR'):'—'} • Validé : ${row.approved_at?new Date(row.approved_at).toLocaleString('fr-FR'):'—'}</div>`}
- window.generateTreasurerMonthlyFinancialReport=async function(){if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);try{const row=await closingRow(month);if(!row||row.status!=='approved'){alert('Rapò mansyèl finansye a dwe valide pa Prezidan an anvan génération.');return}monthlyApprovedRow=row;const p=ensureMonthlyPanel();p.innerHTML=monthlyHTML(row);p.style.display='';try{if(typeof registerChebselArchive==='function'){const b=monthBounds(month);await registerChebselArchive('financial_report',b.from,b.to,`Rapport_mensuel_financier_CHEBSEL_${month}`,{month,monthly:true,status:'approved'})}}catch(e){};await refreshTreasurerMonthlyTools()}catch(e){alert('Génération impossible : '+(e?.message||e))}};
- window.saveTreasurerMonthlyFinancialJPEG=async function(){if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);try{if(!monthlyApprovedRow||monthlyApprovedRow.month_reference!==month)monthlyApprovedRow=await closingRow(month);if(!monthlyApprovedRow||monthlyApprovedRow.status!=='approved'){alert('Se sèlman yon rapò valide ki ka anrejistre an JPEG.');return}const s=monthlyApprovedRow.snapshot||{},W=1400,H=1120,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const txt=(t,px,py,size=28,b=false,color='#111827',align='left')=>{x.font=`${b?'700':'400'} ${size}px Arial`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(String(t??''),px,py)};txt('CHŒUR D’HOMME DE L’ÉGLISE BAPTISTE SEL ET LUMIÈRE',W/2,60,27,true,'#102644','center');txt('RAPPORT MENSUEL FINANCIER',W/2,112,40,true,'#111827','center');txt(fmtMonth(month),W/2,166,25,false,'#667085','center');x.fillStyle='#c59d3f';x.fillRect(70,215,W-140,4);const stats=[['Dû',s.due],['Payé',s.paid],['Créances',s.balance],['Entrées caisse',s.cashIn],['Dépenses',s.expenses],['Solde net',s.net]];stats.forEach((a,i)=>{const col=i%3,row=Math.floor(i/3),bw=(W-140-36)/3,bx=70+col*(bw+18),by=265+row*145;x.fillStyle='#f5f7fa';x.fillRect(bx,by,bw,120);txt(a[0],bx+20,by+18,21,false,'#667085');txt(moneyX(a[1]),bx+20,by+58,31,true,'#102644')});let y=610;txt('Statut : VALIDÉ & VERROUILLÉ',70,y,25,true,'#157347');y+=60;txt('Préparé par le Trésorier : '+(monthlyApprovedRow.prepared_at?new Date(monthlyApprovedRow.prepared_at).toLocaleString('fr-FR'):'—'),70,y,22,false,'#667085');y+=42;txt('Validé par le Président : '+(monthlyApprovedRow.approved_at?new Date(monthlyApprovedRow.approved_at).toLocaleString('fr-FR'):'—'),70,y,22,false,'#667085');y=920;x.strokeStyle='#111827';x.beginPath();x.moveTo(100,y);x.lineTo(490,y);x.moveTo(W-490,y);x.lineTo(W-100,y);x.stroke();txt('Trésorier',100,y+12,20,false,'#667085');txt('Président',W-100,y+12,20,false,'#667085','right');c.toBlob(blob=>{if(!blob)return alert('Impossible de générer le JPEG.');const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Rapport_mensuel_financier_CHEBSEL_${month}.jpg`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/jpeg',0.94)}catch(e){alert('JPEG impossible : '+(e?.message||e))}};
- window.modifyTreasurerMonthlyFinancial=async function(){if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7),reason=prompt('Rezon obligatwa pou modifye rapò mansyèl finansye '+month+' :');if(reason===null)return;if(!reason.trim()){alert('Ou dwe antre yon rezon pou modification an.');return}try{const row=await closingRow(month);if(!row||row.status!=='approved'){alert('Se sèlman yon rapò deja valide ki ka réouvrir pou modification.');return}if(typeof criticalGuard==='function'&&!(await criticalGuard('month.close','Modifier le rapport mensuel financier '+month)))return;const {c,org}=await cloudCtx(),q=await c.from('monthly_closings').update({status:'reopened',reopened_reason:reason.trim(),updated_at:new Date().toISOString()}).eq('organization_id',org).eq('month_reference',month).select().single();if(q.error)throw q.error;monthlyApprovedRow=null;const p=ensureMonthlyPanel();p.innerHTML='';p.style.display='none';await pullInstitutionalClosings?.();await renderMonthlyClose?.();await refreshTreasurerMonthlyTools();alert('Rapò finansye a réouvert. Apre koreksyon, Trezorye a dwe reprépare li epi Prezidan an dwe valide li ankò.')}catch(e){alert('Modification impossible : '+(e?.message||e))}};
- async function refreshTreasurerMonthlyTools(){if(role()!=='treasurer')return;const view=document.getElementById('monthlyView');if(!view?.classList.contains('open'))return;let bar=document.getElementById('treasurerMonthlyFinancialActions');if(!bar){bar=document.createElement('div');bar.id='treasurerMonthlyFinancialActions';bar.className='profilePanel';const body=view.querySelector('.membersBody')||view;body.appendChild(bar)}const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);try{const row=await closingRow(month);bar.innerHTML=row?.status==='approved'?'<div class="memberActions"><button class="quickBtn" onclick="generateTreasurerMonthlyFinancialReport()">Générer le rapport</button><button class="secondaryQuick" onclick="saveTreasurerMonthlyFinancialJPEG()">Enregistrer en JPEG</button><button class="secondaryQuick" onclick="modifyTreasurerMonthlyFinancial()">Modifier avec motif</button></div>':'<div class="memberMeta">Après validation du Président, les options Générer, JPEG et Modifier seront disponibles ici.</div>'}catch(e){bar.innerHTML=''}}
+ window.generateTreasurerMonthlyFinancialReport=async function(){
+  if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);
+  try{const row=await closingRow(month);if(!row||row.status!=='approved'){alert('Rapò mansyèl finansye a dwe valide pa Prezidan an anvan génération.');return}monthlyApprovedRow=row;const p=ensureMonthlyPanel();if(!p)return;p.innerHTML=monthlyHTML(row);p.style.display='';try{if(typeof registerChebselArchive==='function'){const b=monthBounds(month);await registerChebselArchive('financial_report',b.from,b.to,`Rapport_mensuel_financier_CHEBSEL_${month}`,{month,monthly:true,status:'approved'})}}catch(e){};await refreshTreasurerMonthlyTools()}catch(e){alert('Génération impossible : '+(e?.message||e))}
+ };
+ window.saveTreasurerMonthlyFinancialJPEG=async function(){
+  if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);
+  try{if(!monthlyApprovedRow||monthlyApprovedRow.month_reference!==month)monthlyApprovedRow=await closingRow(month);if(!monthlyApprovedRow||monthlyApprovedRow.status!=='approved'){alert('Se sèlman yon rapò valide ki ka anrejistre an JPEG.');return}const s=monthlyApprovedRow.snapshot||{},W=1400,H=1120,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const txt=(t,px,py,size=28,b=false,color='#111827',align='left')=>{x.font=`${b?'700':'400'} ${size}px Arial`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(String(t??''),px,py)};txt('CHŒUR D’HOMME DE L’ÉGLISE BAPTISTE SEL ET LUMIÈRE',W/2,60,27,true,'#102644','center');txt('RAPPORT MENSUEL FINANCIER',W/2,112,40,true,'#111827','center');txt(fmtMonth(month),W/2,166,25,false,'#667085','center');x.fillStyle='#c59d3f';x.fillRect(70,215,W-140,4);const stats=[['Dû',s.due],['Payé',s.paid],['Créances',s.balance],['Entrées caisse',s.cashIn],['Dépenses',s.expenses],['Solde net',s.net]];stats.forEach((a,i)=>{const col=i%3,row=Math.floor(i/3),bw=(W-140-36)/3,bx=70+col*(bw+18),by=265+row*145;x.fillStyle='#f5f7fa';x.fillRect(bx,by,bw,120);txt(a[0],bx+20,by+18,21,false,'#667085');txt(moneyX(a[1]),bx+20,by+58,31,true,'#102644')});let y=610;txt('Statut : VALIDÉ & VERROUILLÉ',70,y,25,true,'#157347');y+=60;txt('Préparé par le Trésorier : '+(monthlyApprovedRow.prepared_at?new Date(monthlyApprovedRow.prepared_at).toLocaleString('fr-FR'):'—'),70,y,22,false,'#667085');y+=42;txt('Validé par le Président : '+(monthlyApprovedRow.approved_at?new Date(monthlyApprovedRow.approved_at).toLocaleString('fr-FR'):'—'),70,y,22,false,'#667085');y=920;x.strokeStyle='#111827';x.beginPath();x.moveTo(100,y);x.lineTo(490,y);x.moveTo(W-490,y);x.lineTo(W-100,y);x.stroke();txt('Trésorier',100,y+12,20,false,'#667085');txt('Président',W-100,y+12,20,false,'#667085','right');c.toBlob(blob=>{if(!blob)return alert('Impossible de générer le JPEG.');const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Rapport_mensuel_financier_CHEBSEL_${month}.jpg`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/jpeg',0.94)}catch(e){alert('JPEG impossible : '+(e?.message||e))}
+ };
+ window.modifyTreasurerMonthlyFinancial=async function(){
+  if(role()!=='treasurer')return;const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7),reason=prompt('Rezon obligatwa pou modifye rapò mansyèl finansye '+month+' :');if(reason===null)return;if(!reason.trim()){alert('Ou dwe antre yon rezon pou modification an.');return}
+  try{const row=await closingRow(month);if(!row||row.status!=='approved'){alert('Se sèlman yon rapò deja valide ki ka réouvrir pou modification.');return}if(typeof criticalGuard==='function'&&!(await criticalGuard('month.close','Modifier le rapport mensuel financier '+month)))return;const {c,org}=await cloudCtx(),q=await c.from('monthly_closings').update({status:'reopened',reopened_reason:reason.trim(),updated_at:new Date().toISOString()}).eq('organization_id',org).eq('month_reference',month).select().single();if(q.error)throw q.error;monthlyApprovedRow=null;const p=ensureMonthlyPanel();if(p){p.innerHTML='';p.style.display='none'}await pullInstitutionalClosings?.();await renderMonthlyClose?.();await refreshTreasurerMonthlyTools();alert('Rapò finansye a réouvert. Rezon an anrejistre. Apre koreksyon, Trezorye a dwe reprépare li epi Prezidan an dwe valide li ankò.')}catch(e){alert('Modification impossible : '+(e?.message||e))}
+ };
+ async function refreshTreasurerMonthlyTools(){
+  if(role()!=='treasurer')return;const view=document.getElementById('monthlyView');if(!view?.classList.contains('open'))return;
+  let bar=document.getElementById('treasurerMonthlyFinancialActions');if(!bar){bar=document.createElement('div');bar.id='treasurerMonthlyFinancialActions';bar.className='profilePanel';const body=view.querySelector('.membersBody')||view;body.appendChild(bar)}
+  const month=document.getElementById('closeMonth')?.value||new Date().toISOString().slice(0,7);
+  try{const row=await closingRow(month),ok=row?.status==='approved';bar.innerHTML=`<div class="profileTitle"><div><h3>Document financier mensuel</h3><div class="memberMeta">${ok?'Rapport validé : génération, JPEG et modification contrôlée disponibles.':'Le rapport doit être préparé puis validé par le Président.'}</div></div></div><div class="memberActions"><button class="quickBtn" onclick="generateTreasurerMonthlyFinancialReport()" ${ok?'':'disabled'}>Générer le rapport</button><button class="secondaryQuick" onclick="saveTreasurerMonthlyFinancialJPEG()" ${ok?'':'disabled'}>Enregistrer en JPEG</button><button class="secondaryQuick" onclick="modifyTreasurerMonthlyFinancial()" ${ok?'':'disabled'}>Modifier avec raison obligatoire</button></div>`}catch(e){bar.innerHTML='<div class="memberMeta">Connexion cloud requise pour vérifier le statut du rapport mensuel.</div>'}
+ }
  if(typeof window.renderMonthlyClose==='function'&&!window.__treasurerMonthlyWrapped){window.__treasurerMonthlyWrapped=true;const base=window.renderMonthlyClose;window.renderMonthlyClose=async function(){const out=await base.apply(this,arguments);setTimeout(refreshTreasurerMonthlyTools,40);return out}}
 
  function monthList(n=6){const out=[],d=new Date();d.setDate(1);for(let i=n-1;i>=0;i--){const x=new Date(d);x.setMonth(x.getMonth()-i);out.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`)}return out}
- function financeHealthData(){return monthList().map(m=>{const b=monthBounds(m),ins=typeof treasuryIncomeRows==='function'?treasuryIncomeRows(b.from,b.to):[],outs=typeof treasuryExpenseRows==='function'?treasuryExpenseRows(b.from,b.to):[],snap=typeof monthlySnapshot==='function'?monthlySnapshot(m):{};return {month:m,income:ins.reduce((s,x)=>s+Number(x.amount||0),0),expenses:outs.reduce((s,x)=>s+Number(x.amount||0),0),balance:Number(snap?.balance||0)}})}
+ function financeHealthData(){return monthList().map(m=>{const b=monthBounds(m),ins=typeof treasuryIncomeRows==='function'?treasuryIncomeRows(b.from,b.to):[],outs=typeof treasuryExpenseRows==='function'?treasuryExpenseRows(b.from,b.to):[],snap=typeof monthlySnapshot==='function'?monthlySnapshot(m):{};const income=ins.reduce((s,x)=>s+Number(x.amount||0),0),expenses=outs.reduce((s,x)=>s+Number(x.amount||0),0);return {month:m,income,expenses,net:income-expenses,receivables:Number(snap?.balance||0),due:Number(snap?.due||0),paid:Number(snap?.paid||0)}})}
  function ensureHealthView(){let v=document.getElementById('treasurerHealthView');if(v)return v;v=document.createElement('div');v.className='membersView';v.id='treasurerHealthView';v.innerHTML='<div class="viewerbar"><div class="viewtitle"><b>Santé financière CHEBSEL</b><span>Historique graphique des 6 derniers mois</span></div></div><div class="membersBody" id="treasurerHealthBody"></div>';document.body.appendChild(v);return v}
- window.openTreasurerFinanceHealth=function(){if(role()!=='treasurer')return openFinanceHistory();treasurerBackTarget=null;const v=ensureHealthView();v.classList.add('open');renderTreasurerFinanceHealth()};
- window.renderTreasurerFinanceHealth=function(){const box=document.getElementById('treasurerHealthBody');if(!box)return;const rows=financeHealthData(),max=Math.max(1,...rows.flatMap(r=>[r.income,r.expenses,r.balance])),W=920,H=360,pad=54,group=(W-pad*2)/rows.length,bar=group/4;let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogramme santé financière" style="width:100%;height:auto"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="currentColor" opacity=".3"/>`;rows.forEach((r,i)=>{const x=pad+i*group+group*.16,scale=(H-pad*2)/max,vals=[r.income,r.expenses,r.balance],cols=['#16794B','#B42318','#C59D3F'];vals.forEach((v,j)=>{const h=v*scale;svg+=`<rect x="${x+j*bar}" y="${H-pad-h}" width="${bar-4}" height="${h}" rx="4" fill="${cols[j]}"/>`});svg+=`<text x="${x+bar}" y="${H-20}" text-anchor="middle" font-size="16" fill="currentColor">${r.month.slice(5)}</text>`});svg+='</svg>';const cur=rows.at(-1)||{},net=cur.income-cur.expenses;box.innerHTML=`<div class="profilePanel"><div class="treasurySummary"><div class="mini"><b>${moneyX(cur.income)}</b><span>Entrées mois actuel</span></div><div class="mini"><b>${moneyX(cur.expenses)}</b><span>Dépenses mois actuel</span></div><div class="mini"><b>${moneyX(net)}</b><span>Solde net période</span></div><div class="mini"><b>${moneyX(cur.balance)}</b><span>Créances</span></div></div></div><div class="profilePanel"><h3>Histogramme — 6 derniers mois</h3><div class="memberMeta">Vert = Entrées • Rouge = Dépenses • Or = Créances</div>${svg}</div>`};
+ window.openTreasurerFinanceHealth=function(){if(role()!=='treasurer')return openFinanceHistory();treasurerBackTarget='healthHome';const v=ensureHealthView();v.classList.add('open');renderTreasurerFinanceHealth()};
+ window.renderTreasurerFinanceHealth=function(){
+  const box=document.getElementById('treasurerHealthBody');if(!box)return;const rows=financeHealthData(),max=Math.max(1,...rows.flatMap(r=>[r.income,r.expenses,Math.max(0,r.net)])),W=920,H=380,pad=58,group=(W-pad*2)/rows.length,bar=group/4;let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogramme santé financière" style="width:100%;height:auto"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="currentColor" opacity=".3"/>`;
+  rows.forEach((r,i)=>{const x=pad+i*group+group*.14,scale=(H-pad*2)/max,vals=[r.income,r.expenses,Math.max(0,r.net)],cols=['#16794B','#B42318','#C59D3F'];vals.forEach((v,j)=>{const h=Math.max(2,v*scale);svg+=`<rect x="${x+j*bar}" y="${H-pad-h}" width="${Math.max(5,bar-4)}" height="${h}" rx="4" fill="${cols[j]}"/>`});svg+=`<text x="${x+bar}" y="${H-22}" text-anchor="middle" font-size="16" fill="currentColor">${r.month.slice(5)}</text>`});svg+='</svg>';
+  const cur=rows.at(-1)||{},recovery=cur.due?Math.round((cur.paid/cur.due)*100):0;
+  box.innerHTML=`<div class="profilePanel"><div class="treasurySummary"><div class="mini"><b>${moneyX(cur.income)}</b><span>Entrées mois actuel</span></div><div class="mini"><b>${moneyX(cur.expenses)}</b><span>Dépenses mois actuel</span></div><div class="mini"><b>${moneyX(cur.net)}</b><span>Solde net</span></div><div class="mini"><b>${moneyX(cur.receivables)}</b><span>Créances</span></div><div class="mini"><b>${recovery} %</b><span>Taux de recouvrement</span></div></div></div><div class="profilePanel"><h3>Évolution de la santé financière — 6 derniers mois</h3><div class="memberMeta">Vert = Entrées • Rouge = Dépenses • Or = Solde net positif</div>${svg}<div class="memberMeta" style="margin-top:10px">Le graphique permet de voir immédiatement si les recettes couvrent les dépenses et comment le solde net évolue d’un mois à l’autre.</div></div>`
+ };
 
  const baseBack=window.globalBack;
  window.globalBack=function(){
   if(role()==='treasurer'){
-   const viewer=document.getElementById('viewer');if(viewer?.classList.contains('open')&&financeScope){try{closeViewer()}catch(e){viewer.classList.remove('open')}financeScope=null;openTreasurerPaymentHub();return}
+   const viewer=document.getElementById('viewer');
+   if(viewer?.classList.contains('open')&&financeScope){try{closeViewer()}catch(e){viewer.classList.remove('open')}financeScope=null;treasurerBackTarget=null;openTreasurerPaymentHub();return}
    const mv=document.getElementById('monthlyView');if(mv?.classList.contains('open')&&treasurerBackTarget==='reportsHub'){try{closeMonthlyClose()}catch(e){mv.classList.remove('open')}treasurerBackTarget=null;openTreasurerReportsHub();return}
-   const rv=document.getElementById('treasuryReportView');if(rv?.classList.contains('open')&&treasurerBackTarget==='reportsHub'){try{closeTreasuryReport()}catch(e){rv.classList.remove('open')}treasurerBackTarget=null;openTreasurerReportsHub();return}
+   const rv=document.getElementById('treasuryReportView');if(rv?.classList.contains('open')){try{closeTreasuryReport()}catch(e){rv.classList.remove('open')}const back=treasurerBackTarget;treasurerBackTarget=null;if(back==='reportsHub')openTreasurerReportsHub();return}
+   const ev=document.getElementById('treasuryExpensesView');if(ev?.classList.contains('open')){try{closeTreasuryExpenses?.()}catch(e){ev.classList.remove('open')}ev.classList.remove('open');treasurerBackTarget=null;return}
+   const hv=document.getElementById('treasurerHealthView');if(hv?.classList.contains('open')){hv.classList.remove('open');treasurerBackTarget=null;return}
    const ph=document.getElementById('treasurerPaymentHub1173');if(ph?.classList.contains('open')){ph.classList.remove('open');return}
    const rh=document.getElementById('treasurerReportsHub1173');if(rh?.classList.contains('open')){rh.classList.remove('open');return}
-   const hv=document.getElementById('treasurerHealthView');if(hv?.classList.contains('open')){hv.classList.remove('open');return}
   }
   return typeof baseBack==='function'?baseBack.apply(this,arguments):undefined;
  };
