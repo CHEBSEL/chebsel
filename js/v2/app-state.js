@@ -1,4 +1,4 @@
-export const APP_VERSION='2.0.0-alpha.6';
+export const APP_VERSION='2.0.0-alpha.7';
 
 const listeners=new Set();
 
