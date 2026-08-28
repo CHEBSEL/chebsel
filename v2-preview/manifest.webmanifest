@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.14 — Preview",
+  "name":"CHEBSEL v2.0.0-alpha.15 — Preview",
   "short_name":"CHEBSEL v2",
-  "description":"CHEBSEL v2 alpha.14 — Clean Core local-first avec authentification Supabase et synchronisation multi-appareils.",
+  "description":"CHEBSEL v2 alpha.15 — Clean Core local-first avec authentification Supabase et synchronisation multi-appareils sécurisée.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
