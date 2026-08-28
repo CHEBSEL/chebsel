@@ -1,4 +1,4 @@
-export const APP_VERSION='2.0.0-alpha.2';
+export const APP_VERSION='2.0.0-alpha.3';
 
 const listeners=new Set();
 
@@ -10,7 +10,7 @@ export const AppState={
   route:'home',
   navigationStack:['home'],
   data:{members:[],attendance:[],finance:[],settings:{}},
-  ui:{selectedMemberId:null},
+  ui:{selectedMemberId:null,selectedAttendanceCallId:null},
   syncStatus:{online:navigator.onLine,state:'idle',lastSync:null,pending:0},
   notifications:{unread:0,items:[]}
 };
