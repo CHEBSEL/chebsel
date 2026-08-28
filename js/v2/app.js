@@ -15,20 +15,24 @@ function placeholder(title){const w=page(title,'Modil sa a ap migre nan CHEBSEL 
 function home(){const cfg=getRoleConfig(AppState.role),w=page(cfg.label,'CHEBSEL v2 Clean Core'),grid=el('div','menu-grid');cfg.menus.forEach(([r,i,l])=>grid.append(card(r,i,l)));w.append(grid);return w}
 function hub(title,items){const w=page(title),grid=el('div','menu-grid');items.forEach(x=>grid.append(card(...x)));w.append(grid);return w}
 
-function lazyAttendance(rendererName){
-  return async()=>{const m=await import('./attendance.js');return m[rendererName]();};
-}
+const lazy=(file,name)=>async()=>{const m=await import(file);return m[name]();};
 
 function registerCoreRoutes(){
   registerRoute('home',home);
   registerMemberRoutes(registerRoute);
   registerRoute('secretariat',()=>hub('Secrétariat',[['attendance','✅','Appel'],['attendance-settings','⚙️','Paramètres'],['attendance-history','📈','Historique']]));
-  registerRoute('attendance',lazyAttendance('renderAttendancePage'));
-  registerRoute('attendance-settings',lazyAttendance('renderAttendanceSettings'));
-  registerRoute('attendance-history',lazyAttendance('renderAttendanceHistory'));
-  registerRoute('treasury',()=>hub('Trésorerie',[['payments','💰','Paiements'],['debtors','📋','Débiteurs'],['expenses','💸','Dépenses'],['finance-history','📈','Historique']]));
+  registerRoute('attendance',lazy('./attendance.js','renderAttendancePage'));
+  registerRoute('attendance-settings',lazy('./attendance.js','renderAttendanceSettings'));
+  registerRoute('attendance-history',lazy('./attendance.js','renderAttendanceHistory'));
+  registerRoute('treasury',()=>hub('Trésorerie',[['payments','💰','Paiements'],['debtors','📋','Débiteurs'],['expenses','💸','Dépenses'],['finance-history','📈','Historique'],['finance-reports','📊','Rapports financiers']]));
   registerRoute('payments',()=>hub('Paiements',[['payment-entry','💵','Saisir'],['finance-settings','⚙️','Paramètres']]));
-  ['punctuality-reports','debtors','expenses','finance-history','finance-reports','payment-entry','finance-settings','reports','archives','conflicts','settings','privacy','about'].forEach(id=>registerRoute(id,()=>placeholder(id.replaceAll('-',' '))));
+  registerRoute('payment-entry',lazy('./finance.js','renderPaymentEntry'));
+  registerRoute('finance-settings',lazy('./finance.js','renderFinanceSettings'));
+  registerRoute('debtors',lazy('./finance.js','renderDebtors'));
+  registerRoute('expenses',lazy('./finance.js','renderExpenses'));
+  registerRoute('finance-history',lazy('./finance.js','renderFinanceHistory'));
+  registerRoute('finance-reports',lazy('./finance.js','renderFinanceReports'));
+  ['punctuality-reports','reports','archives','conflicts','settings','privacy','about'].forEach(id=>registerRoute(id,()=>placeholder(id.replaceAll('-',' '))));
 }
 
 function renderHeader(){
