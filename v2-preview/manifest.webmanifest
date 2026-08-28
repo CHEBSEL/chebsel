@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.10 — Preview",
+  "name":"CHEBSEL v2.0.0-alpha.13 — Preview",
   "short_name":"CHEBSEL v2",
-  "description":"CHEBSEL v2 alpha.10 — rapports mensuels, JPEG, profils, thème et PIN dans le Clean Core.",
+  "description":"CHEBSEL v2 alpha.13 — Clean Core avec états réseau/sync et interface mobile stabilisée.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
