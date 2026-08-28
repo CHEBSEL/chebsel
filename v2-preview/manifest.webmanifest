@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2 Preview",
+  "name":"CHEBSEL v2.0.0-alpha.5 — Preview",
   "short_name":"CHEBSEL v2",
-  "description":"CHEBSEL v2 Clean Core preview",
+  "description":"CHEBSEL v2 alpha.5 preview — Membres, Secrétariat, Trésorerie et Administration Clean Core.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
