@@ -5,7 +5,9 @@ const KEYS={
   attendance:'chebsel_attendance_app_v1',
   finance:'chebsel_finance_app_v1',
   session:'chebsel_v2_session',
-  settings:'chebsel_v2_settings'
+  settings:'chebsel_v2_settings',
+  conflicts:'chebsel_v2_conflicts',
+  notificationRead:'chebsel_v2_notification_read'
 };
 
 function parse(key,fallback){try{const raw=localStorage.getItem(key);if(raw==null)return fallback;const v=JSON.parse(raw);return v??fallback}catch{return fallback}}
@@ -19,6 +21,7 @@ export function loadLocalData(){
   const attendanceRaw=readAttendanceEnvelope();
   const financeRaw=readFinanceEnvelope();
   const settings=parse(KEYS.settings,{});
+  const conflicts=parse(KEYS.conflicts,[]);
   if(!Array.isArray(members)||!members.length){
     if(Array.isArray(attendanceRaw?.members)&&attendanceRaw.members.length)members=attendanceRaw.members;
     else if(Array.isArray(financeRaw?.members)&&financeRaw.members.length)members=financeRaw.members;
@@ -30,7 +33,8 @@ export function loadLocalData(){
     finance:Array.isArray(financeRaw?.entries)?financeRaw.entries:[],
     expenses:Array.isArray(financeRaw?.expenses)?financeRaw.expenses:[],
     financeSettings:financeRaw?.settings&&typeof financeRaw.settings==='object'?financeRaw.settings:{},
-    settings
+    settings:settings&&typeof settings==='object'?settings:{},
+    conflicts:Array.isArray(conflicts)?conflicts:[]
   });
   return AppState.data;
 }
@@ -49,15 +53,15 @@ export function saveAttendanceCompatible(calls,settingsPatch=null){
 
 export function saveFinanceCompatible({entries,expenses,settings}={}){
   const current=readFinanceEnvelope();
-  const next={
-    ...current,
-    members:(AppState.data.members||current.members||[]).map(m=>({...m})),
-    entries:Array.isArray(entries)?entries:(Array.isArray(current.entries)?current.entries:[]),
-    expenses:Array.isArray(expenses)?expenses:(Array.isArray(current.expenses)?current.expenses:[]),
-    settings:settings&&typeof settings==='object'?{...(current.settings||{}),...settings}:(current.settings||{})
-  };
+  const next={...current,members:(AppState.data.members||current.members||[]).map(m=>({...m})),entries:Array.isArray(entries)?entries:(Array.isArray(current.entries)?current.entries:[]),expenses:Array.isArray(expenses)?expenses:(Array.isArray(current.expenses)?current.expenses:[]),settings:settings&&typeof settings==='object'?{...(current.settings||{}),...settings}:(current.settings||{})};
   save(KEYS.finance,next);return next;
 }
+
+export function saveAppSettings(settings){const next={...(readRaw(KEYS.settings,{})||{}),...(settings||{})};save(KEYS.settings,next);updateState('data',{...AppState.data,settings:next});return next}
+export function saveConflicts(conflicts){const list=Array.isArray(conflicts)?conflicts:[];save(KEYS.conflicts,list);updateState('data',{...AppState.data,conflicts:list});return list}
+
+export function makeBackupBundle(){return {schema:'CHEBSEL_V2_BACKUP',createdAt:new Date().toISOString(),members:readRaw(KEYS.members,[]),attendance:readAttendanceEnvelope(),finance:readFinanceEnvelope(),settings:readRaw(KEYS.settings,{}),conflicts:readRaw(KEYS.conflicts,[])}}
+export function restoreBackupBundle(bundle){if(!bundle||bundle.schema!=='CHEBSEL_V2_BACKUP')throw new Error('Fichier de sauvegarde CHEBSEL v2 invalide.');if(!Array.isArray(bundle.members))throw new Error('Liste des membres invalide.');save(KEYS.members,bundle.members);save(KEYS.attendance,bundle.attendance&&typeof bundle.attendance==='object'?bundle.attendance:{});save(KEYS.finance,bundle.finance&&typeof bundle.finance==='object'?bundle.finance:{});save(KEYS.settings,bundle.settings&&typeof bundle.settings==='object'?bundle.settings:{});save(KEYS.conflicts,Array.isArray(bundle.conflicts)?bundle.conflicts:[]);return loadLocalData()}
 
 export function loadSession(){return parse(KEYS.session,null)}
 export function saveSession(session){save(KEYS.session,session)}
