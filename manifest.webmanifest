@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.13 — Clean Core",
+  "name":"CHEBSEL v2.0.0-alpha.14 — Clean Core",
   "short_name":"CHEBSEL",
-  "description":"CHEBSEL v2.0.0-alpha.13 — Clean Core avec états réseau/sync et interface mobile stabilisée.",
+  "description":"CHEBSEL v2.0.0-alpha.14 — Clean Core local-first avec authentification Supabase et synchronisation multi-appareils.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
