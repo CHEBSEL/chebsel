@@ -1,4 +1,4 @@
-export const APP_VERSION='2.0.0-alpha.15';
+export const APP_VERSION='2.0.0-alpha.16';
 const listeners=new Set();
 export const AppState={version:APP_VERSION,boot:{ready:false,error:null},user:null,role:'visitor',route:'home',navigationStack:['home'],data:{members:[],attendance:[],finance:[],expenses:[],financeSettings:{},settings:{},conflicts:[]},ui:{selectedMemberId:null,selectedAttendanceCallId:null},syncStatus:{online:navigator.onLine,state:'idle',active:false,lastSync:null,pending:0,lastError:null},notifications:{unread:0,items:[]}};
 export function setState(patch){Object.assign(AppState,patch);listeners.forEach(fn=>{try{fn(AppState)}catch(e){console.error('CHEBSEL state listener',e)}})}
