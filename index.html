@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#102644">
-  <title>CHEBSEL v2.0.0-alpha.5 — Clean Core</title>
+  <title>CHEBSEL v2.0.0-alpha.7 — Clean Core</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="./css/attendance-v2.css">
   <link rel="stylesheet" href="./css/finance-v2.css">
   <link rel="stylesheet" href="./css/admin-v2.css">
+  <link rel="stylesheet" href="./css/receipts-v2.css">
 </head>
 <body>
   <div id="splash" class="splash" aria-live="polite"><div class="splash-card"><img class="splash-logo" src="./icons/chebsel-logo.png" alt="CHEBSEL"><h1>CHEBSEL</h1><p class="muted">Chargement…</p></div></div>
@@ -19,5 +20,6 @@
   <div id="rolePicker" class="role-picker" hidden><div class="role-box"><h2>Connexion CHEBSEL v2</h2><p class="muted">Phase Clean Core — sélection du profil pour valider la nouvelle architecture.</p><div class="role-grid" style="margin-top:16px"><button type="button" data-role="president" data-name="Président"><b>Président</b><br><small>Administration</small></button><button type="button" data-role="secretary" data-name="Secrétaire"><b>Secrétaire</b><br><small>Membres & appel</small></button><button type="button" data-role="treasurer" data-name="Trésorier"><b>Trésorier</b><br><small>Finances</small></button><button type="button" data-role="visitor" data-name="Visiteur"><b>Visiteur</b><br><small>Lecture seule</small></button></div></div></div>
   <div id="updateBanner" class="update-banner" hidden><span>Nouvelle version CHEBSEL disponible.</span><button type="button" data-update>Mizajou</button></div>
   <script type="module" src="./js/v2/app.js"></script>
+  <script type="module" src="./js/v2/receipts.js"></script>
 </body>
 </html>
