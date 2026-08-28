@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "CHEBSEL v1.17.18 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "name": "CHEBSEL v1.17.19 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
   "short_name": "CHEBSEL",
-  "description": "CHEBSEL v1.17.18 — démarrage stabilisé, cache local prioritaire et navigation Back sans blocage.",
+  "description": "CHEBSEL v1.17.19 — boot gate: affichage uniquement lorsque le shell final du profil est prêt.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
