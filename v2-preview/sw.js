@@ -1,4 +1,4 @@
-const APP_VERSION='2.0.0-alpha.8-preview';
+const APP_VERSION='2.0.0-alpha.9-preview';
 const STATIC_CACHE=`chebsel-v2-preview-static-${APP_VERSION}`;
 const HTML_CACHE=`chebsel-v2-preview-html-${APP_VERSION}`;
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./css/v2.css','./css/attendance-v2.css','./css/finance-v2.css','./css/admin-v2.css','./css/receipts-v2.css','./css/history-dashboards.css','./js/v2/app-state.js','./js/v2/router.js','./js/v2/role-config.js','./js/v2/storage.js','./js/v2/auth.js','./js/v2/updates.js','./js/v2/members.js','./js/v2/attendance.js','./js/v2/finance.js','./js/v2/notifications.js','./js/v2/admin.js','./js/v2/receipts.js','./js/v2/history-dashboards.js','./js/v2/app.js','../icons/chebsel-logo.png','../icons/icon-192.png','../icons/icon-512.png','../icons/icon-maskable-512.png'];
