@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "CHEBSEL v1.17.16 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
+  "name": "CHEBSEL v1.17.17 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
   "short_name": "CHEBSEL",
-  "description": "CHEBSEL v1.17.16 — navigation Back universelle, boutons locaux préservés et protection PWA.",
+  "description": "CHEBSEL v1.17.17 — Back universel stable, sans récursion ni blocage de l’application.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
