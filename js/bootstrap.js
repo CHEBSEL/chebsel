@@ -1,14 +1,14 @@
-/* CHEBSEL v1.17.16 — universal Back navigation bootstrap */
+/* CHEBSEL v1.17.17 — stable universal Back navigation bootstrap */
 'use strict';
-window.CHEBSEL_ARCHITECTURE={version:'1.17.16',modules:['notification-routing-1142','deletion-1141','embedded-apps','legacy-core','auth-security','sync-policy','institutional-ops','corrections-1131','stability-1132','payment-reason-history-1133','closing-canonical-1134','monthly-governance-1140','reports-center-1150','role-shell-1160','clean-shell-1170','secretary-scope-1171','treasurer-scope-1173','hotfix-1175','president-scope-1176','update-manager-1177','notification-state-11711','navigation-final-11716']};
+window.CHEBSEL_ARCHITECTURE={version:'1.17.17',modules:['notification-routing-1142','deletion-1141','embedded-apps','legacy-core','auth-security','sync-policy','institutional-ops','corrections-1131','stability-1132','payment-reason-history-1133','closing-canonical-1134','monthly-governance-1140','reports-center-1150','role-shell-1160','clean-shell-1170','secretary-scope-1171','treasurer-scope-1173','hotfix-1175','president-scope-1176','update-manager-1177','notification-state-11711','navigation-stable-11717']};
 function chebselLoadRuntime(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=false;document.body.appendChild(s)}
 window.addEventListener('load',()=>{
- chebselLoadRuntime('chebsel-hotfix-1175','./js/hotfix-1175.js?v=11716');
- chebselLoadRuntime('chebsel-president-scope-1176','./js/president-scope-1176.js?v=11716');
- chebselLoadRuntime('chebsel-update-manager-1177','./js/update-manager-1177.js?v=11716');
- setTimeout(()=>chebselLoadRuntime('chebsel-notification-state-11711','./js/notification-state-11711.js?v=11716'),90);
- // Final navigation authority. Local view Back buttons keep their native close handlers.
- setTimeout(()=>chebselLoadRuntime('chebsel-navigation-final-11716','./js/navigation-final-11716.js?v=11716'),160);
- const chip=document.querySelector('.versionChip');if(chip)chip.textContent='v1.17.16';
- document.title=document.title.replace(/CHEBSEL v\d+(?:\.\d+){1,2}/g,'CHEBSEL v1.17.16');
+ chebselLoadRuntime('chebsel-hotfix-1175','./js/hotfix-1175.js?v=11717');
+ chebselLoadRuntime('chebsel-president-scope-1176','./js/president-scope-1176.js?v=11717');
+ chebselLoadRuntime('chebsel-update-manager-1177','./js/update-manager-1177.js?v=11717');
+ setTimeout(()=>chebselLoadRuntime('chebsel-notification-state-11711','./js/notification-state-11711.js?v=11717'),90);
+ // Only final Back authority. No history manipulation, no recursive legacy delegation.
+ setTimeout(()=>chebselLoadRuntime('chebsel-navigation-stable-11717','./js/navigation-stable-11717.js?v=11717'),160);
+ const chip=document.querySelector('.versionChip');if(chip)chip.textContent='v1.17.17';
+ document.title=document.title.replace(/CHEBSEL v\d+(?:\.\d+){1,2}/g,'CHEBSEL v1.17.17');
 });
