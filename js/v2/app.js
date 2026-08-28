@@ -4,6 +4,7 @@ import {getRoleConfig} from './role-config.js';
 import {loadLocalData} from './storage.js';
 import {initAuth,signIn,signOut} from './auth.js';
 import {initUpdates} from './updates.js';
+import {registerMemberRoutes} from './members.js';
 
 let initialized=false;
 const $=(s,r=document)=>r.querySelector(s);
@@ -27,10 +28,11 @@ function hub(title,items){const w=page(title);const grid=el('div','menu-grid');i
 
 function registerCoreRoutes(){
   registerRoute('home',home);
+  registerMemberRoutes(registerRoute);
   registerRoute('secretariat',()=>hub('Secrétariat', [['attendance','✅','Appel'],['attendance-settings','⚙️','Paramètres'],['attendance-history','📈','Historique']]));
   registerRoute('treasury',()=>hub('Trésorerie',[['payments','💰','Paiements'],['debtors','📋','Débiteurs'],['expenses','💸','Dépenses'],['finance-history','📈','Historique']]));
   registerRoute('payments',()=>hub('Paiements',[['payment-entry','💵','Saisir'],['finance-settings','⚙️','Paramètres']]));
-  ['members','attendance','attendance-settings','attendance-history','punctuality-reports','debtors','expenses','finance-history','finance-reports','payment-entry','finance-settings','reports','archives','conflicts','settings','privacy','about'].forEach(id=>registerRoute(id,()=>placeholder(id.replaceAll('-',' '))));
+  ['attendance','attendance-settings','attendance-history','punctuality-reports','debtors','expenses','finance-history','finance-reports','payment-entry','finance-settings','reports','archives','conflicts','settings','privacy','about'].forEach(id=>registerRoute(id,()=>placeholder(id.replaceAll('-',' '))));
 }
 
 function renderHeader(){
@@ -48,8 +50,8 @@ function showRolePicker(){
 }
 
 async function startBackgroundServices(){
-  window.addEventListener('online',()=>updateState('syncStatus',{online:true}));
-  window.addEventListener('offline',()=>updateState('syncStatus',{online:false}));
+  window.addEventListener('online',()=>updateState('syncStatus',{online:true}),{passive:true});
+  window.addEventListener('offline',()=>updateState('syncStatus',{online:false}),{passive:true});
   try{await initUpdates()}catch(e){console.warn('Update manager',e)}
 }
 
@@ -73,5 +75,5 @@ export async function initApp(){
   }
 }
 
-window.CHEBSEL={navigate,back,signOut,state:AppState};
+window.CHEBSEL={navigate,back,signOut,state:AppState,rerender:renderCurrent};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initApp,{once:true});else initApp();
