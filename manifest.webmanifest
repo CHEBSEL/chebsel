@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.5 — Clean Core",
+  "name":"CHEBSEL v2.0.0-alpha.10 — Clean Core",
   "short_name":"CHEBSEL",
-  "description":"CHEBSEL v2.0.0-alpha.5 — Clean Core avec Membres, Secrétariat, Trésorerie et Administration migrés.",
+  "description":"CHEBSEL v2.0.0-alpha.10 — rapports mensuels, JPEG, profils, thème et PIN intégrés au Clean Core.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
