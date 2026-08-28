@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#102644">
-  <title>CHEBSEL v2.0.0-alpha.16 — Clean Core</title>
+  <title>CHEBSEL v2.0.0-alpha.17 — Clean Core</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -15,13 +15,16 @@
   <link rel="stylesheet" href="./css/receipts-v2.css">
   <link rel="stylesheet" href="./css/history-dashboards.css">
   <link rel="stylesheet" href="./css/home-dashboard.css">
+  <link rel="stylesheet" href="./css/install-v2.css">
 </head>
 <body>
   <div id="splash" class="splash" aria-live="polite"><div class="splash-card"><img class="splash-logo" src="./icons/chebsel-logo.png" alt="CHEBSEL"><h1>CHEBSEL</h1><p class="muted">Chargement…</p></div></div>
   <div class="app-shell"><header class="topbar"><div class="brand"><img src="./icons/chebsel-logo.png" alt="Logo CHEBSEL"><div class="brand-copy"><strong>Chœur d’Homme de l’Église Baptiste Sel et Lumière</strong><small><span id="roleLabel">CHEBSEL</span> • <span id="userLabel">Chargement…</span></small></div></div><div class="top-actions"><span class="chip" id="versionChip">v2</span><span class="status-indicator" id="onlineStatus" role="status" aria-label="État réseau">● Online</span><span class="status-indicator" id="syncStatusIndicator" role="status" aria-label="État synchronisation">● Sync OFF</span><button class="icon-btn" id="notificationBtn" type="button" aria-label="Notifications" title="Notifications">🔔</button><button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Mode jour / nuit" title="Mode jour / nuit">☀️</button><button class="icon-btn profile-btn" id="profileSwitchBtn" type="button" aria-label="Changer de profil" title="Changer de profil"><svg class="profile-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="currentColor"></circle><path d="M4 21c.7-5 3.5-7.5 8-7.5S19.3 16 20 21" fill="currentColor"></path></svg></button><button class="icon-btn" id="globalBackBtn" type="button" aria-label="Retour" title="Retour">←</button></div></header><main class="app-main" id="appOutlet" aria-live="polite"></main></div>
-  <div id="rolePicker" class="role-picker" hidden><div class="role-box"><h2>Changer de profil CHEBSEL</h2><p class="muted">Choisissez le profil à utiliser. Les profils responsables utilisent leur mot de passe cloud Supabase; le PIN local reste appliqué s’il est activé.</p><div class="role-grid" style="margin-top:16px"><button type="button" data-role="president" data-name="Président"><b>Président</b><br><small>Administration</small></button><button type="button" data-role="secretary" data-name="Secrétaire"><b>Secrétaire</b><br><small>Membres & appel</small></button><button type="button" data-role="treasurer" data-name="Trésorier"><b>Trésorier</b><br><small>Finances</small></button><button type="button" data-role="visitor" data-name="Visiteur"><b>Visiteur</b><br><small>Lecture seule</small></button></div><div class="dialog-actions" style="margin-top:14px"><button type="button" class="btn secondary" id="closeRolePickerBtn">Annuler</button></div></div></div>
+  <div id="rolePicker" class="role-picker" hidden><div class="role-box"><h2>Changer de profil CHEBSEL</h2><p class="muted">Choisissez le profil à utiliser. Les profils responsables utilisent leur mot de passe cloud Supabase; le PIN local reste appliqué s’il est activé.</p><div class="role-grid"><button type="button" data-role="president" data-name="Président"><b>Président</b><br><small>Administration</small></button><button type="button" data-role="secretary" data-name="Secrétaire"><b>Secrétaire</b><br><small>Membres & appel</small></button><button type="button" data-role="treasurer" data-name="Trésorier"><b>Trésorier</b><br><small>Finances</small></button><button type="button" data-role="visitor" data-name="Visiteur"><b>Visiteur</b><br><small>Lecture seule</small></button></div><div class="dialog-actions role-footer"><button type="button" class="btn primary" id="installFromRoleBtn" hidden>📲 Installer CHEBSEL</button><button type="button" class="btn secondary" id="closeRolePickerBtn">Annuler</button></div></div></div>
+  <div id="installBanner" class="install-banner" hidden><div><strong>Installer CHEBSEL</strong><span>Ajoutez l’application sur cet appareil.</span></div><button type="button" class="btn primary" id="installAppBtn">📲 Installer</button></div>
   <div id="updateBanner" class="update-banner" hidden><span>Nouvelle version CHEBSEL disponible.</span><button type="button" data-update>Mizajou</button></div>
   <script type="module" src="./js/v2/app.js"></script>
   <script type="module" src="./js/v2/receipts.js"></script>
+  <script type="module" src="./js/v2/install.js"></script>
 </body>
 </html>
