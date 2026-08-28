@@ -1,4 +1,4 @@
-const CACHE_NAME='chebsel-pwa-stable-v1174';
+const CACHE_NAME='chebsel-pwa-stable-v1175';
 const APP_SHELL=[
  './',
  './index.html',
@@ -19,6 +19,7 @@ const APP_SHELL=[
  './js/clean-shell-1170.js',
  './js/secretary-scope-1171.js',
  './js/treasurer-scope-1173.js',
+ './js/hotfix-1175.js',
  './js/strict-role-ui-1161.js',
  './js/auth-security.js',
  './js/legacy-core.js',
@@ -29,30 +30,7 @@ const APP_SHELL=[
  './icons/icon-512.png',
  './icons/icon-maskable-512.png'
 ];
-
-self.addEventListener('install',event=>{
- event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));
- self.skipWaiting();
-});
-
-self.addEventListener('activate',event=>{
- event.waitUntil(
-  caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
- );
- self.clients.claim();
-});
-
-self.addEventListener('fetch',event=>{
- if(event.request.method!=='GET')return;
- event.respondWith(
-  fetch(event.request,{cache:'no-store'})
-   .then(response=>{
-    const copy=response.clone();
-    caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));
-    return response;
-   })
-   .catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html')))
- );
-});
-
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));self.skipWaiting();});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim();});
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));return response;}).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))));});
 self.addEventListener('message',event=>{if(event.data&&event.data.type==='SKIP_WAITING')self.skipWaiting();});
