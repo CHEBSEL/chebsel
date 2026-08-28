@@ -1,0 +1,31 @@
+name: CHEBSEL v1.17.8 President parity and Back fix
+on:
+  push:
+    paths:
+      - 'scripts/patch_v1178.py'
+      - 'js/president-scope-1178.js'
+      - '.github/workflows/release-v1178.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v1.17.8 patch
+        run: python scripts/patch_v1178.py
+      - name: Verify release
+        run: |
+          grep -q "CHEBSEL v1.17.8" index.html
+          grep -q "bootstrap.js?v=1780" index.html
+          grep -q "president-scope-1178.js?v=1780" index.html
+          grep -q "chebsel-pwa-stable-v1178" sw.js
+          grep -q "CHEBSEL v1.17.8" manifest.webmanifest
+      - name: Commit release files
+        run: |
+          git config user.name "CHEBSEL Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest js/bootstrap.js
+          git commit -m "Release CHEBSEL v1.17.8 President parity and Back fix" || exit 0
+          git push
