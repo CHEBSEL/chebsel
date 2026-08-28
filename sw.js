@@ -1,5 +1,5 @@
 const VERSION='1.17.17';
-const CACHE_NAME='chebsel-pwa-stable-v11717';
+const CACHE_NAME='chebsel-pwa-stable-v1178';
 const APP_SHELL=[
  './','./index.html','./manifest.webmanifest','./js/bootstrap.js','./js/sync-policy.js','./js/report-images.js','./js/institutional-ops.js','./js/corrections-1131.js','./js/stability-1132.js','./js/payment-reason-history-1133.js','./js/closing-canonical-1134.js','./js/monthly-governance-1140.js','./js/notification-routing-1142.js','./js/deletion-1141.js','./js/reports-center-1150.js','./js/role-shell-1160.js','./js/clean-shell-1170.js','./js/secretary-scope-1171.js','./js/treasurer-scope-1173.js','./js/hotfix-1175.js','./js/president-scope-1176.js','./js/president-scope-1178.js','./js/update-manager-1177.js','./js/notification-state-11711.js','./js/navigation-stable-11717.js','./js/strict-role-ui-1161.js','./js/auth-security.js','./js/legacy-core.js','./js/embedded-apps.js','./css/app.css','./icons/chebsel-logo.png','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'
 ];
