@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2 Clean Core",
+  "name":"CHEBSEL v2.0.0-alpha.5 — Clean Core",
   "short_name":"CHEBSEL",
-  "description":"CHEBSEL v2 — architecture propre, navigation unique, shell unique et démarrage simplifié.",
+  "description":"CHEBSEL v2.0.0-alpha.5 — Clean Core avec Membres, Secrétariat, Trésorerie et Administration migrés.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
