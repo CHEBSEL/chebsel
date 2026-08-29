@@ -1,6 +1,6 @@
 import {AppState,updateState} from './app-state.js';
 
-const KEYS={members:'chebsel_master_members_v1',attendance:'chebsel_attendance_app_v1',finance:'chebsel_finance_app_v1',session:'chebsel_v2_session',settings:'chebsel_v2_settings',conflicts:'chebsel_v2_conflicts',notificationRead:'chebsel_v2_notification_read'};
+const KEYS={members:'chebsel_master_members_v1',attendance:'chebsel_attendance_app_v1',finance:'chebsel_finance_app_v1',session:'chebsel_v2_session',settings:'chebsel_v2_settings',conflicts:'chebsel_v2_conflicts',notificationRead:'chebsel_v2_notification_read',committeeCache:'chebsel_v2_committee_cache'};
 function parse(key,fallback){try{const raw=localStorage.getItem(key);if(raw==null)return fallback;const v=JSON.parse(raw);return v??fallback}catch{return fallback}}
 function changed(){window.dispatchEvent(new Event('chebsel:data-changed'))}
 export function save(key,value){localStorage.setItem(key,JSON.stringify(value))}
@@ -15,6 +15,11 @@ export function saveAttendanceCompatible(calls,settingsPatch=null){const current
 export function saveFinanceCompatible({entries,expenses,settings}={}){const current=readFinanceEnvelope(),next={...current,members:(AppState.data.members||current.members||[]).map(m=>({...m})),entries:Array.isArray(entries)?entries:(Array.isArray(current.entries)?current.entries:[]),expenses:Array.isArray(expenses)?expenses:(Array.isArray(current.expenses)?current.expenses:[]),settings:settings&&typeof settings==='object'?{...(current.settings||{}),...settings}:(current.settings||{})};save(KEYS.finance,next);changed();return next}
 export function saveAppSettings(settings){const next={...(readRaw(KEYS.settings,{})||{}),...(settings||{})};save(KEYS.settings,next);updateState('data',{...AppState.data,settings:next});changed();return next}
 export function saveConflicts(conflicts){const list=Array.isArray(conflicts)?conflicts:[];save(KEYS.conflicts,list);updateState('data',{...AppState.data,conflicts:list});changed();return list}
+export function loadCommitteeCache(){return parse(KEYS.committeeCache,{mandates:[],audit:[],cachedAt:null})}
+export function saveCommitteeCache(cache){const next={mandates:Array.isArray(cache?.mandates)?cache.mandates:[],audit:Array.isArray(cache?.audit)?cache.audit:[],cachedAt:new Date().toISOString()};save(KEYS.committeeCache,next);return next}
 export function makeBackupBundle(){return {schema:'CHEBSEL_V2_BACKUP',createdAt:new Date().toISOString(),members:readRaw(KEYS.members,[]),attendance:readAttendanceEnvelope(),finance:readFinanceEnvelope(),settings:readRaw(KEYS.settings,{}),conflicts:readRaw(KEYS.conflicts,[])}}
 export function restoreBackupBundle(bundle){if(!bundle||bundle.schema!=='CHEBSEL_V2_BACKUP')throw new Error('Fichier de sauvegarde CHEBSEL v2 invalide.');if(!Array.isArray(bundle.members))throw new Error('Liste des membres invalide.');save(KEYS.members,bundle.members);save(KEYS.attendance,bundle.attendance&&typeof bundle.attendance==='object'?bundle.attendance:{});save(KEYS.finance,bundle.finance&&typeof bundle.finance==='object'?bundle.finance:{});save(KEYS.settings,bundle.settings&&typeof bundle.settings==='object'?bundle.settings:{});save(KEYS.conflicts,Array.isArray(bundle.conflicts)?bundle.conflicts:[]);const data=loadLocalData();changed();return data}
-export function loadSession(){return parse(KEYS.session,null)}export function saveSession(session){save(KEYS.session,session)}export function clearSession(){localStorage.removeItem(KEYS.session)}export {KEYS};
+export function loadSession(){return parse(KEYS.session,null)}
+export function saveSession(session){save(KEYS.session,session)}
+export function clearSession(){localStorage.removeItem(KEYS.session)}
+export {KEYS};
