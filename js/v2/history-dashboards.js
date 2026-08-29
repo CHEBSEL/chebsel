@@ -1,0 +1,46 @@
+import {AppState,updateState} from './app-state.js';
+import {navigate} from './router.js';
+
+const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n};
+const money=v=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(Number(v||0))+' G';
+const norm=s=>String(s||'').trim().toUpperCase();
+const entries=()=>Array.isArray(AppState.data.finance)?AppState.data.finance:[];
+const expenses=()=>Array.isArray(AppState.data.expenses)?AppState.data.expenses:[];
+const calls=()=>Array.isArray(AppState.data.attendance)?AppState.data.attendance:[];
+const canEditAttendance=()=>['president','secretary'].includes(AppState.role);
+
+function monthKeys(){const out=[],d=new Date();d.setDate(1);for(let i=5;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`)}return out}
+function page(title,subtitle){const w=el('section','page history-dashboard-page'),h=el('div','page-head');h.append(el('h1','',title),el('p','muted',subtitle));w.append(h);return w}
+function kpi(label,value){const c=el('div','history-kpi');c.append(el('b','',value),el('span','',label));return c}
+function legend(items){const w=el('div','history-legend');for(const [key,label] of items){const x=el('span',`legend-${key}`);x.append(el('i'),document.createTextNode(label));w.append(x)}return w}
+function chart(title,legendItems,months,series){
+ const box=el('section','panel history-chart-card');box.append(el('h2','',title),legend(legendItems));
+ const area=el('div','history-multi-chart');
+ const all=series.flatMap(s=>months.map(m=>Number(s.values[m]||0)));const max=Math.max(1,...all);
+ for(const m of months){const group=el('div','history-month-group'),bars=el('div','history-month-bars');for(const s of series){const value=Number(s.values[m]||0),bar=el('i',`history-bar series-${s.key}`);bar.style.height=`${Math.max(value>0?3:1,Math.round(value/max*100))}%`;bar.title=`${s.label}: ${s.format?s.format(value):value}`;bars.append(bar)}group.append(bars,el('span','',m.slice(5)));area.append(group)}box.append(area);return box
+}
+
+function financeMonth(month){
+ const es=entries().filter(e=>String(e.date||'').startsWith(month)&&!e.voided&&!e.cancelled&&e.status!=='cancelled');
+ const xs=expenses().filter(e=>String(e.date||'').startsWith(month));
+ const due=es.reduce((s,e)=>s+(Number(e.due??e.amountDue??0)||0),0),income=es.reduce((s,e)=>s+(Number(e.paid??e.amountPaid??0)||0),0),out=xs.reduce((s,e)=>s+(Number(e.amount||0)||0),0);
+ return {income,expenses:out,net:income-out,debt:Math.max(0,due-income)};
+}
+export function renderFinanceHealthDashboard(){
+ const w=page('Historique / Histogramme','Vue synthétique de la santé financière et évolution sur les 6 derniers mois.');
+ const months=monthKeys(),current=months[months.length-1],now=financeMonth(current);
+ const kpis=el('div','panel history-kpi-panel history-kpis-finance');kpis.append(kpi('Entrées',money(now.income)),kpi('Dépenses',money(now.expenses)),kpi('Solde net',money(now.net)),kpi('Dette / Créances',money(now.debt)));w.append(kpis);
+ const vals={income:{},expenses:{},net:{},debt:{}};for(const m of months){const v=financeMonth(m);for(const k of Object.keys(vals))vals[k][m]=v[k]}
+ w.append(chart('Évolution de la santé financière — 6 derniers mois',[['income','Entrées'],['expenses','Dépenses'],['net','Solde net'],['debt','Dette / Créances']],months,[{key:'income',label:'Entrées',values:vals.income,format:money},{key:'expenses',label:'Dépenses',values:vals.expenses,format:money},{key:'net',label:'Solde net',values:vals.net,format:money},{key:'debt',label:'Dette / Créances',values:vals.debt,format:money}]));
+ return w;
+}
+
+function attendanceStats(list){let total=0,present=0,late=0,absent=0;for(const c of list){for(const r of Object.values(c?.records||{})){const s=norm(r?.status);if(!s)continue;total++;if(s==='P')present++;else if(['RM','RNM','R'].includes(s))late++;else if(['AM','ANM','ANMP','A'].includes(s))absent++}}return{activities:list.length,total,present,late,absent,presenceRate:total?Math.round((present+late)/total*100):0,punctualityRate:total?Math.round(present/total*100):0,lateRate:total?Math.round(late/total*100):0,absenceRate:total?Math.round(absent/total*100):0}}
+export function renderPunctualityHealthDashboard(){
+ const w=page('Historique & santé de la ponctualité','Résumé chiffré et évolution du groupe sur les 6 derniers mois.');
+ const months=monthKeys(),current=months[months.length-1],currentCalls=calls().filter(c=>String(c.date||'').startsWith(current)),now=attendanceStats(currentCalls);
+ const kpis=el('div','panel history-kpi-panel history-kpis-punctuality');kpis.append(kpi('Activités',String(now.activities)),kpi('Présence',`${now.presenceRate}%`),kpi('Ponctualité',`${now.punctualityRate}%`),kpi('Retards',`${now.lateRate}%`),kpi('Absences',`${now.absenceRate}%`));w.append(kpis);
+ const vals={presence:{},punctuality:{},late:{},absence:{}};for(const m of months){const s=attendanceStats(calls().filter(c=>String(c.date||'').startsWith(m)));vals.presence[m]=s.presenceRate;vals.punctuality[m]=s.punctualityRate;vals.late[m]=s.lateRate;vals.absence[m]=s.absenceRate}
+ w.append(chart('Évolution de la santé de ponctualité — 6 derniers mois',[['presence','Présence'],['punctuality','Ponctualité'],['late','Retards'],['absence','Absences']],months,[{key:'presence',label:'Présence',values:vals.presence,format:v=>`${v}%`},{key:'punctuality',label:'Ponctualité',values:vals.punctuality,format:v=>`${v}%`},{key:'late',label:'Retards',values:vals.late,format:v=>`${v}%`},{key:'absence',label:'Absences',values:vals.absence,format:v=>`${v}%`} ]));
+ const history=el('section','history-call-list');for(const c of [...calls()].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,20)){const s=attendanceStats([c]),row=el('article','panel history-call-summary'),copy=el('div');copy.append(el('h3','',c.activityType||c.activity||'Activité'),el('p','muted',`${c.date||'—'} • Présence ${s.presenceRate}% • Ponctualité ${s.punctualityRate}% • Retards ${s.lateRate}% • Absences ${s.absenceRate}%`));const b=el('button','btn secondary',canEditAttendance()?'Ouvrir / modifier':'Consulter');b.onclick=()=>{updateState('ui',{...(AppState.ui||{}),selectedAttendanceCallId:c.id});navigate('attendance')};row.append(copy,b);history.append(row)}w.append(history);return w;
+}

@@ -1,12 +1,14 @@
-name: CHEBSEL v1.12.0 Runtime Validation
+name: CHEBSEL v2 Clean Core Validation
 
 on:
   push:
     paths:
       - '.github/workflows/v1200-runtime-validation.yml'
-      - 'js/**'
+      - 'js/v2/**'
       - 'css/**'
       - 'index.html'
+      - 'manifest.webmanifest'
+      - 'sw.js'
   workflow_dispatch:
 
 jobs:
@@ -16,22 +18,40 @@ jobs:
       - uses: actions/checkout@v4
       - name: JavaScript syntax checks
         run: |
-          node --check js/embedded-apps.js
-          node --check js/legacy-core.js
-          node --check js/auth-security.js
-          node --check js/sync-policy.js
-          node --check js/finance-evidence.js
-          node --check js/bootstrap.js
-      - name: HTML architecture checks
+          for f in js/v2/*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+      - name: Clean Core architecture checks
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('index.html').read_text(encoding='utf-8')
-          assert '<style' not in p.lower()
-          assert "const ATT_B64='" not in p
-          assert "const FIN_B64='" not in p
-          assert 'payEvidenceFile' in p
-          assert 'treasuryReportEvidenceFile' in p
-          assert 'v1.12.0' in p
-          print('CHEBSEL v1.12.0 runtime structure OK')
+          import json,re
+
+          index=Path('index.html').read_text(encoding='utf-8')
+          state=Path('js/v2/app-state.js').read_text(encoding='utf-8')
+          sw=Path('sw.js').read_text(encoding='utf-8')
+          manifest=json.loads(Path('manifest.webmanifest').read_text(encoding='utf-8'))
+
+          assert '<style' not in index.lower(), 'No inline <style> block allowed in Clean Core index'
+          assert './js/v2/app.js' in index, 'Clean Core app entrypoint missing'
+          assert Path('js/v2/router.js').exists(), 'Single router missing'
+          assert Path('js/v2/supabase-client.js').exists(), 'Supabase client missing'
+          assert Path('js/v2/sync.js').exists(), 'Sync engine missing'
+          assert 'embedded-apps.js' not in index, 'Legacy iframe runtime must not be loaded'
+          assert 'legacy-core.js' not in index, 'Legacy core must not be loaded'
+          assert 'history.back(' not in Path('js/v2/router.js').read_text(encoding='utf-8'), 'Internal router must not use history.back()'
+          assert 'MutationObserver' not in Path('js/v2/router.js').read_text(encoding='utf-8'), 'Router must not use MutationObserver'
+          assert 'service_role' not in Path('js/v2/supabase-client.js').read_text(encoding='utf-8').lower(), 'Service-role key must never be shipped to client'
+
+          m=re.search(r"APP_VERSION='([^']+)'",state)
+          assert m, 'APP_VERSION missing from app-state.js'
+          version=m.group(1)
+          assert version in index, f'index.html version does not match {version}'
+          assert version in manifest.get('name',''), f'manifest version does not match {version}'
+          assert version in manifest.get('description',''), f'manifest description does not match {version}'
+          assert version in sw, f'service worker version does not match {version}'
+          assert './js/v2/supabase-client.js' in sw and './js/v2/sync.js' in sw, 'Cloud modules missing from app shell'
+
+          print(f'CHEBSEL {version} Clean Core structure OK')
           PY

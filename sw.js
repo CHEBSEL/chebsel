@@ -1,23 +1,14 @@
-const VERSION='1.17.19';
-const CACHE_NAME='chebsel-pwa-stable-v11719';
+const APP_VERSION='2.0.0-alpha.23';
+const STATIC_CACHE=`chebsel-v2-static-${APP_VERSION}`;
+const HTML_CACHE=`chebsel-v2-html-${APP_VERSION}`;
 const APP_SHELL=[
- './','./index.html','./manifest.webmanifest','./js/bootstrap.js','./js/sync-policy.js','./js/report-images.js','./js/institutional-ops.js','./js/corrections-1131.js','./js/stability-1132.js','./js/payment-reason-history-1133.js','./js/closing-canonical-1134.js','./js/monthly-governance-1140.js','./js/notification-routing-1142.js','./js/deletion-1141.js','./js/reports-center-1150.js','./js/role-shell-1160.js','./js/clean-shell-1170.js','./js/secretary-scope-1171.js','./js/treasurer-scope-1173.js','./js/hotfix-1175.js','./js/president-scope-1176.js','./js/president-scope-1178.js','./js/update-manager-1177.js','./js/notification-state-11711.js','./js/navigation-stable-11717.js','./js/strict-role-ui-1161.js','./js/auth-security.js','./js/legacy-core.js','./js/embedded-apps.js','./css/app.css','./icons/chebsel-logo.png','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'
+  './','./index.html','./manifest.webmanifest','./css/v2.css','./css/attendance-v2.css','./css/finance-v2.css','./css/admin-v2.css','./css/receipts-v2.css','./css/history-dashboards.css','./css/home-dashboard.css','./css/install-v2.css',
+  './js/v2/app-state.js','./js/v2/router.js','./js/v2/role-config.js','./js/v2/storage.js','./js/v2/supabase-client.js','./js/v2/sync.js','./js/v2/auth.js','./js/v2/updates.js','./js/v2/members.js','./js/v2/attendance.js','./js/v2/finance.js','./js/v2/notifications.js','./js/v2/admin.js','./js/v2/privacy.js','./js/v2/reports.js','./js/v2/receipts.js','./js/v2/history-dashboards.js','./js/v2/home-dashboard.js','./js/v2/install.js','./js/v2/committee.js','./js/v2/app.js',
+  './icons/chebsel-logo.png','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'
 ];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));self.skipWaiting()});
-self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});clients.forEach(c=>c.postMessage({type:'CHEBSEL_UPDATE_ACTIVE',version:VERSION}))})())});
-self.addEventListener('fetch',event=>{
- if(event.request.method!=='GET')return;
- const url=new URL(event.request.url);if(url.origin!==self.location.origin)return;
- event.respondWith((async()=>{
-   const cached=await caches.match(event.request,{ignoreSearch:true});
-   const refresh=fetch(event.request,{cache:'no-store'}).then(async response=>{if(response&&response.ok){const cache=await caches.open(CACHE_NAME);cache.put(event.request,response.clone())}return response}).catch(()=>null);
-   if(cached){event.waitUntil(refresh);return cached}
-   const network=await refresh;if(network)return network;
-   if(event.request.mode==='navigate')return (await caches.match('./index.html'))||Response.error();
-   return Response.error();
- })())
-});
-self.addEventListener('message',event=>{
- if(event.data?.type==='SKIP_WAITING'){self.skipWaiting();return}
- if(event.data?.type==='CHEBSEL_GET_VERSION'){try{event.ports?.[0]?.postMessage({version:VERSION})}catch(e){}}
-});
+self.addEventListener('install',event=>{event.waitUntil(caches.open(STATIC_CACHE).then(c=>c.addAll(APP_SHELL)))});
+self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('chebsel-v2-')&&!([STATIC_CACHE,HTML_CACHE].includes(k))).map(k=>caches.delete(k)));await self.clients.claim()})())});
+async function networkFirst(request){const cache=await caches.open(HTML_CACHE);try{const response=await fetch(request,{cache:'no-store'});if(response.ok)cache.put(request,response.clone());return response}catch{return (await cache.match(request))||(await caches.match('./index.html'))}}
+async function cacheFirstRefresh(request){const cache=await caches.open(STATIC_CACHE);const cached=await cache.match(request,{ignoreSearch:true});const refresh=fetch(request).then(response=>{if(response.ok)cache.put(request,response.clone());return response}).catch(()=>null);if(cached){void refresh;return cached}return (await refresh)||Response.error()}
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin!==self.location.origin)return;if(event.request.mode==='navigate'||url.pathname.endsWith('.html'))event.respondWith(networkFirst(event.request));else event.respondWith(cacheFirstRefresh(event.request))});
+self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();if(event.data?.type==='GET_VERSION')event.ports?.[0]?.postMessage({version:APP_VERSION})});

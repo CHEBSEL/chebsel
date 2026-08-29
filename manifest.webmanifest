@@ -1,16 +1,16 @@
 {
-  "id": "./",
-  "name": "CHEBSEL v1.17.19 — Chœur d’Homme de l’Église Baptiste Sel et Lumière",
-  "short_name": "CHEBSEL",
-  "description": "CHEBSEL v1.17.19 — boot gate: affichage uniquement lorsque le shell final du profil est prêt.",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#102644",
-  "orientation": "any",
-  "lang": "fr",
-  "icons": [
+  "id":"./",
+  "name":"CHEBSEL v2.0.0-alpha.23 — Clean Core",
+  "short_name":"CHEBSEL",
+  "description":"CHEBSEL v2.0.0-alpha.23 — Clean Core local-first avec synchronisation silencieuse en arrière-plan, authentification Supabase, accès hors ligne sécurisé, gestion du comité et fiche membre simplifiée.",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#0d1117",
+  "theme_color":"#102644",
+  "orientation":"any",
+  "lang":"fr",
+  "icons":[
     {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
     {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
     {"src":"icons/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
