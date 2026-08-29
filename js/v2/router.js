@@ -11,7 +11,7 @@ export function navigate(id,{replace=false}={}){
   if(replace)stack[stack.length-1]=id;
   else if(stack[stack.length-1]!==id)stack.push(id);
   setState({route:id,navigationStack:stack});
-  void renderCurrent();
+  void renderCurrent({force:true});
 }
 
 export function back(){
@@ -20,18 +20,19 @@ export function back(){
   stack.pop();
   const route=stack[stack.length-1]||'home';
   setState({route,navigationStack:stack});
-  void renderCurrent();
+  void renderCurrent({force:true});
   return true;
 }
 
 export function resetTo(id='home'){
   if(!routes.has(id))throw new Error(`Route inconnue: ${id}`);
   setState({route:id,navigationStack:[id]});
-  void renderCurrent();
+  void renderCurrent({force:true});
 }
 
-export async function renderCurrent(){
+export async function renderCurrent({force=false}={}){
   const outlet=document.getElementById('appOutlet');if(!outlet)return;
+  if(!force&&outlet.firstElementChild?.dataset?.renderLock==='true')return;
   const token=++renderToken,route=AppState.route;
   const renderer=routes.get(route)||routes.get('home');
   outlet.replaceChildren();
