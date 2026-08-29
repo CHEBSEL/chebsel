@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.22 — Clean Core",
+  "name":"CHEBSEL v2.0.0-alpha.23 — Clean Core",
   "short_name":"CHEBSEL",
-  "description":"CHEBSEL v2.0.0-alpha.22 — Clean Core local-first avec synchronisation silencieuse en arrière-plan, authentification Supabase, accès hors ligne sécurisé et gestion du comité.",
+  "description":"CHEBSEL v2.0.0-alpha.23 — Clean Core local-first avec synchronisation silencieuse en arrière-plan, authentification Supabase, accès hors ligne sécurisé, gestion du comité et fiche membre simplifiée.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
