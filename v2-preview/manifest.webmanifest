@@ -1,8 +1,8 @@
 {
   "id":"./",
-  "name":"CHEBSEL v2.0.0-alpha.19 — Preview",
+  "name":"CHEBSEL v2.0.0-alpha.20 — Preview",
   "short_name":"CHEBSEL v2",
-  "description":"CHEBSEL v2 alpha.19 — Clean Core local-first avec authentification Supabase, accès hors ligne sécurisé, gestion du comité sur mandat de 2 ans et profil connecté visible.",
+  "description":"CHEBSEL v2 alpha.20 — Clean Core local-first avec authentification Supabase, accès hors ligne sécurisé, gestion du comité stable et profil connecté visible.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
